@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DJai — Shawn Singh</title>
+  <meta name="description" content="DJai case study — Your Favorite DJ, Now in Your Pocket" />
+
+
+  <script type="module" crossorigin src="/assets/styles-D1AIz0qy.js"></script>
+  <script type="module" crossorigin src="/assets/script-D_0hslKU.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-CfowJpL9.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">Shawn Singh</a>
+
+      <ul class="nav__links" role="list">
+        <li><a href="index.html#work" class="active">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+      </ul>
+
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       CASE STUDY HERO
+       ============================================================ -->
+  <section class="case-hero" style="position: relative;">
+    <!-- Full-width hero image -->
+    <img
+      class="case-hero__img"
+      src="/images/djai2.png"
+      alt="DJai hero"
+      onerror="this.outerHTML='<div class=\'case-hero__img--placeholder\'>DJai — /images/djai2.png</div>'"
+    />
+
+    <!-- Scroll indicator arrow -->
+    <div style="display: flex; justify-content: center; padding: 17px 0 8px; animation: bounce 1s infinite;">
+      <svg fill="#1d1d1f" width="32px" height="32px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 16a1 1 0 0 1-.64-.23l-6-5a1 1 0 1 1 1.28-1.54L12 13.71l5.36-4.32a1 1 0 0 1 1.41.15 1 1 0 0 1-.14 1.46l-6 4.83A1 1 0 0 1 12 16z"/>
+      </svg>
+    </div>
+
+    <div class="container">
+      <div class="case-hero__meta" data-reveal>
+        <a href="index.html#work" class="back-link">
+          <!-- Left arrow -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          All Work
+        </a>
+
+        <p class="case-hero__tag">UX / Product Design</p>
+        <h1 class="case-hero__title">DJai</h1>
+        <p class="case-hero__tagline">Your Favorite DJ, Now in Your Pocket</p>
+
+        <div class="case-hero__details">
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Role</span>
+            <span class="case-hero__detail-value">UX / Product Design</span>
+          </div>
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Year</span>
+            <span class="case-hero__detail-value">2024</span>
+          </div>
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Tools</span>
+            <span class="case-hero__detail-value">Figma</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CASE STUDY SECTIONS
+       ============================================================ -->
+  <main>
+
+    <!-- Overview -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Overview</p>
+          <div class="case-section__body">
+            <p>Current music platforms fall short in delivering truly dynamic and personalized listening experiences. DJai reimagines how people interact with music — not just passively listening, but actively shaping it.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problem -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Problem</p>
+          <div class="case-section__body">
+            <p>Three core friction points define the modern listening experience:</p>
+            <ul style="margin-top: 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 12px;">
+              <li><strong>Hard to discover new music.</strong> Algorithmic recommendations surface the same artists repeatedly, leaving listeners stuck in a loop rather than genuinely exploring new sounds.</li>
+              <li><strong>Updating playlists is a full-time job.</strong> Curating and maintaining playlists that match shifting moods, contexts, and events demands constant manual effort with no intelligent assistance.</li>
+              <li><strong>No app utilizes true DJing.</strong> Existing platforms treat listeners as passive consumers. There is no tool that brings professional DJ controls — EQ, mixing, and live transitions — into an everyday mobile experience.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Process -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Process</p>
+          <div class="case-section__body">
+            <p>Research began with identifying two distinct user archetypes to ground design decisions in real behavior and goals.</p>
+            <p style="margin-top: 16px;"><strong>Persona °1 — Irene, 27, Boston.</strong> A Nurse Practitioner who listens to music to decompress after long shifts. She wants smart, effortless curation that matches her mood without requiring her to manage it manually.</p>
+            <p style="margin-top: 12px;"><strong>Persona °2 — Marko, 23, Los Angeles.</strong> A professional DJ who needs a mobile tool that mirrors the control he has behind the decks — real EQ, live mixing, and the flexibility to perform anywhere.</p>
+            <p style="margin-top: 16px;">User flows were mapped across three core surfaces: onboarding and mood detection, the Now Spinning playback view (Basic and Advanced modes), and the DJ controls panel with EQ knobs and performance pads.</p>
+
+            <!-- Slide images from process deck -->
+            <div class="case-images case-images--cols-3" style="margin-top: 40px;">
+              <img class="case-img" src="/images/djai3.png" alt="DJai process slide 1" />
+              <img class="case-img" src="/images/djai4.png" alt="DJai process slide 2" />
+              <img class="case-img" src="/images/djai5.png" alt="DJai process slide 3" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Solution -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Solution</p>
+          <div class="case-section__body">
+            <p>There is a missed opportunity to empower users to not just listen to music, but interact with it depending on their mood, setting, or event. DJai bridges the gap between passive listening and active performance — offering a Basic mode for effortless AI-curated playback and an Advanced mode that puts professional DJ controls directly in the user's hands.</p>
+            <p style="margin-top: 16px;">The result is a single app that serves both Irene and Marko: intelligent enough to handle curation automatically, and expressive enough for those who want full creative control.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Prototype Embed -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container" data-reveal>
+        <p class="section-label">Interactive Prototype</p>
+        <!--
+          Replace [FIGMA_EMBED_URL] with the actual Figma embed src URL.
+          Get it from Figma: Share → Get embed code → copy the src value.
+        -->
+        <iframe
+          class="figma-embed"
+          title="DJai Figma Prototype"
+          src="https://www.figma.com/embed?embed_host=share&url=https%3A%2F%2Fwww.figma.com%2Fproto%2F6fUgdumwu98jyYTTV3RfpF%2FDJai%3Fpage-id%3D4029%253A9360%26node-id%3D6001-3354%26p%3Df%26viewport%3D451%252C303%252C0.07%26t%3DZEA2CUPsjnifnwQD-1%26scaling%3Dscale-down%26content-scaling%3Dfixed%26starting-point-node-id%3D6001%253A3354%26show-proto-sidebar%3D1"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <p class="footer__logo">Shawn Singh</p>
+          <p class="footer__tagline">Product Designer — Los Angeles, CA</p>
+        </div>
+        <div class="footer__links">
+          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            LinkedIn
+          </a>
+          <a href="https://drive.google.com/file/d/1cqEcpCcJ0mvZbAYtkgjS76e6LGajXqPt/view?usp=sharing" class="footer__link" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Résumé
+          </a>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; <span id="footer-year"></span> Shawn Singh. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
