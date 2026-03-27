@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloudexa — Shawn Singh</title>
+  <meta name="description" content="Cloudexa case study — A banking-grade data visualization platform for securely managing a network of ATMs" />
+
+
+
+  <style>
+    /* Cloudexa-specific accent override (optional — keep or remove) */
+    .cloudexa-accent { color: var(--accent); }
+
+    .stack-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .stack-tag {
+      padding: 4px 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid var(--accent);
+      border-radius: 2px;
+      color: var(--accent);
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/styles-D1AIz0qy.js"></script>
+  <script type="module" crossorigin src="/assets/script-D_0hslKU.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-CfowJpL9.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">Shawn Singh</a>
+
+      <ul class="nav__links" role="list">
+        <li><a href="index.html#work" class="active">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+      </ul>
+
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       CASE STUDY HERO
+       ============================================================ -->
+  <section class="case-hero" style="position: relative;">
+    <img
+      class="case-hero__img"
+      src="/images/cloudexa3.png"
+      alt="Cloudexa hero"
+      style="width: 70%; margin: -3px auto 0; display: block;"
+      onerror="this.outerHTML='<div class=\'case-hero__img--placeholder\'>Cloudexa — /images/cloudexa3.png</div>'"
+    />
+
+    <!-- Scroll indicator arrow -->
+    <div style="display: flex; justify-content: center; padding: 17px 0 8px; animation: bounce 1s infinite;">
+      <svg fill="#1d1d1f" width="32px" height="32px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 16a1 1 0 0 1-.64-.23l-6-5a1 1 0 1 1 1.28-1.54L12 13.71l5.36-4.32a1 1 0 0 1 1.41.15 1 1 0 0 1-.14 1.46l-6 4.83A1 1 0 0 1 12 16z"/>
+      </svg>
+    </div>
+
+    <div class="container">
+      <div class="case-hero__meta" data-reveal>
+        <a href="index.html#work" class="back-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          All Work
+        </a>
+
+        <p class="case-hero__tag">Data Science / Frontend Development</p>
+        <h1 class="case-hero__title">Cloudexa</h1>
+        <p class="case-hero__tagline">A banking-grade data visualization platform for securely managing a network of ATMs</p>
+
+        <div class="case-hero__details">
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Role</span>
+            <span class="case-hero__detail-value">Designer & Developer</span>
+          </div>
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Year</span>
+            <span class="case-hero__detail-value">2025</span>
+          </div>
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Client</span>
+            <span class="case-hero__detail-value">
+              <a href="[LIVE_SITE_URL]" target="_blank" rel="noopener noreferrer" class="live-link btn btn--accent" style="padding: 6px 16px; font-size: 0.75rem;">
+                ESQ Data Solutions
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-left: 4px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+            </span>
+          </div>
+        </div>
+
+        <!-- Tech stack tags -->
+        <div class="stack-tags" style="margin-top: 28px;">
+          <span class="stack-tag">Figma</span>
+          <span class="stack-tag">Vue.js</span>
+          <span class="stack-tag">Vite</span>
+          <span class="stack-tag">Pinia</span>
+          <span class="stack-tag">DevExtreme</span>
+          <span class="stack-tag">pgAdmin</span>
+          <span class="stack-tag">Power BI</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CASE STUDY SECTIONS
+       ============================================================ -->
+  <main>
+
+    <!-- Overview -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Overview</p>
+          <div class="case-section__body">
+            <p>Cloudexa is a custom banking-grade data visualization platform built for ESQ Data Solutions — a Kinective company — to help enterprise clients securely monitor and manage their ATM networks. The platform surfaces 8 key operational metrics in a clean, accessible interface, replacing a fragile Power BI setup that was consistently failing high-profile clients.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problem -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Problem</p>
+          <div class="case-section__body">
+            <p>ESQ spent millions building out a network of ATMs, but the weakness fell in the client's ability to use it. Clients continuously ran into the same issues — and it was almost never a technical failure. It was a monitoring and maintenance failure. High-profile clients were making simple mistakes.</p>
+            <p style="margin-top: 16px;">The existing Power BI dashboard made this worse, not better:</p>
+            <ul style="margin-top: 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 12px;">
+              <li><strong>Dense Layout.</strong> Charts with overlapping metrics created high cognitive load, especially for non-technical banking staff.</li>
+              <li><strong>Small Click Targets.</strong> Server selection boxes and slicer buttons required precise mouse control, creating friction in time-sensitive situations.</li>
+              <li><strong>Hover Dependency.</strong> Power BI relied heavily on tooltips for detailed information — inaccessible for elder clientele who make up much of the banking industry.</li>
+              <li><strong>No Launch Support.</strong> Sharing the dashboard with a client was hard, and pushing updates proved even more challenging.</li>
+              <li><strong>Limited Icon Support.</strong> The interface lacked visual affordances suited for less technically fluent users.</li>
+            </ul>
+            <p style="margin-top: 20px; font-weight: 600;">An error on the client side is an error on the provider.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Process -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Process</p>
+          <div class="case-section__body">
+            <p>The first redesign — Cloudexa version 1 — was already an improvement over Power BI. It introduced a Configuration and Status Manager with a structured sidebar, instance management, and a cleaner layout. But it still fell short:</p>
+            <ul style="margin-top: 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 12px;">
+              <li><strong>Dead Space.</strong> Too much unused space created more cognitive load and forced users to click through more menus to find information.</li>
+              <li><strong>Outdated Colors.</strong> A system is only as good as it feels when used — the visual language felt dated.</li>
+              <li><strong>No Breadcrumbs.</strong> Users struggled to identify where they were within the application hierarchy.</li>
+            </ul>
+            <p style="margin-top: 16px;">Cloudexa was better than Power BI, but still had issues to fix. The design process audited both tools against real client pain points, then rebuilt the interface around the 8 key issues ESQ clients faced most: Server Status, Server Restarts, Cipher Suites, Certificates, Disk Usage, Hotfixes, TLS Protocols, and Memory Usage.</p>
+
+            <figure style="margin-top: 32px;">
+              <img class="case-img" src="/images/cloudexa6.png" alt="Cloudexa version 1" style="aspect-ratio: auto; width: 80%;" />
+              <figcaption style="margin-top: 10px; font-size: 0.78rem; color: var(--light); letter-spacing: 0.04em;">Cloudexa v.1</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Solution + Screenshots -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Solution</p>
+          <div class="case-section__body">
+            <p>Cloudexa version 2 is a purpose-built dashboard that puts the most critical ATM health data front and center. The Instance Status Dashboard presents Memory Usage by Service, Hotfixes Over Time, TLS Protocols Balance, Ciphers Balance, and Service Status by Server — all in a single scannable view without tooltips or hidden menus.</p>
+            <p style="margin-top: 16px;">Each data module pairs raw database output (queried directly via pgAdmin) with a corresponding chart, giving both technical and non-technical users multiple ways to read the same information. Security Protocol Monitoring and General Monitoring sections provide deep visibility into the areas most likely to cause client-side errors.</p>
+            <p style="margin-top: 16px;">The result is a platform tailored to each client's environment — deployable, maintainable, and built to prevent the simple mistakes that were costing ESQ and their clients the most.</p>
+
+            <!-- Screenshots -->
+            <div class="case-images case-images--cols-2" style="margin-top: 40px;">
+              <img class="case-img" src="/images/cloudexa1.png" alt="Cloudexa dashboard overview" />
+              <img class="case-img" src="/images/cloudexa2.png" alt="Cloudexa server status view" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA — Live Site -->
+    <section class="section" style="padding-top: 0; text-align: center;" data-reveal>
+      <div class="container">
+        <div style="padding: 64px 0; border-top: 1px solid var(--border);">
+          <p class="section-label" style="margin-bottom: 24px; border: none; padding: 0;">See it live</p>
+          <h2 style="margin-bottom: 24px;">Explore Cloudexa</h2>
+          <a href="[LIVE_SITE_URL]" target="_blank" rel="noopener noreferrer" class="btn btn--accent" style="margin: 0 auto;">
+            Coming Soon
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <p class="footer__logo">Shawn Singh</p>
+          <p class="footer__tagline">Product Designer — Los Angeles, CA</p>
+        </div>
+        <div class="footer__links">
+          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            LinkedIn
+          </a>
+          <a href="https://drive.google.com/file/d/1cqEcpCcJ0mvZbAYtkgjS76e6LGajXqPt/view?usp=sharing" class="footer__link" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Résumé
+          </a>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; <span id="footer-year"></span> Shawn Singh. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

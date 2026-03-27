@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — Shawn Singh</title>
+  <meta name="description" content="Shawn Singh — [YOUR_TITLE] based in [YOUR_LOCATION]." />
+
+
+
+  <style>
+    .about-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 56px 0;
+    }
+
+    .about-section {
+      padding: 72px 0;
+    }
+
+    .about-col-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 64px;
+    }
+
+    .about-col-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--light);
+      padding-top: 6px;
+    }
+
+    .about-bio-large {
+      font-family: var(--serif);
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+      font-weight: 700;
+      line-height: 1.5;
+      color: var(--black);
+      max-width: 28ch;
+      margin-bottom: 32px;
+    }
+
+    .resume-cta {
+      margin-top: 40px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .resume-cta p {
+      font-size: 0.9rem;
+      color: var(--mid);
+      margin: 0;
+      max-width: none;
+    }
+
+    @media (max-width: 900px) {
+      .about-col-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/styles-D1AIz0qy.js"></script>
+  <script type="module" crossorigin src="/assets/script-D_0hslKU.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-CfowJpL9.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">Shawn Singh</a>
+
+      <ul class="nav__links" role="list">
+        <li><a href="index.html#work">Work</a></li>
+        <li><a href="about.html" class="active">About</a></li>
+        <li><a href="mailto:[YOUR_EMAIL]">Contact</a></li>
+      </ul>
+
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       ABOUT HERO
+       ============================================================ -->
+  <header class="about-hero" style="padding-top: var(--nav-height); background: var(--bg-off); border-bottom: 1px solid var(--border);">
+    <div class="about-hero__inner">
+      <div data-reveal>
+        <p class="about-eyebrow">About</p>
+        <h1 class="about-title">Shawn Singh</h1>
+      </div>
+      <div data-reveal data-reveal-delay="80">
+        <p class="hero__sub" style="font-size: 1.05rem;">[YOUR_TITLE]<br />[YOUR_LOCATION]</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============================================================
+         BIO SECTION
+         ============================================================ -->
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Bio</p>
+          <div>
+            <p class="about-bio-large">[BIO_HEADLINE]</p>
+            <p style="font-size: 1rem; color: var(--mid); line-height: 1.8; max-width: 65ch;">
+              [BIO_TEXT]
+            </p>
+
+            <div class="resume-cta">
+              <p>Want to work together or learn more about my experience?</p>
+              <a href="[RESUME_URL]" class="btn btn--accent" download>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Résumé
+              </a>
+              <a href="mailto:[YOUR_EMAIL]" class="btn btn--dark">
+                Get in Touch
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SKILLS SECTION
+         ============================================================ -->
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Skills &amp; Tools</p>
+          <div>
+            <!--
+              [SKILLS_LIST] — Replace the tags below with your actual skills.
+              You can group them or just list them all flat.
+              Current placeholders mirror the [SKILLS_LIST] token.
+            -->
+            <p class="skills-label">Design</p>
+            <div class="skills-grid">
+              <span class="skill-tag">[SKILL_1]</span>
+              <span class="skill-tag">[SKILL_2]</span>
+              <span class="skill-tag">[SKILL_3]</span>
+              <span class="skill-tag">[SKILL_4]</span>
+              <span class="skill-tag">[SKILL_5]</span>
+            </div>
+
+            <p class="skills-label">Development</p>
+            <div class="skills-grid">
+              <span class="skill-tag">[SKILL_6]</span>
+              <span class="skill-tag">[SKILL_7]</span>
+              <span class="skill-tag">[SKILL_8]</span>
+              <span class="skill-tag">[SKILL_9]</span>
+              <span class="skill-tag">[SKILL_10]</span>
+            </div>
+
+            <p class="skills-label">Other</p>
+            <div class="skills-grid">
+              <span class="skill-tag">[SKILL_11]</span>
+              <span class="skill-tag">[SKILL_12]</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         CURRENTLY / AVAILABILITY (optional — delete if not needed)
+         ============================================================ -->
+    <section class="about-section">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Currently</p>
+          <div>
+            <p style="font-size: 1rem; color: var(--mid); max-width: 65ch; line-height: 1.8;">
+              [CURRENTLY_TEXT]
+            </p>
+            <p class="skills-label" style="margin-top: 32px;">Availability</p>
+            <p style="font-size: 1rem; color: var(--accent); font-weight: 500; max-width: none; display: flex; align-items: center; gap: 8px;">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--accent);"></span>
+              [AVAILABILITY_STATUS]
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <p class="footer__logo">Shawn Singh</p>
+          <p class="footer__tagline">[YOUR_TITLE] — [YOUR_LOCATION]</p>
+        </div>
+        <div class="footer__links">
+          <a href="[LINKEDIN_URL]" class="footer__link" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            LinkedIn
+          </a>
+          <a href="[RESUME_URL]" class="footer__link" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Résumé
+          </a>
+          <a href="mailto:[YOUR_EMAIL]" class="footer__link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            [YOUR_EMAIL]
+          </a>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; <span id="footer-year"></span> Shawn Singh. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
