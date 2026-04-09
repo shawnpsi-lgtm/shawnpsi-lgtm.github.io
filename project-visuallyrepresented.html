@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visually Represented — Shawn Singh</title>
+  <meta name="description" content="Visually Represented — A media company crafting visual stories that represent culture, creativity, and community." />
+
+  <style>
+    /* ── Page base ─────────────────────────────────────────── */
+    body { background: #0a0a0a; }
+
+    /* ── Hero ──────────────────────────────────────────────── */
+    .vr-hero {
+      background: #0a0a0a;
+      padding-top: var(--nav-height);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .vr-hero__video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+
+    .vr-hero__video.loaded { opacity: 1; }
+
+    .vr-hero__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.35) 0%,
+        rgba(0,0,0,0.15) 40%,
+        rgba(0,0,0,0.7)  80%,
+        rgba(0,0,0,0.92) 100%
+      );
+    }
+
+    .vr-hero__noise {
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    .vr-hero__content {
+      position: relative;
+      z-index: 1;
+      padding: 0 40px 80px;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .vr-hero__eyebrow {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 24px;
+    }
+
+    .vr-hero__title {
+      font-size: clamp(3.2rem, 10vw, 9rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 0.93;
+      color: #fff;
+      margin-bottom: 36px;
+    }
+
+    .vr-hero__tagline {
+      font-size: clamp(1rem, 1.8vw, 1.25rem);
+      color: rgba(255,255,255,0.42);
+      max-width: 48ch;
+      line-height: 1.65;
+      margin-bottom: 40px;
+    }
+
+    .vr-hero__details {
+      display: flex;
+      gap: 48px;
+      flex-wrap: wrap;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin-top: 8px;
+    }
+
+    .vr-hero__detail-label {
+      font-size: 0.67rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      margin-bottom: 5px;
+    }
+
+    .vr-hero__detail-value {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.8);
+      font-weight: 500;
+    }
+
+    /* ── Back link (dark variant) ──────────────────────────── */
+    .back-link--dark {
+      color: rgba(255,255,255,0.32);
+    }
+    .back-link--dark:hover {
+      color: rgba(255,255,255,0.7);
+    }
+
+    /* ── Stats strip ───────────────────────────────────────── */
+    .vr-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: #111;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .vr-stat {
+      padding: 48px 40px;
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .vr-stat:last-child { border-right: none; }
+
+    .vr-stat__number {
+      font-size: clamp(2.4rem, 4.5vw, 4.5rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .vr-stat__label {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Gallery ───────────────────────────────────────────── */
+    .vr-gallery {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 3px;
+      background: #000;
+    }
+
+    .vr-gallery__item {
+      overflow: hidden;
+      background: #111;
+      position: relative;
+    }
+
+    .vr-gallery__item--wide  { grid-column: span 8; aspect-ratio: 16/9; }
+    .vr-gallery__item--tall  { grid-column: span 4; aspect-ratio: 9/16; grid-row: span 2; }
+    .vr-gallery__item--half  { grid-column: span 6; aspect-ratio: 4/3; }
+    .vr-gallery__item--third { grid-column: span 4; aspect-ratio: 4/3; }
+
+    .vr-gallery__img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.5s ease;
+      filter: brightness(0.88) saturate(0.9);
+    }
+
+    .vr-gallery__item:hover .vr-gallery__img {
+      transform: scale(1.04);
+      filter: brightness(1) saturate(1);
+    }
+
+    .vr-gallery__caption {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 20px 22px;
+      background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0) 55%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .vr-gallery__item:hover .vr-gallery__caption {
+      opacity: 1;
+    }
+
+    .vr-gallery__caption-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.01em;
+      margin-bottom: 3px;
+    }
+
+    .vr-gallery__caption-sub {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+
+    /* Placeholder for empty gallery slots */
+    .vr-slot {
+      width: 100%;
+      height: 100%;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.12);
+      background: #111;
+    }
+
+    .vr-slot svg { opacity: 0.2; }
+
+    /* ── About section ─────────────────────────────────────── */
+    .vr-about {
+      background: #0a0a0a;
+      padding: 96px 0;
+    }
+
+    .vr-about .case-section__label {
+      color: rgba(255,255,255,0.28);
+      border-bottom-color: rgba(255,255,255,0.07);
+    }
+
+    /* ── Services section ──────────────────────────────────── */
+    .vr-services {
+      background: #fff;
+      padding: 96px 0;
+    }
+
+    .vr-service-card {
+      padding: 36px 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 200px 1fr auto;
+      align-items: center;
+      gap: 40px;
+      transition: background 0.2s;
+      cursor: default;
+    }
+
+    .vr-service-card:first-child { border-top: 1px solid var(--border); }
+
+    .vr-service-num {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .vr-service-title {
+      font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--black);
+    }
+
+    .vr-service-desc {
+      font-size: 0.88rem;
+      color: var(--mid);
+      max-width: 45ch;
+      line-height: 1.7;
+    }
+
+    .vr-service-arrow {
+      color: var(--border);
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .vr-service-card:hover .vr-service-arrow {
+      color: var(--accent);
+      transform: translateX(4px);
+    }
+
+    /* ── CTA ───────────────────────────────────────────────── */
+    .vr-cta {
+      background: #0a0a0a;
+      padding: 128px 40px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .vr-cta__label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .vr-cta__title {
+      font-size: clamp(2rem, 5.5vw, 4.5rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: #fff;
+      max-width: 14ch;
+      line-height: 1.02;
+    }
+
+    /* Buttons for dark bg */
+    .btn--ghost-light {
+      color: #fff;
+      background: transparent;
+      border-color: rgba(255,255,255,0.25);
+      padding: 14px 32px;
+      font-size: 0.88rem;
+    }
+
+    .btn--ghost-light:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    .btn--muted-light {
+      color: rgba(255,255,255,0.35);
+      background: transparent;
+      border-color: transparent;
+      font-size: 0.88rem;
+    }
+
+    .btn--muted-light:hover {
+      color: rgba(255,255,255,0.65);
+    }
+
+    /* ── Footer (dark) ─────────────────────────────────────── */
+    .vr-footer {
+      background: #111 !important;
+      border-top: 1px solid rgba(255,255,255,0.07) !important;
+    }
+
+    .vr-footer .footer__logo,
+    .vr-footer .footer__copy { color: rgba(255,255,255,0.8); }
+
+    .vr-footer .footer__tagline,
+    .vr-footer .footer__link { color: rgba(255,255,255,0.35); }
+
+    .vr-footer .footer__link:hover { color: rgba(255,255,255,0.75); }
+
+    .vr-footer .footer__inner,
+    .vr-footer .footer__bottom { border-color: rgba(255,255,255,0.07); }
+
+    /* ── Scroll reveal ─────────────────────────────────────── */
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.75s ease, transform 0.75s ease;
+    }
+
+    [data-reveal].revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .vr-hero__content { padding: 0 24px 64px; }
+
+      .vr-stats { grid-template-columns: 1fr; }
+      .vr-stat  { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 32px 24px; }
+      .vr-stat:last-child { border-bottom: none; }
+
+      .vr-gallery { grid-template-columns: 1fr 1fr; }
+      .vr-gallery__item--wide,
+      .vr-gallery__item--tall,
+      .vr-gallery__item--half,
+      .vr-gallery__item--third { grid-column: span 2; aspect-ratio: 16/9; grid-row: auto; }
+      /* Pairs: children 1-4 and 7-8 side by side */
+      .vr-gallery > * { grid-column: span 1 !important; aspect-ratio: 16/9 !important; }
+      /* Orphans + billboards → full width */
+      .vr-gallery > *:nth-child(5),
+      .vr-gallery > *:nth-child(6),
+      .vr-gallery > *:nth-child(9),
+      .vr-gallery > *:nth-child(10),
+      .vr-gallery > *:nth-child(11) { grid-column: 1 / -1 !important; aspect-ratio: 21/9 !important; }
+
+      .vr-service-card { grid-template-columns: 1fr; gap: 12px; }
+      .vr-service-arrow { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .vr-gallery {
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+      }
+
+      /* Pairs: children 1+2 square, 3+4 portrait */
+      .vr-gallery > * {
+        grid-column: span 1 !important;
+        aspect-ratio: 1/1 !important;
+      }
+
+      .vr-gallery > *:nth-child(3),
+      .vr-gallery > *:nth-child(4) {
+        aspect-ratio: 3/4 !important;
+      }
+
+      /* Orphans + billboards → full-width rectangles */
+      .vr-gallery > *:nth-child(5),
+      .vr-gallery > *:nth-child(6),
+      .vr-gallery > *:nth-child(9),
+      .vr-gallery > *:nth-child(10),
+      .vr-gallery > *:nth-child(11) {
+        grid-column: 1 / -1 !important;
+        aspect-ratio: 21/9 !important;
+      }
+
+      .vr-hero__details { gap: 28px; }
+      .vr-cta { padding: 88px 24px; }
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/styles-CczpWqp1.js"></script>
+  <script type="module" crossorigin src="/assets/script-3vGHzRZi.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-CfowJpL9.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">Shawn Singh</a>
+      <ul class="nav__links" role="list">
+        <li><a href="index.html#work" class="active">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+      </ul>
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       HERO
+       ============================================================ -->
+  <section class="vr-hero">
+    <video
+      class="vr-hero__video"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      poster="/images/d_sav_poster.jpg"
+    >
+      <source media="(max-width: 640px)" src="/videos/d_sav_mobile.mp4" type="video/mp4" />
+      <source src="/videos/d_sav_desktop.mp4" type="video/mp4" />
+    </video>
+    <div class="vr-hero__overlay"></div>
+    <div class="vr-hero__noise"></div>
+
+    <a href="index.html#work" class="back-link back-link--dark"
+       style="position: absolute; top: calc(var(--nav-height) + 24px); left: 40px; z-index: 2;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+      </svg>
+      All Work
+    </a>
+
+    <div class="vr-hero__content" data-reveal>
+      <p class="vr-hero__eyebrow">Media &amp; Creative — Los Angeles</p>
+      <h1 class="vr-hero__title">Visually<br>Represented</h1>
+      <p class="vr-hero__tagline">A media company crafting visual stories that represent culture, creativity, and community.</p>
+
+      <a href="https://www.instagram.com/visuallyrepresented"
+         target="_blank" rel="noopener noreferrer"
+         class="btn btn--ghost-light" style="width: fit-content;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+        @visuallyrepresented
+      </a>
+
+      <div class="vr-hero__details">
+        <div>
+          <p class="vr-hero__detail-label">Role</p>
+          <p class="vr-hero__detail-value">Founder &amp; Creative Director</p>
+        </div>
+        <div>
+          <p class="vr-hero__detail-label">Since</p>
+          <p class="vr-hero__detail-value">2019</p>
+        </div>
+        <div>
+          <p class="vr-hero__detail-label">Focus</p>
+          <p class="vr-hero__detail-value">Photography · Video · Brand</p>
+        </div>
+        <div>
+          <p class="vr-hero__detail-label">Location</p>
+          <p class="vr-hero__detail-value">Los Angeles, CA</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       STATS STRIP
+       ============================================================ -->
+  <div class="vr-stats" data-reveal>
+    <div class="vr-stat">
+      <p class="vr-stat__number">∞</p>
+      <p class="vr-stat__label">Stories Told</p>
+    </div>
+    <div class="vr-stat">
+      <p class="vr-stat__number">LA</p>
+      <p class="vr-stat__label">Based in Los Angeles</p>
+    </div>
+    <div class="vr-stat">
+      <p class="vr-stat__number">100%</p>
+      <p class="vr-stat__label">Visual First</p>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- ============================================================
+         ABOUT
+         ============================================================ -->
+    <section class="vr-about" data-reveal>
+      <div class="container">
+        <div class="case-section__grid">
+          <p class="case-section__label vr-about" style="color: rgba(255,255,255,0.28); border: none;">About</p>
+          <div class="case-section__body">
+            <h2 style="color: #fff; margin-bottom: 24px; font-size: clamp(1.8rem, 4vw, 3rem);">
+              Visual storytelling<br>for real culture.
+            </h2>
+            <p style="color: rgba(255,255,255,0.48); font-size: 1.05rem; line-height: 1.85; max-width: 58ch;">
+              Visually Represented is a media company built on the belief that authentic visual language is the most powerful form of communication. From short-form content to full brand campaigns, every frame is crafted with intention.
+            </p>
+            <p style="color: rgba(255,255,255,0.38); margin-top: 20px; max-width: 58ch; font-size: 1rem; line-height: 1.85;">
+              Visually Represented provides practical solutions such as UGC and videography, and digital solutions including 3D animations, renders, roll-out strategies, and interface consulting. 
+
+. 
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         GALLERY — drop images into the vr-slot divs
+         Replace each <div class="vr-slot">…</div> with an <img> tag
+         pointing to your shot (e.g. src="/images/vr-01.jpg")
+         ============================================================ -->
+    <section style="background: #000; padding-bottom: 3px;" data-reveal>
+      <div class="container" style="padding-bottom: 28px; background: #0a0a0a;">
+        <p class="section-label"
+           style="color: rgba(255,255,255,0.28); border-bottom-color: rgba(255,255,255,0.07); margin-bottom: 0; padding-bottom: 0; border: none; padding-top: 32px;">
+          Selected Work
+        </p>
+      </div>
+      <div class="vr-gallery">
+
+        <!-- Slot 1 — Reel video -->
+        <div class="vr-gallery__item" style="grid-column: span 8; aspect-ratio: 1/1;">
+          <video
+            id="vr-reel"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+            poster="/images/vr_poster.jpg"
+            style="width: 100%; height: 100%; object-fit: cover; display: block;"
+          >
+            <source src="/videos/vr_trim_mobile.mp4" type="video/mp4" />
+          </video>
+        </div>
+
+        <!-- Row 1 col 2: B&W portrait — matches video height (span4 at 1:2 = span8 at 1:1) -->
+        <div class="vr-gallery__item" style="grid-column: span 4; aspect-ratio: 1/2;">
+          <img class="vr-gallery__img" src="/images/vr_images/IMG_1179.PNG" alt="Portrait" style="object-position: center 45%;" />
+          <div class="vr-gallery__caption"><p class="vr-gallery__caption-title">JELEEL!</p><p class="vr-gallery__caption-sub">Portrait · Los Angeles</p></div>
+        </div>
+
+        <!-- Row 2: three portraits, all same 3/4 ratio -->
+        <div class="vr-gallery__item" style="grid-column: span 4; aspect-ratio: 3/4;">
+          <img class="vr-gallery__img" src="/images/vr_images/DSC06248.jpg" alt="Night shoot" style="object-position: center 30%;" />
+          <div class="vr-gallery__caption"><p class="vr-gallery__caption-title">Midwxst</p><p class="vr-gallery__caption-sub">Music Video · Night Shoot</p></div>
+        </div>
+        <div class="vr-gallery__item" style="grid-column: span 4; aspect-ratio: 3/4;">
+          <img class="vr-gallery__img" src="/images/vr_images/DSC06066.jpg" alt="On set" style="object-position: center 40%;" />
+          <div class="vr-gallery__caption"><p class="vr-gallery__caption-title">Midwxst</p><p class="vr-gallery__caption-sub">BTS · Production</p></div>
+        </div>
+        <div class="vr-gallery__item" style="grid-column: span 4; aspect-ratio: 3/4;">
+          <img class="vr-gallery__img" src="/images/vr_images/22B7C2B3-7B96-427F-A89A-A6871A2EAAB6.jpg" alt="Portrait" style="object-position: center 20%;" />
+          <div class="vr-gallery__caption"><p class="vr-gallery__caption-title">SSGKobe</p><p class="vr-gallery__caption-sub">Editorial · Portrait</p></div>
+        </div>
+
+        <!-- Row 3: full-width wide shot -->
+        <div class="vr-gallery__item" style="grid-column: span 12; aspect-ratio: 21/9;">
+          <img class="vr-gallery__img" src="/images/vr_images/page9.jpg" alt="Yonge-Dundas Square" style="object-position: center center;" />
+          <div class="vr-gallery__caption"><p class="vr-gallery__caption-title">Yonge-Dundas Square</p><p class="vr-gallery__caption-sub">Photography & Billboard Design · Toronto</p></div>
+        </div>
+
+        <!-- Row 4: studio + two concert shots, all 3/4 -->
+        <div class="vr-gallery__item" style="grid-column: span 4; aspect-ratio: 3/4;">
+          <img class="vr-gallery__img" src="/images/vr_images/IMG_5494.JPG" alt="Studio portrait" style="object-position: 55% 85%;" />
+          <div class="vr-gallery__caption"><p class="vr-gallery__caption-title">03 Greedo</p><p class="vr-gallery__caption-sub">Portrait · Editorial</p></div>
+        </div>
+        <div class="vr-gallery__item" style="grid-column: span 4; aspect-ratio: 3/4;">
+          <img class="vr-gallery__img" src="/images/vr_images/IMG_0749.JPG" alt="Concert" style="object-position: center 15%;" />
+          <div class="vr-gallery__caption"><p class="vr-gallery__caption-title">DC The Don</p><p class="vr-gallery__caption-sub">Concert · Event Coverage</p></div>
+        </div>
+        <div class="vr-gallery__item" style="grid-column: span 4; aspect-ratio: 3/4;">
+          <img class="vr-gallery__img" src="/images/vr_images/IMG_0772.JPG" alt="Concert" style="object-position: center 20%;" />
+          <div class="vr-gallery__caption"><p class="vr-gallery__caption-title">DC The Don</p><p class="vr-gallery__caption-sub">Concert · Event Coverage</p></div>
+        </div>
+
+        <!-- Row 5: wide + portrait, matching heights with 16/9 + 16/9 cropped -->
+        <div class="vr-gallery__item" style="grid-column: span 8; aspect-ratio: 16/9;">
+          <img class="vr-gallery__img" src="/images/vr_images/page10.jpg" alt="Yonge-Dundas Square" style="object-position: center center;" />
+          <div class="vr-gallery__caption"><p class="vr-gallery__caption-title">Yonge-Dundas Square</p><p class="vr-gallery__caption-sub">Photography & Billboard Design · Toronto</p></div>
+        </div>
+        <div class="vr-gallery__item" style="grid-column: span 4; aspect-ratio: 8/9;">
+          <img class="vr-gallery__img" src="/images/vr_images/jaden.jpg" alt="Jaden" style="object-position: center 15%;" />
+          <div class="vr-gallery__caption"><p class="vr-gallery__caption-title">Jaden Smith</p><p class="vr-gallery__caption-sub">Editorial · Street</p></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SERVICES
+         ============================================================ -->
+    <section class="vr-services" data-reveal>
+      <div class="container">
+        <p class="section-label">What We Do</p>
+        <div>
+
+          <div class="vr-service-card">
+            <p class="vr-service-num">01</p>
+            <div>
+              <h3 class="vr-service-title" style="margin-bottom: 10px;">Photography</h3>
+              <p class="vr-service-desc">Editorial, event, portrait, and brand photography with a cinematic eye and editorial sensibility.</p>
+            </div>
+            <svg class="vr-service-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+
+          <div class="vr-service-card">
+            <p class="vr-service-num">02</p>
+            <div>
+              <h3 class="vr-service-title" style="margin-bottom: 10px;">Videography</h3>
+              <p class="vr-service-desc">Short-form content, music videos, brand reels, and documentary-style storytelling built for impact.</p>
+            </div>
+            <svg class="vr-service-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+
+          <div class="vr-service-card">
+            <p class="vr-service-num">03</p>
+            <div>
+              <h3 class="vr-service-title" style="margin-bottom: 10px;">Creative Direction</h3>
+              <p class="vr-service-desc">Concept, mood, and execution — full creative oversight for campaigns, lookbooks, and media projects.</p>
+            </div>
+            <svg class="vr-service-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         CTA
+         ============================================================ -->
+    <div class="vr-cta" data-reveal>
+      <p class="vr-cta__label">Ready to collaborate?</p>
+      <h2 class="vr-cta__title">Let's make something worth seeing.</h2>
+      <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 12px;">
+        <a href="mailto:shawn@visuallyrepresented.co" class="btn btn--ghost-light">Get in Touch</a>
+        <a href="https://www.instagram.com/visuallyrepresented"
+           target="_blank" rel="noopener noreferrer"
+           class="btn btn--muted-light">
+          View Instagram
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer vr-footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <p class="footer__logo">Shawn Singh</p>
+          <p class="footer__tagline">Product Designer — Los Angeles, CA</p>
+        </div>
+        <div class="footer__links">
+          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link"
+             target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+              <rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+            </svg>
+            LinkedIn
+          </a>
+          <a href="https://drive.google.com/file/d/1cqEcpCcJ0mvZbAYtkgjS76e6LGajXqPt/view?usp=sharing"
+             class="footer__link" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download Résumé
+          </a>
+          <a href="mailto:shawn@visuallyrepresented.co" class="footer__link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            shawn@visuallyrepresented.co
+          </a>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; <span id="footer-year"></span> Shawn Singh. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+    // Reel — force play
+    const reelVideo = document.getElementById('vr-reel');
+    if (reelVideo) {
+      reelVideo.muted = true;
+      reelVideo.play().catch(() => {
+        document.addEventListener('click', () => reelVideo.play(), { once: true });
+      });
+    }
+
+    // Hero video fade-in
+    const heroVideo = document.querySelector('.vr-hero__video');
+    if (heroVideo) {
+      const onReady = () => heroVideo.classList.add('loaded');
+      if (heroVideo.readyState >= 3) {
+        onReady();
+      } else {
+        heroVideo.addEventListener('canplay', onReady, { once: true });
+      }
+    }
+
+    // Scroll reveal
+    const revealEls = document.querySelectorAll('[data-reveal]');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    revealEls.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+# Unused video files
+videos/animation_reel_trim.mp4
+videos/d sav.mp4
+videos/vr trim.mp4
+videos/vr_trim_desktop.mp4
+
+# System files
+.DS_Store

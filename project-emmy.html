@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emmy Award — Shawn Singh</title>
+  <meta name="description" content="Emmy Award — Animation, Graphics & Special Effects. SF/Northern California Chapter." />
+
+  <style>
+    /* ── Emmy-specific overrides ───────────────────────────── */
+    .emmy-hero {
+      background: #0d0c0a;
+      padding-top: var(--nav-height);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subtle gold ambient glow behind hero image */
+    .emmy-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 65% 40%, rgba(212,175,55,0.12) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .emmy-hero__img {
+      width: 100%;
+      max-width: 960px;
+      display: block;
+      margin: 48px auto 0;
+    }
+
+    .emmy-hero__meta {
+      padding: 48px 0 56px;
+    }
+
+    .emmy-hero__meta .back-link,
+    .emmy-hero__meta .case-hero__tagline,
+    .emmy-hero__meta .case-hero__title,
+    .emmy-hero__meta .case-hero__detail-value,
+    .emmy-hero__meta .emmy-badge__value { color: #fff; }
+
+    .emmy-hero__meta .back-link { color: rgba(255,255,255,0.45); }
+    .emmy-hero__meta .back-link:hover { color: rgba(255,255,255,0.85); }
+    .emmy-hero__meta .case-hero__detail-label { color: rgba(255,255,255,0.35); }
+
+    .case-hero__tag--gold {
+      color: #c9a227;
+    }
+
+    /* Gold accent tags */
+    .emmy-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid #c9a227;
+      border-radius: 2px;
+      color: #c9a227;
+      margin-right: 8px;
+      margin-top: 8px;
+    }
+
+    /* Award badge */
+    .emmy-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      border: 1px solid rgba(201,162,39,0.3);
+      border-radius: 8px;
+      background: rgba(201,162,39,0.05);
+      margin-top: 32px;
+    }
+
+    .emmy-badge__icon {
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+
+    .emmy-badge__text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .emmy-badge__label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #c9a227;
+    }
+
+    .emmy-badge__value {
+      font-size: 0.88rem;
+      color: var(--black);
+      font-weight: 500;
+    }
+
+    /* Media placeholder */
+    .emmy-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--light);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .emmy-placeholder svg { opacity: 0.3; }
+  </style>
+  <script type="module" crossorigin src="/assets/styles-CczpWqp1.js"></script>
+  <script type="module" crossorigin src="/assets/script-3vGHzRZi.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-CfowJpL9.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">Shawn Singh</a>
+      <ul class="nav__links" role="list">
+        <li><a href="index.html#work" class="active">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+      </ul>
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       HERO
+       ============================================================ -->
+  <section class="case-hero emmy-hero">
+    <img
+      class="emmy-hero__img"
+      src="/images/Emmy.png"
+      alt="Emmy Award — Shawn Singh Composite"
+    />
+
+    <div style="display: flex; justify-content: center; padding: 17px 0 8px; animation: bounce 1s infinite;">
+      <svg fill="#1d1d1f" width="32px" height="32px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 16a1 1 0 0 1-.64-.23l-6-5a1 1 0 1 1 1.28-1.54L12 13.71l5.36-4.32a1 1 0 0 1 1.41.15 1 1 0 0 1-.14 1.46l-6 4.83A1 1 0 0 1 12 16z"/>
+      </svg>
+    </div>
+
+    <div class="container">
+      <div class="emmy-hero__meta" data-reveal>
+        <a href="index.html#work" class="back-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+          </svg>
+          All Work
+        </a>
+
+        <p class="case-hero__tag case-hero__tag--gold">Animation · Graphics · Special Effects</p>
+        <h1 class="case-hero__title">Emmy Award</h1>
+        <p class="case-hero__tagline">Recognized by The National Academy of Television Arts and Sciences for outstanding work in Animation, Graphics & Special Effects.</p>
+
+        <div class="case-hero__details" style="margin-top: 32px;">
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Role</span>
+            <span class="case-hero__detail-value">Compositor & Motion Designer</span>
+          </div>
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Awarded by</span>
+            <span class="case-hero__detail-value">NATAS</span>
+          </div>
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Category</span>
+            <span class="case-hero__detail-value">Animation / Graphics / Special Effects</span>
+          </div>
+        </div>
+
+        <div class="emmy-badge">
+          <span class="emmy-badge__icon">🏆</span>
+          <div class="emmy-badge__text">
+            <span class="emmy-badge__label">Emmy Award Winner</span>
+            <span class="emmy-badge__value">The National Academy of Television Arts and Sciences</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 28px;">
+          <span class="emmy-tag">Compositing</span>
+          <span class="emmy-tag">Motion Graphics</span>
+          <span class="emmy-tag">Special Effects</span>
+          <span class="emmy-tag">Animation</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CASE STUDY SECTIONS
+       ============================================================ -->
+  <main>
+
+    <!-- Overview -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Overview</p>
+          <div class="case-section__body">
+            <p>This Emmy Award-winning composite was recognized by The National Academy of Television Arts and Sciences. The piece combined original animation, motion graphics, and special effects into a cohesive visual work that earned recognition from industry professionals at the national level.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Work -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">The Work</p>
+          <div class="case-section__body">
+            <p>The composite brought together multiple visual layers — original motion graphics, animated elements, and post-production effects — into a single cohesive piece. Every element was built from scratch, designed to work together with intention and precision.</p>
+            <p style="margin-top: 16px;">The result was a broadcast-quality production that demonstrated a command of both technical compositing and visual storytelling — earning recognition at the professional Emmy level.</p>
+
+            <!-- Drop your screenshots/stills here -->
+            <div class="case-images case-images--cols-2" style="margin-top: 40px;">
+              <div style="width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:4px;">
+                <img src="/images/blender.png" alt="Blender composite still" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;" />
+              </div>
+              <div style="width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:4px;">
+                <img src="/images/plane.png" alt="Plane composite still" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Video embed -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container" data-reveal>
+        <p class="section-label">Watch</p>
+        <div style="width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:8px;background:#000;">
+          <video
+            id="emmy-reel"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+            style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 1s ease;"
+          >
+            <source media="(min-width: 768px)" src="/videos/animation_reel_desktop.mp4" type="video/mp4" />
+            <source src="/videos/animation_reel_mobile.mp4" type="video/mp4" />
+          </video>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      (function() {
+        var v = document.getElementById('emmy-reel');
+        if (!v) return;
+        v.muted = true;
+        function show() { v.style.opacity = '1'; }
+        v.addEventListener('canplay', show, { once: true });
+        v.play().catch(function() {});
+        document.addEventListener('click', function() { v.play().catch(function(){}); }, { once: true });
+      })();
+    </script>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <p class="footer__logo">Shawn Singh</p>
+          <p class="footer__tagline">Product Designer — Los Angeles, CA</p>
+        </div>
+        <div class="footer__links">
+          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link"
+             target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+              <rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+            </svg>
+            LinkedIn
+          </a>
+          <a href="https://drive.google.com/file/d/1cqEcpCcJ0mvZbAYtkgjS76e6LGajXqPt/view?usp=sharing"
+             class="footer__link" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download Résumé
+          </a>
+          <a href="mailto:shawn@visuallyrepresented.co" class="footer__link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            shawn@visuallyrepresented.co
+          </a>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; <span id="footer-year"></span> Shawn Singh. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+
+</body>
+</html>
