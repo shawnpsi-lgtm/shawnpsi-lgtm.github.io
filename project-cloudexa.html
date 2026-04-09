@@ -30,8 +30,8 @@
       color: var(--accent);
     }
   </style>
-  <script type="module" crossorigin src="/assets/styles-D1AIz0qy.js"></script>
-  <script type="module" crossorigin src="/assets/script-D_0hslKU.js"></script>
+  <script type="module" crossorigin src="/assets/styles-CczpWqp1.js"></script>
+  <script type="module" crossorigin src="/assets/script-3vGHzRZi.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/styles-CfowJpL9.css">
 </head>
 <body>
@@ -120,6 +120,72 @@
       </div>
     </div>
   </section>
+
+  <!-- ============================================================
+       LOGO TICKER
+       ============================================================ -->
+  <div class="logo-ticker">
+    <div class="logo-ticker__track">
+      <img src="/images/banks/bancoppel.png" alt="BanCoppel" class="logo-ticker__img" />
+      <img src="/images/banks/bbva.png"      alt="BBVA"      class="logo-ticker__img" />
+      <img src="/images/banks/brinks.png"    alt="Brinks"    class="logo-ticker__img" />
+      <img src="/images/banks/prosa.png"     alt="Prosa"     class="logo-ticker__img" />
+      <img src="/images/banks/usbank.png"    alt="US Bank"   class="logo-ticker__img" />
+      <img src="/images/banks/vocalink.png"  alt="Vocalink"  class="logo-ticker__img" />
+      <img src="/images/banks/bancoppel.png" alt="" class="logo-ticker__img" aria-hidden="true" />
+      <img src="/images/banks/bbva.png"      alt="" class="logo-ticker__img" aria-hidden="true" />
+      <img src="/images/banks/brinks.png"    alt="" class="logo-ticker__img" aria-hidden="true" />
+      <img src="/images/banks/prosa.png"     alt="" class="logo-ticker__img" aria-hidden="true" />
+      <img src="/images/banks/usbank.png"    alt="" class="logo-ticker__img" aria-hidden="true" />
+      <img src="/images/banks/vocalink.png"  alt="" class="logo-ticker__img" aria-hidden="true" />
+      <img src="/images/banks/bancoppel.png" alt="" class="logo-ticker__img" aria-hidden="true" />
+      <img src="/images/banks/bbva.png"      alt="" class="logo-ticker__img" aria-hidden="true" />
+      <img src="/images/banks/brinks.png"    alt="" class="logo-ticker__img" aria-hidden="true" />
+      <img src="/images/banks/prosa.png"     alt="" class="logo-ticker__img" aria-hidden="true" />
+      <img src="/images/banks/usbank.png"    alt="" class="logo-ticker__img" aria-hidden="true" />
+      <img src="/images/banks/vocalink.png"  alt="" class="logo-ticker__img" aria-hidden="true" />
+    </div>
+  </div>
+
+  <style>
+    .logo-ticker {
+      overflow: hidden;
+      background: var(--bg-off);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 0;
+      mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+    }
+
+    .logo-ticker__track {
+      display: flex;
+      align-items: center;
+      gap: 72px;
+      width: max-content;
+      animation: ticker 28s linear infinite;
+    }
+
+    .logo-ticker__track:hover { animation-play-state: paused; }
+
+    .logo-ticker__img {
+      height: 32px;
+      width: auto;
+      object-fit: contain;
+      filter: grayscale(1) opacity(0.45);
+      transition: filter 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .logo-ticker__img:hover {
+      filter: grayscale(0) opacity(1);
+    }
+
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-33.333%); }
+    }
+  </style>
 
   <!-- ============================================================
        CASE STUDY SECTIONS
