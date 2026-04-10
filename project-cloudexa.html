@@ -211,14 +211,6 @@
           <p class="case-section__label">Problem</p>
           <div class="case-section__body">
             <p>ESQ spent millions building out a network of ATMs, but the weakness fell in the client's ability to use it. Clients continuously ran into the same issues — and it was almost never a technical failure. It was a monitoring and maintenance failure. High-profile clients were making simple mistakes.</p>
-            <p style="margin-top: 16px;">The existing Power BI dashboard made this worse, not better:</p>
-            <ul style="margin-top: 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 12px;">
-              <li><strong>Dense Layout.</strong> Charts with overlapping metrics created high cognitive load, especially for non-technical banking staff.</li>
-              <li><strong>Small Click Targets.</strong> Server selection boxes and slicer buttons required precise mouse control, creating friction in time-sensitive situations.</li>
-              <li><strong>Hover Dependency.</strong> Power BI relied heavily on tooltips for detailed information — inaccessible for elder clientele who make up much of the banking industry.</li>
-              <li><strong>No Launch Support.</strong> Sharing the dashboard with a client was hard, and pushing updates proved even more challenging.</li>
-              <li><strong>Limited Icon Support.</strong> The interface lacked visual affordances suited for less technically fluent users.</li>
-            </ul>
             <p style="margin-top: 20px; font-weight: 600;">An error on the client side is an error on the provider.</p>
           </div>
         </div>
@@ -232,12 +224,6 @@
           <p class="case-section__label">Process</p>
           <div class="case-section__body">
             <p>The first redesign — Cloudexa version 1 — was already an improvement over Power BI. It introduced a Configuration and Status Manager with a structured sidebar, instance management, and a cleaner layout. But it still fell short:</p>
-            <ul style="margin-top: 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 12px;">
-              <li><strong>Dead Space.</strong> Too much unused space created more cognitive load and forced users to click through more menus to find information.</li>
-              <li><strong>Outdated Colors.</strong> A system is only as good as it feels when used — the visual language felt dated.</li>
-              <li><strong>No Breadcrumbs.</strong> Users struggled to identify where they were within the application hierarchy.</li>
-            </ul>
-            <p style="margin-top: 16px;">Cloudexa was better than Power BI, but still had issues to fix. The design process audited both tools against real client pain points, then rebuilt the interface around the 8 key issues ESQ clients faced most: Server Status, Server Restarts, Cipher Suites, Certificates, Disk Usage, Hotfixes, TLS Protocols, and Memory Usage.</p>
 
             <figure style="margin-top: 32px;">
               <img class="case-img" src="/images/cloudexa6.png" alt="Cloudexa version 1" style="aspect-ratio: auto; width: 80%;" />
@@ -255,7 +241,6 @@
           <p class="case-section__label">Solution</p>
           <div class="case-section__body">
             <p>Cloudexa version 2 is a purpose-built dashboard that puts the most critical ATM health data front and center. The Instance Status Dashboard presents Memory Usage by Service, Hotfixes Over Time, TLS Protocols Balance, Ciphers Balance, and Service Status by Server — all in a single scannable view without tooltips or hidden menus.</p>
-            <p style="margin-top: 16px;">Each data module pairs raw database output (queried directly via pgAdmin) with a corresponding chart, giving both technical and non-technical users multiple ways to read the same information. Security Protocol Monitoring and General Monitoring sections provide deep visibility into the areas most likely to cause client-side errors.</p>
             <p style="margin-top: 16px;">The result is a platform tailored to each client's environment — deployable, maintainable, and built to prevent the simple mistakes that were costing ESQ and their clients the most.</p>
 
             <!-- Screenshots -->
