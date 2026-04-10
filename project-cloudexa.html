@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cloudexa — Shawn Singh</title>
   <meta name="description" content="Cloudexa case study — A banking-grade data visualization platform for securely managing a network of ATMs" />
@@ -30,18 +31,31 @@
       color: var(--accent);
     }
   </style>
-  <script type="module" crossorigin src="/assets/styles-CczpWqp1.js"></script>
-  <script type="module" crossorigin src="/assets/script-3vGHzRZi.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/styles-CfowJpL9.css">
+  <script type="module" crossorigin src="/assets/styles-C9iXoUBa.js"></script>
+  <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-B6LUdN3p.css">
 </head>
 <body>
 
   <!-- ============================================================
        NAVIGATION
        ============================================================ -->
-  <nav class="nav scrolled" role="navigation" aria-label="Main navigation">
+  <nav class="nav scrolled" data-always-scrolled role="navigation" aria-label="Main navigation">
     <div class="nav__inner">
-      <a href="index.html" class="nav__logo">Shawn Singh</a>
+      <a href="index.html" class="nav__logo" style="display:flex;align-items:center;gap:10px;">
+        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+          <defs>
+            <radialGradient id="sg" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#d9a8f5"/>
+              <stop offset="55%" stop-color="#b36fd9"/>
+              <stop offset="100%" stop-color="#9a4fc4"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="50" fill="url(#sg)"/>
+          <text x="50" y="67" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif" font-size="52" font-weight="600" fill="white" letter-spacing="-1">S</text>
+        </svg>
+        Shawn Singh
+      </a>
 
       <ul class="nav__links" role="list">
         <li><a href="index.html#work" class="active">Work</a></li>
@@ -49,11 +63,17 @@
         <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
       </ul>
 
+      <div class="nav__right" style="display:flex;align-items:center;gap:8px;">
+      <button class="nav__theme-toggle" aria-label="Switch to dark mode">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+
       <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
         <span></span>
         <span></span>
         <span></span>
       </button>
+      </div>
     </div>
   </nav>
 
@@ -181,6 +201,14 @@
       filter: grayscale(0) opacity(1);
     }
 
+    [data-theme="dark"] .logo-ticker__img {
+      filter: grayscale(1) invert(1) opacity(0.5);
+    }
+
+    [data-theme="dark"] .logo-ticker__img:hover {
+      filter: none;
+    }
+
     @keyframes ticker {
       from { transform: translateX(0); }
       to   { transform: translateX(-33.333%); }
@@ -224,7 +252,11 @@
           <p class="case-section__label">Process</p>
           <div class="case-section__body">
             <p>The first redesign — Cloudexa version 1 — was already an improvement over Power BI. It introduced a Configuration and Status Manager with a structured sidebar, instance management, and a cleaner layout. But it still fell short:</p>
-
+            <ul style="margin-top: 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 12px;">
+              <li><strong>Dead Space.</strong> Too much unused space created more cognitive load and forced users to click through more menus to find information.</li>
+              <li><strong>Outdated Colors.</strong> A system is only as good as it feels when used — the visual language felt dated.</li>
+              <li><strong>No Breadcrumbs.</strong> Users struggled to identify where they were within the application hierarchy.</li>
+            </ul>
             <figure style="margin-top: 32px;">
               <img class="case-img" src="/images/cloudexa6.png" alt="Cloudexa version 1" style="aspect-ratio: auto; width: 80%;" />
               <figcaption style="margin-top: 10px; font-size: 0.78rem; color: var(--light); letter-spacing: 0.04em;">Cloudexa v.1</figcaption>
@@ -268,6 +300,22 @@
     </section>
 
   </main>
+
+  <!-- ============================================================
+       NEXT PROJECT
+       ============================================================ -->
+  <a href="project-emmy.html" class="next-project">
+    <div class="container">
+      <p class="next-project__label">Next Project</p>
+      <div class="next-project__inner">
+        <h2 class="next-project__title">Emmy Award</h2>
+        <svg class="next-project__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </div>
+      <p class="next-project__sub">Animation, Graphics &amp; Special Effects — National Award</p>
+    </div>
+  </a>
 
   <!-- ============================================================
        FOOTER
