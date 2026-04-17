@@ -1,8 +1,31 @@
-# Unused video files
+.DS_Store
+
+# Unused images
+images/banks/bbva.png
+images/cloudexa4.png
+images/cloudexa5.png
+images/cloudexalogo.png
+images/d_sav_poster.jpg
+images/djai2_original.png
+images/newesqlogo.png
+images/shawnlogo.jpg
+images/vr_poster.jpg
+images/vr_images/IMG_0749.JPG
+images/vr_images/IMG_0772.JPG
+images/vr_images/IMG_1179.PNG
+images/vr_images/IMG_5494.JPG
+images/vr_images/OF Photo Presentation -John River 2023.pdf
+images/vr_images/Screenshot 2026-04-09 at 11.17.42 AM.png
+images/vr_images/page4.jpg
+
+# Unused videos
 videos/animation_reel_trim.mp4
 videos/d sav.mp4
+videos/tahoeDay.mov
 videos/vr trim.mp4
 videos/vr_trim_desktop.mp4
 
-# System files
-.DS_Store
+# Unused fonts
+fonts/Inter-Latin.woff2
+fonts/PlayfairDisplay-Bold.woff2
+fonts/PlayfairDisplay-BoldItalic.woff2
