@@ -1,0 +1,312 @@
+/* BEAT FX — dark hardware panel */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --panel: #111;
+  --panel-2: #191919;
+  --edge: #2a2a2a;
+  --label: #cfcfcf;
+  --dim: #6b6b6b;
+  --blue: #2563eb;
+  --green: #22c55e;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: var(--label);
+  font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* On phones the panel fills the screen edge-to-edge; match the page
+   background to the panel so no black bands show around Safari's
+   toolbar / home-indicator area */
+@media (max-width: 480px) {
+  html, body { background: var(--panel); }
+}
+
+.panel {
+  max-width: 420px;
+  margin: 0 auto;
+  /* lock to exactly one dynamic-viewport height: no scrolling, ever.
+     dvh tracks Safari's collapsing toolbar; safe-area insets keep the
+     ON/OFF button clear of the iOS home indicator */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--panel);
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px
+           calc(env(safe-area-inset-bottom, 0px) + 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  gap: clamp(6px, 1.4dvh, 14px);
+  position: relative; /* anchors the skin toggle + skin decorations */
+}
+
+/* skin toggle: small pill in the top-right corner */
+.skin-toggle {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  right: 19px;
+  z-index: 20;
+  min-height: 22px;
+  min-width: 34px;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  border-radius: 11px;
+  color: var(--dim);
+  opacity: 0.9;
+}
+
+.brand { display: flex; align-items: baseline; justify-content: space-between; }
+.brand-name { font-size: 18px; font-weight: 800; letter-spacing: 4px; color: #fff; }
+.brand-sub { font-size: 9px; letter-spacing: 2px; color: var(--dim); }
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  color: var(--dim);
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+button {
+  font: inherit;
+  color: var(--label);
+  background: var(--panel-2);
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  min-height: 44px;
+  min-height: clamp(38px, 5.5dvh, 44px);
+  min-width: 44px;
+  letter-spacing: 1.5px;
+  font-size: 12px;
+  cursor: pointer;
+}
+button:active { filter: brightness(1.25); }
+button:disabled { opacity: 0.35; }
+
+/* ---- Track strip ---- */
+.track-strip {
+  background: var(--panel-2);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.file-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-height: clamp(36px, 5.5dvh, 44px);
+  text-align: center;
+  border: 1px dashed #3a3a3a;
+  border-radius: 6px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 10px;
+  cursor: pointer;
+}
+.file-label.loaded { color: var(--label); border-style: solid; }
+.transport-row { display: flex; align-items: center; gap: 10px; }
+.play-btn {
+  width: clamp(38px, 5.5dvh, 44px);
+  height: clamp(38px, 5.5dvh, 44px);
+  border-radius: 50%;
+  font-size: 14px;
+  color: #fff;
+  flex: none;
+}
+.play-btn.playing { border-color: var(--blue); color: var(--blue); }
+.seek-bar {
+  flex: 1;
+  height: clamp(38px, 5.5dvh, 44px);
+  display: flex;
+  align-items: center;
+  position: relative;
+  touch-action: none;
+}
+.seek-bar::before {
+  content: "";
+  position: absolute; left: 0; right: 0;
+  height: 4px; border-radius: 2px;
+  background: #2e2e2e;
+}
+.seek-fill {
+  position: relative;
+  height: 4px; border-radius: 2px;
+  background: var(--blue);
+  width: 0%;
+  pointer-events: none;
+}
+/* analyzed-track waveform fills the seek bar; the flat line/fill hide
+   once it exists (the waveform itself is two-tone progress) */
+.seek-wave {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.seek-bar.has-wave::before, .seek-bar.has-wave .seek-fill { display: none; }
+.bpm-readout {
+  flex: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.bpm-readout span { font-size: 20px; font-weight: 700; color: #fff; }
+.bpm-readout small { display: block; font-size: 8px; letter-spacing: 2px; color: var(--dim); }
+
+/* ---- X-PAD ---- */
+.xpad {
+  height: 64px;
+  height: clamp(44px, 7dvh, 64px);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: linear-gradient(#161616, #0d0d0d);
+  display: flex;
+  gap: 3px;
+  padding: 6px;
+  touch-action: none;
+}
+.xpad .seg {
+  flex: 1;
+  border-radius: 2px;
+  background: #232323;
+}
+.xpad .seg.lit { background: var(--blue); box-shadow: 0 0 8px rgba(37, 99, 235, 0.7); }
+
+/* ---- BEAT row ---- */
+.beat-row { display: flex; align-items: center; justify-content: center; gap: 18px; }
+.beat-arrow { width: 56px; height: clamp(38px, 5.5dvh, 44px); font-size: 12px; }
+.beat-center { min-width: 80px; }
+.beat-center .section-label { margin-bottom: 2px; }
+.beat-value { text-align: center; font-size: 20px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+
+/* ---- AUTO/TAP row ---- */
+.tap-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.small-btn { flex: 1; font-size: 10px; padding: 0 6px; position: relative; }
+.small-btn.active { border-color: var(--blue); color: #fff; }
+.slash { color: var(--dim); padding: 0 2px; }
+.tap-btn {
+  flex: 1.2;
+  height: clamp(44px, 6.5dvh, 54px);
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #06220f;
+  background: var(--green);
+  border-color: #15803d;
+}
+.tap-btn:active { filter: brightness(1.15); }
+.dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #3a3a3a;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.small-btn.q-on .dot { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
+
+/* ---- FX FREQUENCY ---- */
+.freq-row { display: flex; gap: 8px; }
+.freq-btn { flex: 1; height: clamp(38px, 5.5dvh, 46px); }
+.freq-btn.active {
+  border-color: var(--blue);
+  color: #fff;
+  background: rgba(37, 99, 235, 0.18);
+}
+
+/* ---- Knobs ---- */
+.knob {
+  width: 74px; height: 74px;
+  width: clamp(54px, 9.5dvh, 74px);
+  height: clamp(54px, 9.5dvh, 74px);
+  margin: 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #333, #151515 70%);
+  border: 1px solid #383838;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  position: relative;
+  touch-action: none;
+}
+.knob-lg {
+  width: 92px; height: 92px;
+  width: clamp(64px, 12dvh, 92px);
+  height: clamp(64px, 12dvh, 92px);
+}
+/* Indicator line runs from knob center to rim; rotates about its bottom end
+   (the knob center). Inner half is transparent so only the tip shows. */
+.knob-indicator {
+  position: absolute;
+  left: 50%; bottom: 50%;
+  width: 3px; height: 46%;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: linear-gradient(to top, transparent 45%, #fff 45%);
+  transform-origin: 50% 100%;
+  pointer-events: none;
+}
+
+.select-section .fx-labels {
+  display: flex;
+  max-width: 250px;
+  margin: 8px auto 0;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--dim);
+}
+/* equal thirds so the middle label sits exactly under the knob */
+.fx-labels span { flex: 1; text-align: center; }
+.fx-labels span:first-child { text-align: left; }
+.fx-labels span:last-child { text-align: right; }
+.fx-labels .lit { color: var(--blue); text-shadow: 0 0 8px rgba(37, 99, 235, 0.6); }
+
+.knob-row { display: flex; justify-content: space-around; }
+.knob-cell { width: 45%; }
+.minmax {
+  display: flex;
+  justify-content: space-between;
+  max-width: 110px;
+  margin: 6px auto 0;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+}
+
+/* ---- ON/OFF ---- */
+.onoff {
+  height: 58px;
+  height: clamp(46px, 7dvh, 58px);
+  flex: none;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  border-width: 2px;
+}
+.onoff.on {
+  border-color: var(--blue);
+  color: #fff;
+  animation: fxpulse 0.8s ease-in-out infinite;
+}
+@keyframes fxpulse {
+  0%, 100% { background: rgba(37, 99, 235, 0.45); box-shadow: 0 0 18px rgba(37, 99, 235, 0.55); }
+  50% { background: rgba(37, 99, 235, 0.12); box-shadow: 0 0 4px rgba(37, 99, 235, 0.2); }
+}
