@@ -1,0 +1,505 @@
+/* ============================================================
+   RMX-1000 skeuomorphic skin (Pioneer Remix Station look)
+   Applied by adding .skin-rmx to <html>; every rule is scoped.
+   CSS gradients/shadows + one local font (DSEG7, SIL OFL) so
+   the app stays offline.
+   ============================================================ */
+
+/* real 7-segment LED digits for the BPM readout */
+@font-face {
+  font-family: "DSEG7";
+  src: url("../fonts/DSEG7Classic-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+.skin-rmx {
+  --panel: #0d0e11;
+  --panel-2: #16171b;
+  --edge: #060708;
+  --label: #e8e9ec;
+  --dim: #8b8e96;
+  --led-red: #ff2c1e;   /* 7-seg digits, QUANTIZE/AUTO frames, FX labels */
+  --led-blue: #4a68ff;  /* seek fill, X-PAD segments, BEAT readout */
+  --amber: #dfa32c;     /* isolator-style lit buttons */
+  --fx-green: #57d95e;  /* ON/OFF hold glow */
+  --violet: #b78cff;    /* LOAD-menu neon */
+}
+
+/* ---- faceplate: glossy black, cool top sheen, vignette ---- */
+.skin-rmx .panel {
+  background:
+    radial-gradient(120% 55% at 50% 0%, rgba(120, 130, 160, 0.10), transparent 60%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.04), transparent 30%),
+    linear-gradient(#15161a, #0b0c0f 60%, #08090b);
+}
+.skin-rmx .panel::after { /* vignette */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.55);
+}
+
+.skin-rmx .section-label {
+  color: #b9bcc3;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+}
+
+/* ---- buttons: glossy black bevels, pressed = sunk ---- */
+.skin-rmx button {
+  color: var(--label);
+  background: linear-gradient(#26282e, #101114 50%, #0b0c0f);
+  border: 1px solid #050506;
+  border-radius: 4px;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.85);
+}
+.skin-rmx button:active {
+  filter: none;
+  background: linear-gradient(#0a0b0d, #141518);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8);
+  transform: translateY(1px);
+}
+
+/* ---- track strip as black display cluster ---- */
+.skin-rmx .track-strip {
+  position: relative; /* anchors the decorative meter strip */
+  background: #050608;
+  border: 1px solid #26282e;
+  border-radius: 5px;
+  box-shadow:
+    inset 0 0 14px rgba(0, 0, 0, 0.95),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.skin-rmx .track-strip::before { /* blue dB-meter LEDs along the top edge */
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  border-radius: 1px;
+  background: repeating-linear-gradient(90deg,
+    rgba(74, 104, 255, 0.75) 0 4px, transparent 4px 7px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+/* deck select: hardware chip lit in the display cluster's violet */
+.skin-rmx .deck-btn {
+  color: #dcd0ff;
+  text-shadow: 0 0 6px rgba(150, 90, 255, 0.5);
+  background: linear-gradient(#26282e, #101114 50%, #0b0c0f);
+  border-color: #050506;
+}
+/* SYNC: black hardware chip; amber LED when beat-matched */
+.skin-rmx .sync-btn {
+  color: var(--label);
+  background: linear-gradient(#26282e, #101114 50%, #0b0c0f);
+  border-color: #050506;
+}
+.skin-rmx .sync-btn.synced {
+  border-color: var(--amber);
+  color: #ffd867;
+  background: linear-gradient(#26282e, #101114 50%, #0b0c0f);
+  box-shadow:
+    0 0 10px rgba(223, 163, 44, 0.45),
+    inset 0 0 8px rgba(223, 163, 44, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-shadow: 0 0 6px rgba(255, 216, 103, 0.75);
+}
+/* track name in LOAD-menu violet neon */
+.skin-rmx .file-label {
+  color: #dcd0ff;
+  border-color: #2a2440;
+  background: rgba(24, 18, 42, 0.35);
+  text-shadow: 0 0 7px rgba(150, 90, 255, 0.55);
+}
+.skin-rmx .file-label.loaded { color: #dcd0ff; }
+.skin-rmx .play-btn {
+  background: radial-gradient(circle at 40% 32%, #26282e, #101114 70%);
+  border: 1px solid #050506;
+}
+.skin-rmx .play-btn.playing {
+  border-color: var(--violet);
+  color: #dcd0ff;
+  box-shadow: 0 0 9px rgba(150, 90, 255, 0.45);
+}
+.skin-rmx .seek-bar::before { background: #15161b; }
+.skin-rmx .seek-fill {
+  background: var(--led-blue);
+  box-shadow: 0 0 7px rgba(74, 104, 255, 0.8);
+}
+/* red 7-segment LED BPM display */
+.skin-rmx .bpm-readout span {
+  font-family: "DSEG7", ui-monospace, Menlo, monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--led-red);
+  text-shadow:
+    0 0 5px rgba(255, 44, 30, 0.85),
+    0 0 14px rgba(255, 44, 30, 0.4);
+}
+.skin-rmx .bpm-readout small {
+  color: #c1372a;
+  text-shadow: 0 0 5px rgba(255, 44, 30, 0.35);
+}
+
+/* ---- X-PAD: recessed strip, blue LED segments, amber label ---- */
+.skin-rmx .xpad-wrap .section-label {
+  color: var(--amber);
+  text-shadow: 0 0 6px rgba(223, 163, 44, 0.35);
+}
+.skin-rmx .xpad-mode { /* the assign dropdown reads as the amber X-PAD button */
+  color: var(--amber);
+  text-shadow: 0 0 6px rgba(223, 163, 44, 0.35);
+  background:
+    linear-gradient(45deg, transparent 50%, currentColor 50%) right 18px top 50% / 4px 4px no-repeat,
+    linear-gradient(135deg, currentColor 50%, transparent 50%) right 14px top 50% / 4px 4px no-repeat,
+    linear-gradient(#26282e, #101114 50%, #0b0c0f);
+  border-color: #050506;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.skin-rmx .xpad-mode:active {
+  filter: none;
+  background:
+    linear-gradient(45deg, transparent 50%, currentColor 50%) right 18px top 50% / 4px 4px no-repeat,
+    linear-gradient(135deg, currentColor 50%, transparent 50%) right 14px top 50% / 4px 4px no-repeat,
+    linear-gradient(#0a0b0d, #141518);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+/* the open list: recessed glossy panel, amber-lit selection */
+.skin-rmx .dd-menu {
+  background: linear-gradient(#1c1e23, #0f1013);
+  border-color: #050506;
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.skin-rmx .dd-item {
+  background: none;
+  border: 1px solid transparent;
+  box-shadow: none;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.85);
+}
+.skin-rmx .dd-item:active {
+  transform: none;
+  filter: none;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+.skin-rmx .dd-item.selected {
+  border-color: var(--amber);
+  color: #ffd867;
+  background: rgba(64, 48, 12, 0.35);
+  box-shadow: inset 0 0 8px rgba(223, 163, 44, 0.25);
+  text-shadow: 0 0 6px rgba(255, 216, 103, 0.75);
+}
+.skin-rmx .xpad {
+  background: linear-gradient(#08090b, #101216);
+  border: 1px solid #05060a;
+  box-shadow:
+    inset 0 2px 7px rgba(0, 0, 0, 0.85),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.skin-rmx .xpad .seg { background: #191b20; }
+.skin-rmx .xpad .seg.lit {
+  background: var(--led-blue);
+  box-shadow: 0 0 10px rgba(74, 104, 255, 0.85);
+}
+
+/* ---- BEAT: blue LCD fraction readout ---- */
+.skin-rmx .beat-value {
+  font-family: ui-monospace, Menlo, monospace;
+  color: #7d92ff;
+  text-shadow: 0 0 9px rgba(74, 104, 255, 0.6);
+}
+
+/* ---- AUTO/TAP + QUANTIZE: printed faceplate labels above small round
+        hardware buttons (QUANTIZE has a red LED core); TAP is the big
+        round button with the glowing green ring ---- */
+.skin-rmx .small-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  color: #b9bcc3; /* label reads as print on the faceplate */
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+}
+/* merge AUTO <span>/</span> TAP back into one flex line */
+.skin-rmx .small-btn .slash { display: contents; }
+.skin-rmx .small-btn .dot { display: none; } /* the LED moved into the button */
+.skin-rmx .small-btn::after { /* the round button under the label */
+  content: "";
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #050506;
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.14), transparent 42%),
+    radial-gradient(circle, #26282e 0 55%, #101114 100%);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.skin-rmx .small-btn:active {
+  background: none;
+  box-shadow: none;
+  filter: none;
+}
+.skin-rmx .small-btn:active::after {
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.85);
+}
+/* AUTO engaged: white LED center + lit label */
+.skin-rmx .small-btn.active {
+  border: none;
+  background: none;
+  box-shadow: none;
+  color: #fff;
+  text-shadow: 0 0 6px rgba(230, 245, 255, 0.8), 0 1px 1px rgba(0, 0, 0, 0.9);
+}
+.skin-rmx .small-btn.active::after {
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.12), transparent 42%),
+    radial-gradient(circle, #eef4ff 0 18%, #8b929c 28%, #26282e 48% 58%, #101114 100%);
+  box-shadow:
+    0 0 10px rgba(220, 240, 255, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+/* QUANTIZE: dead-red LED ember at rest, bright red when engaged */
+.skin-rmx #quantize::after {
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.14), transparent 42%),
+    radial-gradient(circle, #4a1a14 0 20%, #26282e 32% 58%, #101114 100%);
+}
+.skin-rmx #quantize.q-on::after {
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.12), transparent 42%),
+    radial-gradient(circle, #ff4433 0 20%, #8a1a12 30%, #26282e 48% 58%, #101114 100%);
+  box-shadow:
+    0 0 12px rgba(255, 44, 30, 0.55),
+    0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+/* TAP: round button ringed by a green LED halo */
+.skin-rmx .tap-btn {
+  flex: none;
+  width: clamp(44px, 6.5dvh, 54px);
+  border-radius: 50%;
+  padding: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #eafff0;
+  border: 2px solid #35e05a;
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.12), transparent 45%),
+    radial-gradient(circle, #15181a 0 62%, #0b0d0e 100%);
+  box-shadow:
+    0 0 12px rgba(53, 224, 90, 0.55),
+    0 3px 7px rgba(0, 0, 0, 0.6),
+    inset 0 0 8px rgba(53, 224, 90, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  text-shadow: 0 0 6px rgba(120, 255, 150, 0.8);
+}
+.skin-rmx .tap-btn:active {
+  filter: none;
+  transform: none;
+  background: radial-gradient(circle, #0c1a10 0 62%, #081008 100%);
+  box-shadow:
+    0 0 18px rgba(53, 224, 90, 0.8),
+    inset 0 0 12px rgba(53, 224, 90, 0.45);
+}
+
+/* ---- FX FREQUENCY: DJM-style blue LED-framed band buttons —
+        compact chips (not full-width) with a thick LED ring ---- */
+.skin-rmx .freq-row { justify-content: center; gap: 30px; }
+.skin-rmx .freq-btn {
+  flex: none;
+  min-height: 0;
+  min-width: 0;
+  width: 63px; /* 74px - 15% */
+  height: 32px;
+  border: 4px solid #223a80; /* unlit LED frame */
+  border-radius: 9px;
+  font-size: 11px;
+  color: #5c73b4;
+  background: linear-gradient(#14161c, #0a0b0f);
+  box-shadow:
+    0 0 0 1px #060708, /* dark bezel the ring sits in */
+    0 2px 5px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  text-shadow: none;
+}
+.skin-rmx .freq-btn.active { /* lit: glowing blue frame + blue LED text */
+  border-color: #3d6bff;
+  color: #a9c8ff;
+  background: linear-gradient(#111827, #0a0e17);
+  box-shadow:
+    0 0 0 1px #060708,
+    0 0 16px rgba(61, 107, 255, 0.6),
+    0 2px 5px rgba(0, 0, 0, 0.55),
+    inset 0 0 10px rgba(61, 107, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  text-shadow: 0 0 8px rgba(130, 175, 255, 0.9);
+}
+
+/* ---- knobs ----
+   TIME / LEVEL-DEPTH: fine-toothed black wheel (48 teeth) with an inner
+   ring groove; the position indicator is a red dot riding near the rim.
+   The base .knob supplies this so both small knobs get it. */
+.skin-rmx .knob {
+  background: none;
+  border: none;
+  box-shadow:
+    0 7px 15px rgba(0, 0, 0, 0.8),
+    0 2px 4px rgba(0, 0, 0, 0.6);
+}
+.skin-rmx .knob::before { /* toothed wheel body */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: rotate(var(--knob-rot, 0deg)); /* teeth spin with the value */
+  clip-path: polygon(50.00% 0.00%, 52.94% 0.09%, 53.38% 3.12%, 55.95% 3.38%, 56.53% 0.43%, 59.43% 0.90%, 59.47% 3.96%, 61.99% 4.55%, 62.94% 1.70%, 65.76% 2.55%, 65.40% 5.59%, 67.82% 6.51%, 69.13% 3.81%, 71.82% 5.01%, 71.06% 7.98%, 73.34% 9.20%, 75.00% 6.70%, 77.51% 8.25%, 76.37% 11.09%, 78.47% 12.60%, 80.44% 10.33%, 82.72% 12.19%, 81.22% 14.87%, 83.10% 16.64%, 85.36% 14.64%, 87.38% 16.79%, 85.54% 19.24%, 87.17% 21.24%, 89.67% 19.56%, 91.39% 21.95%, 89.25% 24.14%, 90.61% 26.34%, 93.30% 25.00%, 94.70% 27.59%, 92.29% 29.49%, 93.35% 31.84%, 96.19% 30.87%, 97.24% 33.62%, 94.60% 35.18%, 95.35% 37.66%, 98.30% 37.06%, 98.97% 39.92%, 96.16% 41.13%, 96.57% 43.68%, 99.57% 43.47%, 99.87% 46.40%, 96.92% 47.23%, 97.00% 49.82%, 100.00% 50.00%, 99.91% 52.94%, 96.88% 53.38%, 96.62% 55.95%, 99.57% 56.53%, 99.10% 59.43%, 96.04% 59.47%, 95.45% 61.99%, 98.30% 62.94%, 97.45% 65.76%, 94.41% 65.40%, 93.49% 67.82%, 96.19% 69.13%, 94.99% 71.82%, 92.02% 71.06%, 90.80% 73.34%, 93.30% 75.00%, 91.75% 77.51%, 88.91% 76.37%, 87.40% 78.47%, 89.67% 80.44%, 87.81% 82.72%, 85.13% 81.22%, 83.36% 83.10%, 85.36% 85.36%, 83.21% 87.38%, 80.76% 85.54%, 78.76% 87.17%, 80.44% 89.67%, 78.05% 91.39%, 75.86% 89.25%, 73.66% 90.61%, 75.00% 93.30%, 72.41% 94.70%, 70.51% 92.29%, 68.16% 93.35%, 69.13% 96.19%, 66.38% 97.24%, 64.82% 94.60%, 62.34% 95.35%, 62.94% 98.30%, 60.08% 98.97%, 58.87% 96.16%, 56.32% 96.57%, 56.53% 99.57%, 53.60% 99.87%, 52.77% 96.92%, 50.18% 97.00%, 50.00% 100.00%, 47.06% 99.91%, 46.62% 96.88%, 44.05% 96.62%, 43.47% 99.57%, 40.57% 99.10%, 40.53% 96.04%, 38.01% 95.45%, 37.06% 98.30%, 34.24% 97.45%, 34.60% 94.41%, 32.18% 93.49%, 30.87% 96.19%, 28.18% 94.99%, 28.94% 92.02%, 26.66% 90.80%, 25.00% 93.30%, 22.49% 91.75%, 23.63% 88.91%, 21.53% 87.40%, 19.56% 89.67%, 17.28% 87.81%, 18.78% 85.13%, 16.90% 83.36%, 14.64% 85.36%, 12.62% 83.21%, 14.46% 80.76%, 12.83% 78.76%, 10.33% 80.44%, 8.61% 78.05%, 10.75% 75.86%, 9.39% 73.66%, 6.70% 75.00%, 5.30% 72.41%, 7.71% 70.51%, 6.65% 68.16%, 3.81% 69.13%, 2.76% 66.38%, 5.40% 64.82%, 4.65% 62.34%, 1.70% 62.94%, 1.03% 60.08%, 3.84% 58.87%, 3.43% 56.32%, 0.43% 56.53%, 0.13% 53.60%, 3.08% 52.77%, 3.00% 50.18%, 0.00% 50.00%, 0.09% 47.06%, 3.12% 46.62%, 3.38% 44.05%, 0.43% 43.47%, 0.90% 40.57%, 3.96% 40.53%, 4.55% 38.01%, 1.70% 37.06%, 2.55% 34.24%, 5.59% 34.60%, 6.51% 32.18%, 3.81% 30.87%, 5.01% 28.18%, 7.98% 28.94%, 9.20% 26.66%, 6.70% 25.00%, 8.25% 22.49%, 11.09% 23.63%, 12.60% 21.53%, 10.33% 19.56%, 12.19% 17.28%, 14.87% 18.78%, 16.64% 16.90%, 14.64% 14.64%, 16.79% 12.62%, 19.24% 14.46%, 21.24% 12.83%, 19.56% 10.33%, 21.95% 8.61%, 24.14% 10.75%, 26.34% 9.39%, 25.00% 6.70%, 27.59% 5.30%, 29.49% 7.71%, 31.84% 6.65%, 30.87% 3.81%, 33.62% 2.76%, 35.18% 5.40%, 37.66% 4.65%, 37.06% 1.70%, 39.92% 1.03%, 41.13% 3.84%, 43.68% 3.43%, 43.47% 0.43%, 46.40% 0.13%, 47.23% 3.08%, 49.82% 3.00%);
+  background:
+    radial-gradient(circle at 36% 30%, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0) 46%),
+    radial-gradient(circle closest-side, #161618 0 74%, #060607 76% 79%, #2e2e31 80.5%, #060607 82% 86%, #1a1a1c 88% 100%);
+}
+.skin-rmx .knob-indicator { /* invisible arm carrying the red dot at the rim */
+  background: none;
+  filter: none;
+}
+.skin-rmx .knob-indicator::after {
+  content: "";
+  position: absolute;
+  top: 7%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  background: #e8271d;
+}
+
+/* EFFECT SELECT: gray speckled face in a black bezel; the black grip wing
+   with the red pointer line IS the indicator, spanning the full diameter
+   and spinning about the knob center. */
+.skin-rmx .knob-lg {
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 48%),
+    radial-gradient(circle closest-side, #9b9c9e 0 55%, #8a8b8d 66%, #6f7072 74%, rgba(0, 0, 0, 0) 75%),
+    radial-gradient(circle closest-side, rgba(0, 0, 0, 0) 0 72%, #0b0b0c 74% 96%, #3a3a3c 98%, #58585a 100%);
+}
+.skin-rmx .knob-lg::before { content: none; } /* no toothed body */
+.skin-rmx .knob-lg .knob-indicator { /* the grip wing: black bar, red line to the tip */
+  width: 36%;
+  height: 96%;
+  left: 50%;
+  bottom: 2%;
+  margin-left: -18%;
+  border-radius: 10px;
+  transform-origin: 50% 50%;
+  background:
+    linear-gradient(#e8271d, #e8271d) no-repeat 50% 8% / 4px 42%,
+    linear-gradient(0deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0) 30% 70%, rgba(255, 255, 255, 0.10)),
+    linear-gradient(90deg, #0a0a0b, #29292c 30%, #3b3b3f 50%, #29292c 70%, #0a0a0b);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+}
+.skin-rmx .knob-lg .knob-indicator::after { content: none; } /* no red dot */
+/* effect names like the red BUILD-UP labels around the wheel */
+.skin-rmx .fx-labels span { color: #6e2721; }
+.skin-rmx .fx-labels .lit {
+  color: var(--led-red);
+  text-shadow: 0 0 9px rgba(255, 44, 30, 0.75);
+}
+.skin-rmx .minmax { color: #9a9da5; }
+
+/* ---- ON/OFF: HOLD-style dark button with glowing green ring ---- */
+/* round backlit dome: dark and recessed when off */
+.skin-rmx .onoff {
+  border-radius: 50%;
+  border: 1px solid #050506;
+  background: radial-gradient(circle at 50% 35%, #23262b, #0c0d0f 72%);
+  box-shadow:
+    0 3px 9px rgba(0, 0, 0, 0.7),
+    inset 0 1px 1px rgba(255, 255, 255, 0.12),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.6);
+}
+/* lit: blue backlit dome with a top-left specular highlight + blue halo */
+.skin-rmx .onoff.on {
+  border-color: #16357a;
+  animation: onoffpulse 0.9s ease-in-out infinite;
+}
+@keyframes onoffpulse {
+  0%, 100% {
+    background:
+      radial-gradient(circle at 42% 30%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 32%),
+      radial-gradient(circle at 50% 46%, #7da2ff 0 26%, #3a63e0 56%, #16357a 82%);
+    box-shadow:
+      0 0 24px rgba(74, 104, 255, 0.75),
+      0 3px 9px rgba(0, 0, 0, 0.6),
+      inset 0 0 14px rgba(150, 185, 255, 0.5);
+  }
+  50% {
+    background:
+      radial-gradient(circle at 42% 30%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 32%),
+      radial-gradient(circle at 50% 46%, #5f86f0 0 26%, #2b4fc4 56%, #122c66 82%);
+    box-shadow:
+      0 0 10px rgba(74, 104, 255, 0.4),
+      0 3px 9px rgba(0, 0, 0, 0.6),
+      inset 0 0 8px rgba(150, 185, 255, 0.3);
+  }
+}
+
+/* ---- bottom transport in the RMX skin ---- */
+.skin-rmx .cue-btn {
+  background: radial-gradient(circle at 40% 32%, #43484d, #23262a 70%);
+  border: 1px solid #0c0d0e;
+  color: var(--label);
+}
+.skin-rmx .cue-btn:active, .skin-rmx .cue-btn.hit {
+  color: #ffd867; border-color: var(--amber);
+  box-shadow: 0 0 12px rgba(223, 163, 44, 0.5), inset 0 0 8px rgba(223, 163, 44, 0.3);
+  text-shadow: 0 0 6px rgba(255, 216, 103, 0.7);
+}
+.skin-rmx .nudge-btn {
+  background: linear-gradient(#3b3f44, #272a2e 45%, #1f2226);
+  border: 1px solid #0c0d0e;
+}
+.skin-rmx .nudge-btn:active {
+  color: #a9c8ff; border-color: #3d6bff;
+  box-shadow: 0 0 10px rgba(61, 107, 255, 0.45), inset 0 0 8px rgba(61, 107, 255, 0.3);
+}
+/* hot cues: dark LED frame on the faceplate, bright colour when set */
+.skin-rmx .hotcue-btn {
+  background: linear-gradient(#16171b, #0b0c0f);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  text-shadow: none;
+}
+.skin-rmx .hotcue-btn.cue-a { border-color: #5c1a14; }
+.skin-rmx .hotcue-btn.cue-b { border-color: #12503b; }
+.skin-rmx .hotcue-btn.cue-a.set {
+  border-color: #ff3323; color: #ffb3aa; background: linear-gradient(#1e1210, #120a09);
+  box-shadow: 0 0 14px rgba(255, 44, 30, 0.55), inset 0 0 10px rgba(255, 44, 30, 0.35);
+  text-shadow: 0 0 8px rgba(255, 120, 100, 0.9);
+}
+.skin-rmx .hotcue-btn.cue-b.set {
+  border-color: #35e0a0; color: #b6ffe4; background: linear-gradient(#0c1a15, #08110d);
+  box-shadow: 0 0 14px rgba(53, 224, 160, 0.5), inset 0 0 10px rgba(53, 224, 160, 0.32);
+  text-shadow: 0 0 8px rgba(130, 255, 210, 0.9);
+}

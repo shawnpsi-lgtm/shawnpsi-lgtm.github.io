@@ -47,24 +47,7 @@ html, body {
   flex-direction: column;
   gap: 10px;
   gap: clamp(6px, 1.4dvh, 14px);
-  position: relative; /* anchors the skin toggle + skin decorations */
-}
-
-/* skin toggle: small pill in the top-right corner */
-.skin-toggle {
-  position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 14px);
-  right: 19px;
-  z-index: 20;
-  min-height: 22px;
-  min-width: 34px;
-  height: 22px;
-  padding: 0 8px;
-  font-size: 9px;
-  letter-spacing: 1px;
-  border-radius: 11px;
-  color: var(--dim);
-  opacity: 0.9;
+  position: relative; /* anchors skin decorations */
 }
 
 .brand { display: flex; align-items: baseline; justify-content: space-between; }
@@ -105,6 +88,16 @@ button:disabled { opacity: 0.35; }
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+.file-row { display: flex; gap: 8px; }
+.file-row .file-label { flex: 1; min-width: 0; }
+.deck-btn {
+  flex: none;
+  min-width: 0;
+  min-height: 0; /* stretches to the load-label row height */
+  padding: 0 10px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
 }
 .file-label {
   display: flex;
@@ -171,10 +164,85 @@ button:disabled { opacity: 0.35; }
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+/* SYNC: compact hardware button that beat-matches this deck to the other */
+.sync-btn {
+  flex: none;
+  min-width: 0;
+  min-height: 0;
+  height: clamp(38px, 5.5dvh, 44px);
+  padding: 0 10px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+.sync-btn:disabled { opacity: 0.35; }
+.sync-btn.synced { border-color: var(--blue); color: #fff; background: rgba(37, 99, 235, 0.18); }
+.sync-btn.pending { opacity: 0.6; }
 .bpm-readout span { font-size: 20px; font-weight: 700; color: #fff; }
 .bpm-readout small { display: block; font-size: 8px; letter-spacing: 2px; color: var(--dim); }
 
 /* ---- X-PAD ---- */
+/* the section label is a dropdown assigning what the strip drives; a custom
+   menu (button + listbox) instead of a native select, so the open list is
+   skinnable everywhere. The panel is 100dvh-locked, so the chip's extra
+   height (17px vs the 13px text label) is taken out of the label's margin —
+   the row stays 19px in flow, and the menu overlays instead of pushing. */
+/* negative top margin lifts the chip into the section gap above (it hung
+   2px off the strip); +6px below keeps the flow height identical (19px) */
+.xpad-label { display: flex; align-items: center; justify-content: center; margin: -4px 0 6px; }
+.dropdown { position: relative; }
+.xpad-mode {
+  min-height: 0; /* out from under the 44px button defaults */
+  min-width: 0;
+  height: 17px;
+  line-height: 15px;
+  padding: 0 27px 0 12px; /* right pocket houses the chevron */
+  /* chevron drawn in currentColor so every skin tints it with the text */
+  background:
+    linear-gradient(45deg, transparent 50%, currentColor 50%) right 18px top 50% / 4px 4px no-repeat,
+    linear-gradient(135deg, currentColor 50%, transparent 50%) right 14px top 50% / 4px 4px no-repeat,
+    var(--panel-2);
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  color: var(--label);
+}
+/* the open list: same control vocabulary as the rest of the panel */
+.dd-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  min-width: 134px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--panel-2);
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+}
+.dd-menu[hidden] { display: none; }
+.dd-item {
+  min-height: 0;
+  min-width: 0;
+  height: 26px;
+  padding: 0 12px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  color: var(--label);
+}
+.dd-item.selected { /* mirrors the freq-btn active state */
+  border-color: var(--blue);
+  color: #fff;
+  background: rgba(37, 99, 235, 0.18);
+}
+
 .xpad {
   height: 64px;
   height: clamp(44px, 7dvh, 64px);
@@ -262,6 +330,7 @@ button:disabled { opacity: 0.35; }
   border-radius: 2px;
   background: linear-gradient(to top, transparent 45%, #fff 45%);
   transform-origin: 50% 100%;
+  transform: rotate(var(--knob-rot, 0deg)); /* set by knob.js on the .knob */
   pointer-events: none;
 }
 
@@ -279,8 +348,10 @@ button:disabled { opacity: 0.35; }
 .fx-labels span:last-child { text-align: right; }
 .fx-labels .lit { color: var(--blue); text-shadow: 0 0 8px rgba(37, 99, 235, 0.6); }
 
-.knob-row { display: flex; justify-content: space-around; }
-.knob-cell { width: 45%; }
+.knob-row { display: flex; justify-content: space-around; align-items: flex-start; }
+.knob-cell { flex: 1; }
+/* ON/OFF sits between the two knobs: printed label over a round dome button */
+.onoff-cell { flex: none; text-align: center; padding: 0 6px; }
 .minmax {
   display: flex;
   justify-content: space-between;
@@ -291,22 +362,73 @@ button:disabled { opacity: 0.35; }
   color: var(--dim);
 }
 
-/* ---- ON/OFF ---- */
+/* ---- ON/OFF: round illuminated dome button ---- */
 .onoff {
-  height: 58px;
-  height: clamp(46px, 7dvh, 58px);
-  flex: none;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 3px;
-  border-width: 2px;
+  width: clamp(46px, 8dvh, 60px);
+  height: clamp(46px, 8dvh, 60px);
+  min-width: 0;
+  min-height: 0;
+  margin: 0 auto;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #383838;
+  background: radial-gradient(circle at 50% 35%, #333, #151515 70%);
 }
 .onoff.on {
   border-color: var(--blue);
-  color: #fff;
   animation: fxpulse 0.8s ease-in-out infinite;
 }
 @keyframes fxpulse {
-  0%, 100% { background: rgba(37, 99, 235, 0.45); box-shadow: 0 0 18px rgba(37, 99, 235, 0.55); }
-  50% { background: rgba(37, 99, 235, 0.12); box-shadow: 0 0 4px rgba(37, 99, 235, 0.2); }
+  0%, 100% { background: radial-gradient(circle at 50% 40%, #5a86ff, #1a3aa0 75%); box-shadow: 0 0 18px rgba(37, 99, 235, 0.6); }
+  50% { background: radial-gradient(circle at 50% 40%, #3a63e0, #16357a 75%); box-shadow: 0 0 6px rgba(37, 99, 235, 0.3); }
 }
+
+/* ---- Bottom transport deck: CUE / PLAY / NUDGE + HOT CUE (one row) ---- */
+.transport-deck {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 3vw, 18px);
+}
+/* CUE + PLAY are round transport buttons */
+.cue-btn {
+  width: clamp(42px, 6.5dvh, 52px);
+  height: clamp(42px, 6.5dvh, 52px);
+  min-width: 0; min-height: 0;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  flex: none;
+}
+.cue-btn:active, .cue-btn.hit { border-color: var(--green); color: var(--green); }
+.transport-deck .play-btn { width: clamp(46px, 7dvh, 56px); height: clamp(46px, 7dvh, 56px); font-size: 16px; }
+/* NUDGE: two small arrow buttons, labelled */
+.nudge-group { flex: none; text-align: center; }
+.nudge-group .section-label { margin-bottom: 3px; }
+.nudge-row { display: flex; gap: 5px; }
+.nudge-btn {
+  width: 30px; min-width: 0;
+  height: clamp(28px, 4dvh, 34px); min-height: 0;
+  font-size: 11px;
+  border-radius: 6px;
+}
+.nudge-btn:active { border-color: var(--blue); color: var(--blue); }
+/* HOT CUE: rectangular LED-framed buttons, A red / B green */
+.hotcue-group { flex: none; text-align: center; }
+.hotcue-group .section-label { margin-bottom: 3px; }
+.hotcue-row { display: flex; justify-content: center; gap: 8px; }
+.hotcue-btn {
+  width: clamp(46px, 13vw, 84px); min-width: 0;
+  height: clamp(28px, 4dvh, 36px); min-height: 0;
+  border-width: 2px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--dim);
+}
+.hotcue-btn.cue-a { border-color: #7a221b; }
+.hotcue-btn.cue-b { border-color: #1c6b4f; }
+.hotcue-btn.cue-a.set { border-color: #ff2c1e; color: #ff6a5c; background: rgba(255, 44, 30, 0.12); }
+.hotcue-btn.cue-b.set { border-color: #35e0a0; color: #7dffcf; background: rgba(53, 224, 160, 0.12); }

@@ -8,7 +8,6 @@
   function Knob(el, opts) {
     opts = opts || {};
     this.el = el;
-    this.indicator = el.querySelector('.knob-indicator');
     this.steps = opts.steps || 0;          // 0 = continuous
     this.onInput = opts.onInput || function () {};
     this.range = opts.range || 180;        // drag pixels for full sweep
@@ -25,8 +24,10 @@
     if (this.steps > 1) v = Math.round(v * (this.steps - 1)) / (this.steps - 1);
     var changed = v !== this.value;
     this.value = v;
+    // expose the angle as a CSS var on the knob element; the indicator and
+    // any skin body layers (e.g. the RMX gear) rotate with it in CSS
     var deg = -ARC / 2 + v * ARC;
-    this.indicator.style.transform = 'rotate(' + deg + 'deg)';
+    this.el.style.setProperty('--knob-rot', deg + 'deg');
     if (changed && !silent) this.onInput(v);
   };
 

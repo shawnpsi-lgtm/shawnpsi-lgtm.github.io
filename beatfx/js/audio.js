@@ -9,13 +9,33 @@
   var ENTRY = { reverb: 'preDelay', echo: 'delay', dub: 'dubDelay' };
   var EXIT = { reverb: 'revShelf', echo: 'delay', dub: 'dubOut' };
 
+  function deckState() { // one per deck: exact copies, independent playback + FX
+    return { buffer: null, baseBuffer: null, source: null, srcGain: null,
+             playing: false, startTime: 0, offset: 0,
+             bpm: 120, baseBpm: 120, gridOffset: 0, synced: false,
+             // per-deck FX: each deck has its own effect chain + settings, so
+             // effects only touch the deck they're on
+             fx: null, effect: 'echo', wired: null, on: false, mix: 0.5,
+             bands: [], quantize: false, padMode: 'fx', timeKnob: 0.5,
+             division: 0.5, filterHold: null, _swap: null,
+             // transport cues + nudge (per deck)
+             cuePoint: 0, hotCues: [null, null], _nudgeDir: null, _nudgeStart: 0 };
+  }
+
   var Engine = {
-    ctx: null, buffer: null, source: null, n: {},
-    playing: false, startTime: 0, offset: 0,
-    effect: 'echo', wired: null, on: false, mix: 0.5, bands: [], quantize: false,
-    bpm: 120, division: 0.5, timeKnob: 0.5, gridOffset: 0,
-    onEnded: function () {}
+    ctx: null, limiter: null, washIR: null,
+    decks: [deckState(), deckState()],
+    deck: 0, // the UI-focused deck; both decks are always audible
+    bpm: 120, // mirrors the focused deck's tempo (for the app's readout)
+    onEnded: function (deckIndex) {}
   };
+  // active-deck views so callers keep reading Engine.buffer / Engine.playing
+  Object.defineProperty(Engine, 'buffer', {
+    get: function () { return Engine.decks[Engine.deck].buffer; }
+  });
+  Object.defineProperty(Engine, 'playing', {
+    get: function () { return Engine.decks[Engine.deck].playing; }
+  });
 
   /* --- lifecycle (call inside a user gesture for iOS) --- */
   Engine.ensure = function () {
@@ -32,6 +52,64 @@
     return new Promise(function (res, rej) {
       Engine.ctx.decodeAudioData(ab, res, rej); // callback form for old Safari
     });
+  }
+
+  /* WSOLA time-stretch: returns a new AudioBuffer alpha times as long, pitch
+     preserved. Overlap-add of Hann frames, each aligned to the naturally-
+     continued output by cross-correlation (kills the phasiness plain OLA
+     gets). Stereo: the shift is found on a mono reference and applied to both
+     channels so the image survives. alpha<1 shortens (faster), >1 lengthens. */
+  function timeStretch(buffer, alpha) {
+    var c = Engine.ctx, sr = buffer.sampleRate, chN = buffer.numberOfChannels;
+    if (Math.abs(alpha - 1) < 0.002) return buffer; // no-op: reuse as-is
+    var frame = Math.round(sr * 0.06);      // 60ms analysis/synthesis frame
+    var syn = frame >> 1;                    // 50% overlap synthesis hop
+    var ana = Math.max(1, Math.round(syn / alpha)); // analysis hop
+    var seek = Math.round(sr * 0.008);       // +/-8ms WSOLA search radius
+    var win = new Float32Array(frame);       // Hann window
+    for (var i = 0; i < frame; i++) win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (frame - 1));
+
+    var inLen = buffer.length;
+    var outLen = Math.max(frame, Math.round(inLen * alpha));
+    var out = c.createBuffer(chN, outLen, sr);
+    var ins = [], outs = [];
+    for (var ch = 0; ch < chN; ch++) { ins.push(buffer.getChannelData(ch)); outs.push(out.getChannelData(ch)); }
+    // mono reference for alignment (avg of channels)
+    var ref = ins[0];
+    if (chN > 1) {
+      ref = new Float32Array(inLen);
+      for (var j = 0; j < inLen; j++) { var s = 0; for (var ch2 = 0; ch2 < chN; ch2++) s += ins[ch2][j]; ref[j] = s / chN; }
+    }
+
+    var outPos = 0, anaPos = 0;
+    // running "natural continuation" tail of the last synthesis frame (mono),
+    // used as the correlation template for the next frame's best offset
+    var tail = new Float32Array(syn);
+    while (outPos + frame < outLen && anaPos + frame < inLen) {
+      var best = 0, bestScore = -Infinity;
+      if (anaPos > seek) {
+        var lo = -Math.min(seek, anaPos), hi = seek;
+        for (var d2 = lo; d2 <= hi; d2++) {
+          // stride the correlation by 4: music is smooth over a few samples so
+          // this finds the same alignment lag ~4x faster (keeps the UI snappy)
+          var score = 0;
+          for (var k = 0; k < syn; k += 4) score += tail[k] * ref[anaPos + d2 + k];
+          if (score > bestScore) { bestScore = score; best = d2; }
+        }
+      }
+      var src = anaPos + best;
+      if (src < 0) src = 0;
+      if (src + frame >= inLen) src = inLen - frame - 1;
+      for (var ch3 = 0; ch3 < chN; ch3++) {
+        var xi = ins[ch3], yo = outs[ch3];
+        for (var m = 0; m < frame; m++) yo[outPos + m] += xi[src + m] * win[m];
+      }
+      // refresh the alignment template from the overlap region we just wrote
+      for (var t2 = 0; t2 < syn; t2++) tail[t2] = ref[src + syn + t2] * win[syn + t2];
+      outPos += syn;
+      anaPos += ana;
+    }
+    return out;
   }
 
   function makeWashIR(c) {
@@ -54,26 +132,43 @@
   }
 
   function buildGraph() {
-    var c = Engine.ctx, n = Engine.n;
+    var c = Engine.ctx;
+    Engine.washIR = makeWashIR(c); // one plate IR, shared read-only by both decks
+    // shared master limiter: catches the summed overs of both decks' FX so
+    // stacked echo build-ups don't hard-clip at the destination
+    Engine.limiter = c.createDynamicsCompressor();
+    Engine.limiter.threshold.value = -3; Engine.limiter.knee.value = 6;
+    Engine.limiter.ratio.value = 12;
+    Engine.limiter.attack.value = 0.003; Engine.limiter.release.value = 0.25;
+    Engine.limiter.connect(c.destination);
+    // each deck gets its own full FX chain so effects are deck-specific and
+    // both decks' effects can run at once (they sum at the limiter)
+    Engine.decks.forEach(function (d) {
+      d.srcGain = c.createGain();
+      buildDeckFx(d);
+    });
+  }
+
+  // Build one deck's independent FX graph into d.fx and wire it up:
+  //   srcGain -> input -+-> dry ------------------------> master -> padLp -> padHp -> [limiter]
+  //                     +-> [bands/full] -> wetIn -> [FX] -> wet -+
+  function buildDeckFx(d) {
+    var c = Engine.ctx, n = d.fx = {};
     n.input = c.createGain();
-    // sources connect via srcGain; pause fades it (not master) so echo /
-    // reverb tails keep ringing out through the still-open wet path
-    n.srcGain = c.createGain();
-    n.srcGain.connect(n.input);
+    d.srcGain.connect(n.input);
     n.dry = c.createGain();
     n.wet = c.createGain(); n.wet.gain.value = 0;
     n.master = c.createGain();
     n.wetIn = c.createGain();
-
     n.input.connect(n.dry); n.dry.connect(n.master);
-    // safety limiter: echo build-ups stack on the full dry signal, so
-    // catch overs instead of hard-clipping at the destination
-    n.limiter = c.createDynamicsCompressor();
-    n.limiter.threshold.value = -3; n.limiter.knee.value = 6;
-    n.limiter.ratio.value = 12;
-    n.limiter.attack.value = 0.003; n.limiter.release.value = 0.25;
     n.wet.connect(n.master);
-    n.master.connect(n.limiter); n.limiter.connect(c.destination);
+    // X-PAD lowpass/highpass modes: this deck's master-bus DJ filters in
+    // series, both resting fully open so they're inaudible in other modes
+    n.padLp = c.createBiquadFilter();
+    n.padLp.type = 'lowpass'; n.padLp.frequency.value = 18000; n.padLp.Q.value = 1.2;
+    n.padHp = c.createBiquadFilter();
+    n.padHp.type = 'highpass'; n.padHp.frequency.value = 20; n.padHp.Q.value = 1.2;
+    n.master.connect(n.padLp); n.padLp.connect(n.padHp); n.padHp.connect(Engine.limiter);
 
     // FX FREQUENCY: three parallel band filters into the wet path, each
     // behind its own gain so any combination can be active. A plain gain
@@ -83,21 +178,19 @@
     n.bandGain = {};
     [['low', 'lowpass', 250, null],
      ['mid', 'bandpass', 1200, 0.7],
-     ['hi', 'highpass', 2500, null]].forEach(function (d) {
+     ['hi', 'highpass', 2500, null]].forEach(function (b) {
       var f = c.createBiquadFilter();
-      f.type = d[1]; f.frequency.value = d[2];
-      if (d[3] !== null) f.Q.value = d[3];
+      f.type = b[1]; f.frequency.value = b[2];
+      if (b[3] !== null) f.Q.value = b[3];
       var g = c.createGain(); g.gain.value = 0;
       n.input.connect(f); f.connect(g); g.connect(n.wetIn);
-      n.bandGain[d[0]] = g;
+      n.bandGain[b[0]] = g;
     });
 
-    // Reverb: pre-delay -> convolver -> low cut -> high shelf.
-    // The EQ keeps the tail out of the mud and adds Pioneer-style
-    // shimmer on top (synthesized wash IR, see makeWashIR).
+    // Reverb: pre-delay -> convolver -> low cut -> high shelf (shared IR)
     n.preDelay = c.createDelay(0.5);
     n.convolver = c.createConvolver();
-    n.convolver.buffer = makeWashIR(c);
+    n.convolver.buffer = Engine.washIR;
     n.revHp = c.createBiquadFilter();
     n.revHp.type = 'highpass'; n.revHp.frequency.value = 180;
     n.revShelf = c.createBiquadFilter();
@@ -105,6 +198,11 @@
     n.revShelf.frequency.value = 2800; n.revShelf.gain.value = 5;
     n.preDelay.connect(n.convolver);
     n.convolver.connect(n.revHp); n.revHp.connect(n.revShelf);
+    // X-PAD reverb mode: dedicated full-range send/return into the plate
+    n.padVerbSend = c.createGain(); n.padVerbSend.gain.value = 0;
+    n.input.connect(n.padVerbSend); n.padVerbSend.connect(n.preDelay);
+    n.padVerbRet = c.createGain(); n.padVerbRet.gain.value = 0;
+    n.revShelf.connect(n.padVerbRet); n.padVerbRet.connect(n.master);
 
     // Echo: delay <-> feedback gain -> lowpass (repeats get darker)
     n.delay = c.createDelay(2);
@@ -115,7 +213,6 @@
 
     // Dub echo: tape-style loop — every repeat is band-limited and
     // saturated again, so it gets darker, thinner, grittier each pass.
-    // dubDelay -> highpass -> lowpass -> soft clip -> feedback -> dubDelay
     n.dubDelay = c.createDelay(2);
     n.dubHp = c.createBiquadFilter();
     n.dubHp.type = 'highpass'; n.dubHp.frequency.value = 180;
@@ -138,29 +235,32 @@
     n.dubDelay.connect(n.dubVerbSend); n.dubVerbSend.connect(n.convolver);
     n.convolver.connect(n.dubOut);
 
-    wire(Engine.effect);
-    Engine.setBands(Engine.bands);
-    Engine.setTimeKnob(Engine.timeKnob);
-    applyMix();
+    wire(d, d.effect);   // initialise this deck's effect state
+    applyBands(d);
+    updateEchoTime(d);
+    applyMix(d);
   }
 
-  function wire(fx) {
-    var n = Engine.n;
-    if (Engine.wired) {
-      n.wetIn.disconnect(n[ENTRY[Engine.wired]]);
-      n[EXIT[Engine.wired]].disconnect(n.wet);
+  function wire(d, fx) {
+    var n = d.fx;
+    if (d.wired) {
+      n.wetIn.disconnect(n[ENTRY[d.wired]]);
+      n[EXIT[d.wired]].disconnect(n.wet);
     }
     n.wetIn.connect(n[ENTRY[fx]]);
     n[EXIT[fx]].connect(n.wet);
-    Engine.wired = fx;
+    d.wired = fx;
   }
 
-  function echoFb() { // LEVEL/DEPTH sets how hard repeats regenerate
-    return Math.min(0.9, Engine.mix * 0.9);
-  }
+  function echoFb(d) { return Math.min(0.9, d.mix * 0.9); } // repeat regen amount
+  function dubFb(d) { return Math.min(0.95, d.mix * 0.95); } // hotter; clip bounds it
 
-  function dubFb() { // hotter than echo; the in-loop soft clip bounds it
-    return Math.min(0.95, Engine.mix * 0.95);
+  function applyBands(d) { // FX FREQUENCY -> this deck's band gains
+    var n = d.fx, t = Engine.ctx.currentTime, any = d.bands.length > 0;
+    n.full.gain.setTargetAtTime(any ? 0 : 1, t, TC);
+    Object.keys(n.bandGain).forEach(function (b) {
+      n.bandGain[b].gain.setTargetAtTime(d.bands.indexOf(b) !== -1 ? 1 : 0, t, TC);
+    });
   }
 
   function tanhCurve() { // tape-style soft clip (unity slope at zero, so
@@ -172,178 +272,324 @@
     return curve;
   }
 
-  function applyMix(at) { // `at`: schedule the change in the future (quantize)
-    var c = Engine.ctx, n = Engine.n, t = at || c.currentTime;
-    var m = Engine.on ? Engine.mix : 0;
-    if (Engine.effect === 'echo' || Engine.effect === 'dub') {
+  function applyMix(d, at) { // `at`: schedule the change in the future (quantize)
+    var c = Engine.ctx, n = d.fx, t = at || c.currentTime;
+    var m = d.on ? d.mix : 0;
+    if (d.effect === 'echo' || d.effect === 'dub') {
       // DJM-style echo / dub: dry stays at full and repeats stack on top.
       // LEVEL/DEPTH is the echo send *and* the feedback amount, and the
       // wet return stays open so the tail rings out after OFF / pause.
       n.dry.gain.setTargetAtTime(1, t, TC);
       n.wet.gain.setTargetAtTime(1, t, TC);
       n.wetIn.gain.setTargetAtTime(m, t, TC);
-      n.fb.gain.setTargetAtTime(echoFb(), t, TC);
-      n.dubFb.gain.setTargetAtTime(dubFb(), t, TC);
+      n.fb.gain.setTargetAtTime(echoFb(d), t, TC);
+      n.dubFb.gain.setTargetAtTime(dubFb(d), t, TC);
       return;
     }
     n.wetIn.gain.setTargetAtTime(1, t, TC);
     // Reverb depth is gated by the TIME knob: at min the crossfade stays
     // fully dry, so no reverb is heard regardless of LEVEL/DEPTH.
-    if (Engine.effect === 'reverb') m *= Engine.timeKnob;
+    if (d.effect === 'reverb') m *= d.timeKnob;
     n.dry.gain.setTargetAtTime(Math.cos(m * Math.PI / 2), t, TC);
     n.wet.gain.setTargetAtTime(Math.sin(m * Math.PI / 2), t, TC);
   }
 
-  /* --- transport --- */
+  /* --- transport (operates on the focused deck) --- */
+  Engine.setDeck = function (i) { // focus a deck; the other keeps playing
+    Engine.deck = i;
+    Engine.bpm = Engine.decks[i].bpm; // readout mirrors the focused deck
+    // no FX re-apply needed: each deck's chain retains its own settings
+  };
+
+  Engine.isSynced = function () { return Engine.decks[Engine.deck].synced; };
+
+  /* SYNC: keylock beat-match the focused deck to the other deck. We pre-render
+     a pitch-preserved time-stretch and swap it in, then play at rate 1 — so
+     pos/pause/seek/quantize all stay in buffer-time and need no rate math.
+     Toggles: returns the new synced state. */
+  Engine.sync = function () {
+    var f = Engine.decks[Engine.deck], o = Engine.decks[1 - Engine.deck];
+    if (!f.baseBuffer || !o.baseBuffer) return f.synced; // nothing to match to
+    // Render the new buffer FIRST, while the current source keeps playing. The
+    // time-stretch blocks the main thread but not the audio thread, so doing it
+    // before the pause/swap means the music never goes silent — only the tiny
+    // seek-style gap of the swap itself remains.
+    var newBuffer, newBpm, newSynced;
+    if (!f.synced) {
+      var target = o.bpm;                       // match the other deck as heard
+      newBuffer = timeStretch(f.baseBuffer, f.baseBpm / target); // <1 = faster
+      newBpm = target; newSynced = true;
+    } else {
+      newBuffer = f.baseBuffer;                 // restore the original
+      newBpm = f.baseBpm; newSynced = false;
+    }
+    // quick swap: pause (commits the live position), remap, restart on new buffer
+    var wasPlaying = f.playing, oldDur = f.buffer.duration;
+    if (wasPlaying) Engine.pause();
+    f.buffer = newBuffer; f.bpm = newBpm; f.synced = newSynced;
+    var ratio = f.buffer.duration / oldDur;     // remap position + grid to it
+    f.offset *= ratio; f.gridOffset *= ratio;
+    if (f.offset >= f.buffer.duration) f.offset = 0;
+    if (wasPlaying) Engine.play();              // restart on the new buffer
+    Engine.bpm = f.bpm; updateEchoTime(f);      // echoes follow what's heard
+    return f.synced;
+  };
+
   Engine.loadTrack = function (file) {
     Engine.ensure();
     Engine.pause();
+    var d = Engine.decks[Engine.deck]; // bind to the deck the load started on
     return file.arrayBuffer().then(decode).then(function (buf) {
-      Engine.buffer = buf;
-      Engine.offset = 0;
+      d.buffer = buf; d.baseBuffer = buf; // fresh track: drop any prior sync
+      d.offset = 0; d.synced = false;
+      d.cuePoint = 0; d.hotCues = [null, null]; // and clear cues
       return buf;
     });
   };
 
   Engine.play = function () {
-    if (!Engine.buffer || Engine.playing) return;
+    var d = Engine.decks[Engine.deck];
+    if (!d.buffer || d.playing) return;
     var c = Engine.ensure();
-    if (Engine.offset >= Engine.buffer.duration) Engine.offset = 0;
+    if (d.offset >= d.buffer.duration) d.offset = 0;
     var src = c.createBufferSource();
-    src.buffer = Engine.buffer;
-    src.connect(Engine.n.srcGain);
+    src.buffer = d.buffer;
+    src.connect(d.srcGain);
+    var deckIndex = Engine.deck;
     src.onended = function () {
-      if (Engine.source !== src) return; // manual stop already handled
-      Engine.playing = false; Engine.source = null; Engine.offset = 0;
-      Engine.onEnded();
+      if (d.source !== src) return; // manual stop already handled
+      d.playing = false; d.source = null; d.offset = 0;
+      Engine.onEnded(deckIndex);
     };
-    src.start(0, Engine.offset);
-    Engine.source = src;
-    Engine.startTime = c.currentTime;
-    Engine.playing = true;
-    Engine.n.srcGain.gain.setTargetAtTime(1, c.currentTime, TC);
+    src.start(0, d.offset);
+    d.source = src;
+    d.startTime = c.currentTime;
+    d.playing = true;
+    d.srcGain.gain.setTargetAtTime(1, c.currentTime, TC);
   };
 
   Engine.pause = function () {
-    if (!Engine.playing) return;
-    var c = Engine.ctx, src = Engine.source;
-    Engine.offset = Math.min(Engine.offset + c.currentTime - Engine.startTime,
-      Engine.buffer.duration);
-    Engine.playing = false; Engine.source = null;
-    // fade the source only; effect tails ring out through master
-    Engine.n.srcGain.gain.setTargetAtTime(0, c.currentTime, TC);
+    var d = Engine.decks[Engine.deck];
+    if (!d.playing) return;
+    var c = Engine.ctx, src = d.source;
+    d.offset = Math.min(d.offset + c.currentTime - d.startTime,
+      d.buffer.duration);
+    d.playing = false; d.source = null;
+    // fade this deck's source only; effect tails ring out through master
+    d.srcGain.gain.setTargetAtTime(0, c.currentTime, TC);
     src.onended = null;
     src.stop(c.currentTime + 0.08);
   };
 
   Engine.seek = function (frac) {
-    if (!Engine.buffer) return;
-    var wasPlaying = Engine.playing;
+    var d = Engine.decks[Engine.deck];
+    if (!d.buffer) return;
+    var wasPlaying = d.playing;
     if (wasPlaying) Engine.pause();
-    Engine.offset = Math.max(0, Math.min(1, frac)) * Engine.buffer.duration;
+    d.offset = Math.max(0, Math.min(1, frac)) * d.buffer.duration;
     if (wasPlaying) Engine.play();
   };
 
   Engine.pos = function () {
-    if (!Engine.buffer) return 0;
-    var p = Engine.playing
-      ? Engine.offset + Engine.ctx.currentTime - Engine.startTime : Engine.offset;
-    return Math.min(p, Engine.buffer.duration);
+    var d = Engine.decks[Engine.deck];
+    if (!d.buffer) return 0;
+    var p = d.playing
+      ? d.offset + Engine.ctx.currentTime - d.startTime : d.offset;
+    return Math.min(p, d.buffer.duration);
   };
 
-  /* --- effect + parameter control --- */
+  /* --- CUE / HOT CUE / NUDGE (focused deck) --- */
+  // Momentary cue preview: press plays from the current spot; release stops and
+  // snaps back to where the press began (the cue point).
+  Engine.cuePress = function () {
+    var d = Engine.decks[Engine.deck];
+    if (!d.buffer) return;
+    d.cuePoint = Engine.pos(); // return here on release
+    if (!d.playing) Engine.play();
+  };
+  Engine.cueRelease = function () {
+    var d = Engine.decks[Engine.deck];
+    if (!d.buffer) return;
+    if (d.playing) Engine.pause();
+    d.offset = Math.min(d.cuePoint, d.buffer.duration);
+  };
+
+  // Hot cue: empty slot -> set at the current position (returns 'set'); a set
+  // slot -> jump there and play (returns 'hit'). i = 0 (A) or 1 (B).
+  Engine.hotCue = function (i) {
+    var d = Engine.decks[Engine.deck];
+    if (!d.buffer) return null;
+    if (d.hotCues[i] == null) { d.hotCues[i] = Engine.pos(); return 'set'; }
+    if (d.playing) Engine.pause();
+    d.offset = Math.min(d.hotCues[i], d.buffer.duration);
+    Engine.play();
+    return 'hit';
+  };
+  Engine.hotCueSet = function (i) { return Engine.decks[Engine.deck].hotCues[i] != null; };
+  Engine.clearHotCue = function (i) { Engine.decks[Engine.deck].hotCues[i] = null; }; // long-press
+
+  // Nudge: momentary phase bend for aligning the focused deck to the other.
+  // Hold to bend the live source's rate +/-6%; release restores rate 1 and
+  // shifts startTime so pos() stays accurate for the phase we moved.
+  Engine.nudgeStart = function (dir) { // dir = +1 forward, -1 back
+    var d = Engine.decks[Engine.deck];
+    if (!d.playing || !d.source || d._nudgeDir != null) return;
+    d._nudgeDir = dir; d._nudgeStart = Engine.ctx.currentTime;
+    d.source.playbackRate.setTargetAtTime(1 + dir * 0.06, Engine.ctx.currentTime, 0.03);
+  };
+  Engine.nudgeEnd = function () {
+    var d = Engine.decks[Engine.deck];
+    if (d._nudgeDir == null) return;
+    if (d.source) {
+      var elapsed = Engine.ctx.currentTime - d._nudgeStart;
+      d.source.playbackRate.setTargetAtTime(1, Engine.ctx.currentTime, 0.03);
+      d.startTime -= d._nudgeDir * 0.06 * elapsed; // keep pos() ~accurate
+    }
+    d._nudgeDir = null;
+  };
+
+  /* --- effect + parameter control (all act on the focused deck) --- */
   Engine.setEffect = function (fx) {
-    if (fx === Engine.effect) return;
-    Engine.effect = fx;
+    var d = Engine.decks[Engine.deck];
+    if (fx === d.effect) return;
+    d.effect = fx;
     if (!Engine.ctx) return;
-    var n = Engine.n, c = Engine.ctx;
+    var n = d.fx, c = Engine.ctx;
     n.wet.gain.setTargetAtTime(0, c.currentTime, TC); // fade wet out...
-    clearTimeout(Engine._swap);
-    Engine._swap = setTimeout(function () {          // ...rewire, fade back in
-      wire(Engine.effect);
-      Engine.setTimeKnob(Engine.timeKnob);
-      applyMix();
+    clearTimeout(d._swap);
+    d._swap = setTimeout(function () {                // ...rewire, fade back in
+      wire(d, d.effect);
+      updateEchoTime(d);
+      applyMix(d);
     }, 120);
   };
 
   Engine.setOn = function (on) {
-    Engine.on = on;
+    var d = Engine.decks[Engine.deck];
+    d.on = on;
     if (!Engine.ctx) return;
     var at = Engine.ctx.currentTime;
-    if (Engine.quantize && Engine.playing) {
+    if (d.quantize && d.playing) {
       // snap the engage/release to the track's next beat boundary
       // (grid anchored at track start — we detect tempo, not downbeat)
-      var beat = 60 / Engine.bpm;
-      var phase = ((Engine.pos() - Engine.gridOffset) % beat + beat) % beat;
+      var beat = 60 / d.bpm;
+      var phase = ((Engine.pos() - d.gridOffset) % beat + beat) % beat;
       if (phase > 0.07) at += beat - phase; // within 70ms after a beat = now
     }
-    applyMix(at);
+    applyMix(d, at);
   };
 
-  Engine.setQuantize = function (q) { Engine.quantize = q; };
+  Engine.setQuantize = function (q) { Engine.decks[Engine.deck].quantize = q; };
 
   Engine.setMix = function (v) {
-    Engine.mix = v;
-    if (Engine.ctx) applyMix();
+    var d = Engine.decks[Engine.deck];
+    d.mix = v;
+    if (Engine.ctx) applyMix(d);
   };
 
   Engine.setBands = function (bands) { // array of 'low'/'mid'/'hi'; [] = full range
-    Engine.bands = bands || [];
-    if (!Engine.ctx) return;
-    var n = Engine.n, t = Engine.ctx.currentTime;
-    var any = Engine.bands.length > 0;
-    n.full.gain.setTargetAtTime(any ? 0 : 1, t, TC);
-    Object.keys(n.bandGain).forEach(function (b) {
-      n.bandGain[b].gain.setTargetAtTime(Engine.bands.indexOf(b) !== -1 ? 1 : 0, t, TC);
-    });
+    var d = Engine.decks[Engine.deck];
+    d.bands = bands || [];
+    if (Engine.ctx) applyBands(d);
   };
 
-  Engine.setBpm = function (bpm) { Engine.bpm = bpm; updateEchoTime(); };
-  Engine.setDivision = function (d) { Engine.division = d; updateEchoTime(); };
+  Engine.setBpm = function (bpm) {
+    Engine.bpm = bpm;
+    var d = Engine.decks[Engine.deck];
+    d.bpm = bpm; d.baseBpm = bpm; // manual/detected native tempo (sync reference)
+    updateEchoTime(d);
+  };
+  Engine.setDivision = function (v) {
+    Engine.decks[Engine.deck].division = v;
+    updateEchoTime(Engine.decks[Engine.deck]);
+  };
 
-  function updateEchoTime() {
+  function updateEchoTime(d) {
     if (!Engine.ctx) return;
-    var beat = (60 / Engine.bpm) * Engine.division;
-    var mult = Math.pow(2, (Engine.timeKnob - 0.5) * 2); // knob scales 0.5x..2x
+    var beat = (60 / d.bpm) * d.division;
+    var mult = Math.pow(2, (d.timeKnob - 0.5) * 2); // knob scales 0.5x..2x
     var t = Math.max(0.02, Math.min(2, beat * mult));
-    Engine.n.delay.delayTime.setTargetAtTime(t, Engine.ctx.currentTime, 0.05);
-    Engine.n.dubDelay.delayTime // headroom for the LFO wobble below 2s max
+    d.fx.delay.delayTime.setTargetAtTime(t, Engine.ctx.currentTime, 0.05);
+    d.fx.dubDelay.delayTime // headroom for the LFO wobble below 2s max
       .setTargetAtTime(Math.min(t, 1.99), Engine.ctx.currentTime, 0.05);
   }
 
   Engine.setTimeKnob = function (v) {
-    Engine.timeKnob = v;
+    var d = Engine.decks[Engine.deck];
+    d.timeKnob = v;
     if (!Engine.ctx) return;
-    updateEchoTime();                          // echo/dub: delay time scale
-    Engine.n.preDelay.delayTime               //  reverb: pre-delay 0..0.25s
+    updateEchoTime(d);                         // echo/dub: delay time scale
+    d.fx.preDelay.delayTime                    //  reverb: pre-delay 0..0.25s
       // slow glide: sweeping TIME doppler-bends the reverb input, the
       // Pioneer-style pitch swoop (down when raising, up when lowering)
       .setTargetAtTime(v * 0.25, Engine.ctx.currentTime, 0.2);
-    if (Engine.effect === 'reverb') applyMix(); // reverb depth follows TIME
+    if (d.effect === 'reverb') applyMix(d);    // reverb depth follows TIME
   };
 
   /* --- X-PAD: direct AudioParam writes, no debounce --- */
+  // bipolar FILTER: centre (x=0.5) = both filters open (neutral); left half
+  // sweeps a lowpass down (kills highs), right half sweeps a highpass up
+  // (kills lows). One strip, deviation from centre = amount.
+  function applyFilter(d, x, tc) {
+    var n = d.fx, t = Engine.ctx.currentTime;
+    if (x <= 0.5) { // lowpass on the left; highpass stays open
+      n.padLp.frequency.setTargetAtTime(18000 * Math.pow(90 / 18000, (0.5 - x) * 2), t, tc);
+      n.padHp.frequency.setTargetAtTime(20, t, tc);
+    } else {        // highpass on the right; lowpass stays open
+      n.padHp.frequency.setTargetAtTime(20 * Math.pow(8000 / 20, (x - 0.5) * 2), t, tc);
+      n.padLp.frequency.setTargetAtTime(18000, t, tc);
+    }
+  }
+  // double-tap on the FILTER pad latches it here; single-tap releases it
+  Engine.setFilterHold = function (x) { Engine.decks[Engine.deck].filterHold = x; };
+  Engine.releaseFilterHold = function () { Engine.decks[Engine.deck].filterHold = null; };
+
+  Engine.setPadMode = function (m) { // 'fx' | 'filter' | 'reverb'
+    var d = Engine.decks[Engine.deck];
+    d.padMode = m;
+    d.filterHold = null; // a mode change drops any parked filter
+    if (!Engine.ctx) return;
+    // rest the mode-specific paths so nothing sticks across a switch
+    var n = d.fx, t = Engine.ctx.currentTime;
+    n.padLp.frequency.setTargetAtTime(18000, t, 0.05);
+    n.padHp.frequency.setTargetAtTime(20, t, 0.05);
+    n.padVerbSend.gain.setTargetAtTime(0, t, TC);
+    n.padVerbRet.gain.setTargetAtTime(0, t, 0.35);
+  };
+
   Engine.padMove = function (x) { // x = 0..1
     if (!Engine.ctx) return;
-    var n = Engine.n, t = Engine.ctx.currentTime;
-    if (Engine.effect === 'echo') {
+    var d = Engine.decks[Engine.deck], n = d.fx, t = Engine.ctx.currentTime;
+    if (d.padMode === 'filter') {
+      applyFilter(d, x, 0.01);
+    } else if (d.padMode === 'reverb') {
+      // full-range throw into the plate, whatever effect is selected
+      n.padVerbSend.gain.setTargetAtTime(Math.sin(x * Math.PI / 2), t, 0.01);
+      n.padVerbRet.gain.setTargetAtTime(1, t, 0.01);
+    } else if (d.effect === 'echo') {
       n.fb.gain.setTargetAtTime(Math.min(0.95, x * 0.95), t, 0.01); // hard clamp
-    } else if (Engine.effect === 'dub') {
+    } else if (d.effect === 'dub') {
       // ride feedback past unity: the in-loop soft clip bounds the
       // self-oscillation (classic dub swell)
       n.dubFb.gain.setTargetAtTime(x * 1.05, t, 0.01);
     } else {
       // reverb: pad drives wet amount, still gated by TIME (silent at min)
-      n.wet.gain.setTargetAtTime(Math.sin(x * Engine.timeKnob * Math.PI / 2), t, 0.01);
+      n.wet.gain.setTargetAtTime(Math.sin(x * d.timeKnob * Math.PI / 2), t, 0.01);
     }
   };
 
   Engine.padEnd = function () { // return to knob-set resting values
     if (!Engine.ctx) return;
-    var n = Engine.n, t = Engine.ctx.currentTime;
-    if (Engine.effect === 'echo') n.fb.gain.setTargetAtTime(echoFb(), t, TC);
-    else if (Engine.effect === 'dub') n.dubFb.gain.setTargetAtTime(dubFb(), t, TC);
-    else applyMix();
+    var d = Engine.decks[Engine.deck], n = d.fx, t = Engine.ctx.currentTime;
+    if (d.padMode === 'filter') {
+      // parked (double-tapped) -> stay there; otherwise snap back to centre
+      applyFilter(d, d.filterHold != null ? d.filterHold : 0.5, 0.05);
+    } else if (d.padMode === 'reverb') {
+      n.padVerbSend.gain.setTargetAtTime(0, t, TC);      // stop feeding...
+      n.padVerbRet.gain.setTargetAtTime(0, t, 0.35);     // ...tail rings out
+    } else if (d.effect === 'echo') n.fb.gain.setTargetAtTime(echoFb(d), t, TC);
+    else if (d.effect === 'dub') n.dubFb.gain.setTargetAtTime(dubFb(d), t, TC);
+    else applyMix(d);
   };
 
   /* --- track analysis (rekordbox-style, runs on load) ----------------------
@@ -353,8 +599,10 @@
      as the grid anchor. Waveform: peak amplitude per bucket. */
   Engine.analyze = function (buffer) {
     var waveform = makeWaveform(buffer, 240);
-    return Engine.detectBpm(buffer).then(function (r) {
-      Engine.gridOffset = r.offset;
+    var d = Engine.decks[Engine.deck]; // bind: a deck switch mid-analysis
+    return Engine.detectBpm(buffer).then(function (r) { // must not misfile it
+      d.gridOffset = r.offset;
+      d.bpm = r.bpm; d.baseBpm = r.bpm; // native tempo of the base buffer
       return { bpm: r.bpm, gridOffset: r.offset, waveform: waveform };
     });
   };
