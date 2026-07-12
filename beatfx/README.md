@@ -20,6 +20,13 @@ live with three Web Audio effects:
   grittier every pass. A slow LFO wobbles the delay time (tape wow), and a
   small send feeds the repeats through the plate reverb. Beat-synced like
   ECHO; the X-PAD rides feedback past unity into bounded self-oscillation.
+- **DRUM** — a beat-synced drum roll layered *on top* of the track (not a
+  processor): a lookahead scheduler fires a TR-909 kit sample on the beat
+  grid while ON/OFF is engaged. Unlike the other effects, its knobs are
+  repurposed — **LEVEL/DEPTH** picks the sample (KICK / CLAP / SNARE) and
+  **TIME** pitches it ±1 octave (centre = 1×), while the **BEAT** arrows set
+  the roll rate (1/8 = fast roll … 2 = every two beats). The track keeps
+  playing dry underneath; QUANTIZE aligns the first hit to the next beat.
 
 Everything is vanilla HTML/CSS/JS — no frameworks, no build step, no CDNs.
 Once loaded, the app works fully offline (the impulse responses ship in the
@@ -75,8 +82,10 @@ finishes.
 - **FX FREQUENCY (LOW/MID/HI)** — band-limits what the effect processes; the
   dry signal always stays full-range. Any combination of bands can be active
   (e.g. MID + HI); with no band selected the effect gets the full range.
-- **EFFECT SELECT / TIME / LEVEL-DEPTH** — drag knobs vertically.
-  LEVEL/DEPTH crossfades dry/wet.
+- **EFFECT SELECT / TIME / LEVEL-DEPTH** — drag knobs vertically. EFFECT
+  SELECT cycles REVERB / ECHO / DUB / DRUM. LEVEL/DEPTH crossfades dry/wet
+  (in DRUM it selects the kit sample; TIME sets the drum pitch — the printed
+  labels change to match).
 - **ON/OFF** — engages the effect (click-free crossfade; pulses while on).
 - **Skin** — the UI is a skeuomorphic hardware skin styled after the
   Pioneer RMX-1000 Remix Station (`css/skin-rmx.css`, applied via
