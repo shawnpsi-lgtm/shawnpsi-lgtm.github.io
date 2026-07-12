@@ -31,9 +31,41 @@ finishes.
 
 ## Controls
 
-- **X-PAD** — touch strip; X position drives the current effect's key
-  parameter live (echo → feedback, reverb → wet amount, dub → feedback ride
-  into self-oscillation). Release to return to the knob-set value.
+- **DECK 1/2** — toggles between two identical decks. Each deck holds its
+  own track, playback position, waveform, BPM, beat grid **and its own full
+  FX chain** (effect, knobs, FX FREQUENCY, X-PAD mode, ON/OFF, QUANTIZE).
+  The panel shows whichever deck is focused; both decks keep playing and
+  running their own effects independently, summed at a shared master
+  limiter — so you can, e.g., echo deck 1 while deck 2 runs reverb.
+- **SYNC** — beat-matches the focused deck to the other deck's tempo with
+  **keylock** (pitch preserved): the track is time-stretched to the other
+  deck's BPM using an inline WSOLA algorithm, then plays at rate 1, so the
+  song speeds up or slows down without changing pitch. Press again to
+  release; touching TAP or AUTO/TAP also releases sync. Enabled only when
+  both decks have a track loaded.
+- **Bottom transport** (per deck):
+  - **PLAY/PAUSE** — start/stop the focused deck.
+  - **CUE** — momentary preview: plays from the current position while held,
+    then snaps back to that spot and stops when released.
+  - **NUDGE ◄ / ►** — press-and-hold to briefly bend the focused deck's speed
+    (±6%) and shift its phase, for lining its beats up against the other deck
+    (use after SYNC has matched the tempo). Releasing restores normal speed.
+  - **HOT CUE A / B** — press an unlit pad to drop a cue marker at the current
+    position (it lights: A red, B green); press a lit pad to jump there and
+    play; **long-press (½ s) to clear it**. Each deck keeps its own two hot
+    cues; loading a new track clears them.
+
+- **X-PAD** — touch strip; the label is a dropdown assigning what the strip
+  drives. **FX** (default): the current effect's key parameter live (echo →
+  feedback, reverb → wet amount, dub → feedback ride into self-oscillation).
+  **FILTER**: a bipolar DJ filter on the whole mix — the centre is neutral,
+  sweeping **left** closes a lowpass (kills highs, → 90 Hz) and **right**
+  opens a highpass (kills lows, → 8 kHz); deviation from centre is the
+  amount. **Double-tap a spot to park (hold) the filter there** hands-free;
+  a single tap/sweep is momentary and releases the hold. **REVERB**: a
+  full-range send into the plate, independent of the selected effect — the
+  tail rings out on release. Except a parked filter, release returns the
+  strip to its resting value.
 - **BEAT arrows** — step the echo beat division (1/8, 1/4, 1/2, 3/4, 1, 2).
 - **TAP** — tap tempo (average of the last 4 tap intervals). AUTO/TAP resets
   to 120 BPM.
@@ -46,10 +78,13 @@ finishes.
 - **EFFECT SELECT / TIME / LEVEL-DEPTH** — drag knobs vertically.
   LEVEL/DEPTH crossfades dry/wet.
 - **ON/OFF** — engages the effect (click-free crossfade; pulses while on).
-- **A9 pill (top-right)** — toggles a skeuomorphic hardware skin
-  (`css/skin-a9.css`): graphite faceplate, knurled knobs, OLED-style
-  display, LED buttons, red-illuminated ON/OFF. Pure CSS, persisted in
-  localStorage.
+- **Skin** — the UI is a skeuomorphic hardware skin styled after the
+  Pioneer RMX-1000 Remix Station (`css/skin-rmx.css`, applied via
+  `class="skin-rmx"` on `<html>`): glossy black faceplate, red 7-segment
+  BPM display (DSEG7 font), DJM-style blue LED-framed FX FREQUENCY
+  buttons, round hardware buttons for AUTO/TAP + QUANTIZE (red LED core)
+  with a green-ring TAP, gear-shaped fluted knobs that spin with the
+  pointer, blue LED X-PAD, green hold-glow ON/OFF.
 
 ## Run locally
 
@@ -77,3 +112,8 @@ The `ir/` folder ships **Greg Hopkins EMT 140 Plate Reverb IRs**
 (CC Attribution, via the
 [oramics/sampled](https://oramics.github.io/sampled/) collection) —
 currently unused; the reverb IR is synthesized at startup.
+
+The `fonts/` folder ships **DSEG7 Classic** by keshikan
+([github.com/keshikan/DSEG](https://github.com/keshikan/DSEG), SIL OFL 1.1 —
+license included) for the RMX skin's 7-segment BPM display, so the app
+remains fully offline.
