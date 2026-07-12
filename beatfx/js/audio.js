@@ -18,12 +18,20 @@
              fx: null, effect: 'echo', wired: null, on: false, mix: 0.5,
              bands: [], quantize: false, padMode: 'fx', timeKnob: 0.5,
              division: 0.5, filterHold: null, _swap: null,
+             // DRUM effect: beat-synced sample roll layered over the track
+             drumIndex: 0, drumRate: 1, _drumTimer: null, _drumNext: 0,
              // transport cues + nudge (per deck)
              cuePoint: 0, hotCues: [null, null], _nudgeDir: null, _nudgeStart: 0 };
   }
 
+  // DRUM sample kit: shared read-only decoded buffers, selected per deck by the
+  // LEVEL/DEPTH knob. Order = the LEVEL sweep order (low->high) + label order.
+  var DRUM_FILES = ['roland-tr-909-kick_G_major.wav',
+                    'roland-tr-909-clap_F_minor.wav',
+                    'tr-909-snare-shot.wav'];
+
   var Engine = {
-    ctx: null, limiter: null, washIR: null,
+    ctx: null, limiter: null, washIR: null, drumBuffers: [],
     decks: [deckState(), deckState()],
     deck: 0, // the UI-focused deck; both decks are always audible
     bpm: 120, // mirrors the focused deck's tempo (for the app's readout)
@@ -131,6 +139,16 @@
     return buf;
   }
 
+  function loadDrums() { // fetch + decode each kit sample into Engine.drumBuffers[i]
+    DRUM_FILES.forEach(function (f, i) {
+      fetch('./drum/' + f)
+        .then(function (r) { return r.arrayBuffer(); })
+        .then(decode)
+        .then(function (b) { Engine.drumBuffers[i] = b; })
+        .catch(function () {}); // a missing sample just leaves that slot silent
+    });
+  }
+
   function buildGraph() {
     var c = Engine.ctx;
     Engine.washIR = makeWashIR(c); // one plate IR, shared read-only by both decks
@@ -141,6 +159,7 @@
     Engine.limiter.ratio.value = 12;
     Engine.limiter.attack.value = 0.003; Engine.limiter.release.value = 0.25;
     Engine.limiter.connect(c.destination);
+    loadDrums(); // fetch + decode the drum kit (async; scheduler skips until ready)
     // each deck gets its own full FX chain so effects are deck-specific and
     // both decks' effects can run at once (they sum at the limiter)
     Engine.decks.forEach(function (d) {
@@ -169,6 +188,11 @@
     n.padHp = c.createBiquadFilter();
     n.padHp.type = 'highpass'; n.padHp.frequency.value = 20; n.padHp.Q.value = 1.2;
     n.master.connect(n.padLp); n.padLp.connect(n.padHp); n.padHp.connect(Engine.limiter);
+
+    // DRUM: scheduled kit hits sum into master (so the X-PAD filter rides them
+    // too), layered on top of the untouched track — not an in-line processor.
+    n.drumOut = c.createGain(); n.drumOut.gain.value = 0.9;
+    n.drumOut.connect(n.master);
 
     // FX FREQUENCY: three parallel band filters into the wet path, each
     // behind its own gain so any combination can be active. A plain gain
@@ -243,13 +267,56 @@
 
   function wire(d, fx) {
     var n = d.fx;
-    if (d.wired) {
+    if (d.wired && ENTRY[d.wired]) { // DRUM has no inline path: nothing to unwire
       n.wetIn.disconnect(n[ENTRY[d.wired]]);
       n[EXIT[d.wired]].disconnect(n.wet);
     }
-    n.wetIn.connect(n[ENTRY[fx]]);
-    n[EXIT[fx]].connect(n.wet);
+    if (ENTRY[fx]) {
+      n.wetIn.connect(n[ENTRY[fx]]);
+      n[EXIT[fx]].connect(n.wet);
+    }
     d.wired = fx;
+  }
+
+  /* --- DRUM roll scheduler (per deck) -------------------------------------
+     A lookahead timer fires the selected kit sample on the beat grid at the
+     BEAT division rate, pitched by the TIME knob. Free-running from engage
+     (or the next beat when QUANTIZE is lit), independent of track playback so
+     it works as a stand-alone drum machine. */
+  function deckPos(d) {
+    if (!d.buffer) return 0;
+    var p = d.playing ? d.offset + Engine.ctx.currentTime - d.startTime : d.offset;
+    return Math.min(p, d.buffer.duration);
+  }
+  function fireDrum(d, when) {
+    var buf = Engine.drumBuffers[d.drumIndex];
+    if (!buf) return; // sample not decoded yet: skip this hit
+    var s = Engine.ctx.createBufferSource();
+    s.buffer = buf; s.playbackRate.value = d.drumRate;
+    s.connect(d.fx.drumOut); s.start(when);
+  }
+  function drumScheduler(d) {
+    var c = Engine.ctx, lookahead = 0.1;
+    while (d._drumNext < c.currentTime + lookahead) {
+      fireDrum(d, d._drumNext);
+      // recompute spacing each hit so BEAT / TIME changes apply mid-roll
+      d._drumNext += Math.max(0.03, (60 / d.bpm) * d.division);
+    }
+  }
+  function startDrum(d) {
+    if (d._drumTimer) return;
+    var c = Engine.ctx, t0 = c.currentTime + 0.06;
+    if (d.quantize && d.playing) { // align the first hit to the next beat
+      var beat = 60 / d.bpm;
+      var phase = ((deckPos(d) - d.gridOffset) % beat + beat) % beat;
+      t0 = c.currentTime + (beat - phase);
+    }
+    d._drumNext = t0;
+    d._drumTimer = setInterval(function () { drumScheduler(d); }, 25);
+    drumScheduler(d);
+  }
+  function stopDrum(d) {
+    if (d._drumTimer) { clearInterval(d._drumTimer); d._drumTimer = null; }
   }
 
   function echoFb(d) { return Math.min(0.9, d.mix * 0.9); } // repeat regen amount
@@ -275,6 +342,12 @@
   function applyMix(d, at) { // `at`: schedule the change in the future (quantize)
     var c = Engine.ctx, n = d.fx, t = at || c.currentTime;
     var m = d.on ? d.mix : 0;
+    if (d.effect === 'drum') {
+      // DRUM adds hits via drumOut; the track itself stays fully dry, untouched
+      n.dry.gain.setTargetAtTime(1, t, TC);
+      n.wet.gain.setTargetAtTime(0, t, TC);
+      return;
+    }
     if (d.effect === 'echo' || d.effect === 'dub') {
       // DJM-style echo / dub: dry stays at full and repeats stack on top.
       // LEVEL/DEPTH is the echo send *and* the feedback amount, and the
@@ -452,8 +525,10 @@
   Engine.setEffect = function (fx) {
     var d = Engine.decks[Engine.deck];
     if (fx === d.effect) return;
+    var wasDrum = d.effect === 'drum';
     d.effect = fx;
     if (!Engine.ctx) return;
+    if (wasDrum) stopDrum(d); // leaving DRUM: silence the roll
     var n = d.fx, c = Engine.ctx;
     n.wet.gain.setTargetAtTime(0, c.currentTime, TC); // fade wet out...
     clearTimeout(d._swap);
@@ -461,6 +536,7 @@
       wire(d, d.effect);
       updateEchoTime(d);
       applyMix(d);
+      if (d.effect === 'drum' && d.on) startDrum(d); // entering DRUM while ON
     }, 120);
   };
 
@@ -468,6 +544,10 @@
     var d = Engine.decks[Engine.deck];
     d.on = on;
     if (!Engine.ctx) return;
+    if (d.effect === 'drum') { // ON starts/stops the roll (track stays dry)
+      if (on) startDrum(d); else stopDrum(d);
+      return;
+    }
     var at = Engine.ctx.currentTime;
     if (d.quantize && d.playing) {
       // snap the engage/release to the track's next beat boundary
@@ -483,6 +563,10 @@
 
   Engine.setMix = function (v) {
     var d = Engine.decks[Engine.deck];
+    if (d.effect === 'drum') { // LEVEL/DEPTH picks the kit sample (3 slots)
+      d.drumIndex = Math.min(DRUM_FILES.length - 1, Math.floor(v * DRUM_FILES.length));
+      return;
+    }
     d.mix = v;
     if (Engine.ctx) applyMix(d);
   };
@@ -518,6 +602,10 @@
     var d = Engine.decks[Engine.deck];
     d.timeKnob = v;
     if (!Engine.ctx) return;
+    if (d.effect === 'drum') { // TIME pitches the kit +/- one octave (centre = 1x)
+      d.drumRate = Math.pow(2, (v - 0.5) * 2);
+      return;
+    }
     updateEchoTime(d);                         // echo/dub: delay time scale
     d.fx.preDelay.delayTime                    //  reverb: pre-delay 0..0.25s
       // slow glide: sweeping TIME doppler-bends the reverb input, the

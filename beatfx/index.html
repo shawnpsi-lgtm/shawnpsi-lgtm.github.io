@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#111111">
   <title>BEAT FX</title>
-  <link rel="stylesheet" href="./css/style.css?v=17">
-  <link rel="stylesheet" href="./css/skin-rmx.css?v=23">
+  <link rel="stylesheet" href="./css/style.css?v=18">
+  <link rel="stylesheet" href="./css/skin-rmx.css?v=24">
 </head>
 <body>
   <main class="panel">
@@ -82,13 +82,14 @@
         <span data-fx="0">REVERB</span>
         <span data-fx="1" class="lit">ECHO</span>
         <span data-fx="2">DUB</span>
+        <span data-fx="3">DRUM</span>
       </div>
     </section>
 
     <!-- 6. TIME + LEVEL/DEPTH -->
     <section class="knob-row">
       <div class="knob-cell">
-        <div class="section-label">TIME</div>
+        <div class="section-label" id="time-label">TIME</div>
         <div id="time-knob" class="knob">
           <div class="knob-indicator"></div>
         </div>
@@ -100,7 +101,7 @@
         <button id="onoff" class="onoff" aria-label="Effect on/off"></button>
       </div>
       <div class="knob-cell">
-        <div class="section-label">LEVEL/DEPTH</div>
+        <div class="section-label" id="level-label">LEVEL/DEPTH</div>
         <div id="level-knob" class="knob">
           <div class="knob-indicator"></div>
         </div>
@@ -130,7 +131,7 @@
   </main>
 
   <script src="./js/knob.js?v=6"></script>
-  <script src="./js/audio.js?v=19"></script>
-  <script src="./js/app.js?v=20"></script>
+  <script src="./js/audio.js?v=20"></script>
+  <script src="./js/app.js?v=21"></script>
 </body>
 </html>

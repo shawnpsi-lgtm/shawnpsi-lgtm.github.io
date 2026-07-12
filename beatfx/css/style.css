@@ -336,10 +336,10 @@ button:disabled { opacity: 0.35; }
 
 .select-section .fx-labels {
   display: flex;
-  max-width: 250px;
+  max-width: 270px;
   margin: 8px auto 0;
-  font-size: 10px;
-  letter-spacing: 2px;
+  font-size: 9px;
+  letter-spacing: 1px;
   color: var(--dim);
 }
 /* equal thirds so the middle label sits exactly under the knob */
