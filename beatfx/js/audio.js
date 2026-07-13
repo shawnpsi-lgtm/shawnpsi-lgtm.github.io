@@ -7,7 +7,7 @@
   'use strict';
   var TC = 0.02; // default smoothing time constant (s)
   var ENTRY = { reverb: 'preDelay', echo: 'delay', dub: 'dubDelay' };
-  var EXIT = { reverb: 'revShelf', echo: 'delay', dub: 'dubOut' };
+  var EXIT = { reverb: 'revMix', echo: 'delay', dub: 'dubOut' };
 
   function deckState() { // one per deck: exact copies, independent playback + FX
     return { buffer: null, baseBuffer: null, source: null, srcGain: null,
@@ -125,12 +125,12 @@
     return out;
   }
 
-  function makeWashIR(c) {
-    // Long DJ-transition wash: 5s RT60 of exponentially decaying noise.
+  function makeWashIR(c, secs) {
+    // DJ-transition wash: `secs` RT60 of exponentially decaying noise.
     // A one-pole lowpass that closes over time damps highs progressively
     // (bright attack, dark tail), like a big plate. Independent noise per
     // channel gives stereo width; the convolver normalizes level itself.
-    var sr = c.sampleRate, len = Math.floor(sr * 5);
+    var sr = c.sampleRate, len = Math.floor(sr * secs);
     var buf = c.createBuffer(2, len, sr);
     for (var ch = 0; ch < 2; ch++) {
       var d = buf.getChannelData(ch), lp = 0;
@@ -163,7 +163,8 @@
 
   function buildGraph() {
     var c = Engine.ctx;
-    Engine.washIR = makeWashIR(c); // one plate IR, shared read-only by both decks
+    Engine.washIR = makeWashIR(c, 5); // one plate IR, shared read-only by both decks
+    Engine.washIRShort = makeWashIR(c, 1.2); // tight plate for low reverb TIME
     // shared master limiter: catches the summed overs of both decks' FX so
     // stacked echo build-ups don't hard-clip at the destination
     Engine.limiter = c.createDynamicsCompressor();
@@ -243,6 +244,21 @@
     n.input.connect(n.padVerbSend); n.padVerbSend.connect(n.preDelay);
     n.padVerbRet = c.createGain(); n.padVerbRet.gain.value = 0;
     n.revShelf.connect(n.padVerbRet); n.padVerbRet.connect(n.master);
+    // Knob-reverb TIME = reverb length. A convolver's decay is fixed, so
+    // length is a crossfade between a tight 1.2s plate and the 5s wash,
+    // fading to silence at TIME 0 (see updateReverbTime). The blend is the
+    // knob reverb's private exit (EXIT.reverb = revMix); the pad/dub/noise
+    // paths keep the fixed long plate.
+    n.convShort = c.createConvolver();
+    n.convShort.buffer = Engine.washIRShort;
+    n.revHpS = c.createBiquadFilter();
+    n.revHpS.type = 'highpass'; n.revHpS.frequency.value = 180;
+    n.preDelay.connect(n.convShort); n.convShort.connect(n.revHpS);
+    n.revLongG = c.createGain(); n.revLongG.gain.value = 0;
+    n.revShortG = c.createGain(); n.revShortG.gain.value = 0;
+    n.revMix = c.createGain();
+    n.revShelf.connect(n.revLongG); n.revLongG.connect(n.revMix);
+    n.revHpS.connect(n.revShortG); n.revShortG.connect(n.revMix);
 
     // Echo: delay <-> feedback gain -> lowpass (repeats get darker) -> soft
     // clip. The clipper (unity slope at zero, so decay is untouched) bounds
@@ -312,6 +328,7 @@
     wire(d, d.effect);   // initialise this deck's effect state
     applyBands(d);
     updateEchoTime(d);
+    updateReverbTime(d);
     updateNoiseDepth(d);
     updateNoiseTempo(d);
     applyMix(d);
@@ -605,6 +622,7 @@
     d._swap = setTimeout(function () {                // ...rewire, fade back in
       wire(d, d.effect);
       updateEchoTime(d);
+      updateReverbTime(d); // resync decay blend to the TIME knob on entry
       if (d.effect === 'drum' && d.on) startDrum(d); // entering DRUM while ON
       updateNoiseDepth(d); // self-gating: closes the plate's noise exit outside NOISE
       if (d.effect === 'noise') {
@@ -692,6 +710,18 @@
       .setTargetAtTime(Math.min(t, 1.99), Engine.ctx.currentTime, 0.05);
   }
 
+  function updateReverbTime(d) { // TIME -> reverb length: 0 = no reverb,
+    if (!Engine.ctx) return;     // low = tight 1.2s plate, high = the 5s wash
+    var t = Engine.ctx.currentTime, v = d.timeKnob;
+    var cross = Math.min(1, Math.max(0, (v - 0.3) / 0.7)); // short -> long
+    var level = Math.min(1, v / 0.15); // fast fade up from silence at 0
+    d.fx.revLongG.gain.setTargetAtTime(level * cross, t, TC);
+    // 2.07 makeup: convolver normalization leaves the 1.2s plate ~2x quieter
+    // than the 5s one in steady state (measured offline with broadband noise),
+    // so the TIME sweep stays level-flat across the blend
+    d.fx.revShortG.gain.setTargetAtTime(level * (1 - cross) * 2.07, t, TC);
+  }
+
   function updateNoiseDepth(d) { // TIME knob (0..1) -> tremolo depth
     if (!Engine.ctx) return;
     var t = Engine.ctx.currentTime, v = d.timeKnob;
@@ -732,6 +762,7 @@
     }
     if (d.effect === 'noise') { updateNoiseDepth(d); return; } // TIME -> tremolo depth
     updateEchoTime(d);                         // echo/dub: delay time scale
+    updateReverbTime(d);                       //  reverb: decay length + kill at 0
     d.fx.preDelay.delayTime                    //  reverb: pre-delay 0..0.25s
       // slow glide: sweeping TIME doppler-bends the reverb input, the
       // Pioneer-style pitch swoop (down when raising, up when lowering)
