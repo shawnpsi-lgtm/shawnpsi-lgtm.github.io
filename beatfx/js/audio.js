@@ -299,6 +299,7 @@
     n.noiseHp.connect(n.preDelay);
     n.noiseSrc.start();
     n.noiseOut = c.createGain(); // post-reverb tap, parity with drumOut
+    n.noiseOut.gain.value = 0;   // closed outside NOISE mode (see updateNoiseDepth)
     n.revShelf.connect(n.noiseOut); n.noiseOut.connect(n.fxVol);
     // tremolo pumps the post-reverb tap: modulating before the convolver is
     // inaudible (the 5s plate smears any chop flat), after it you hear the
@@ -602,10 +603,10 @@
       wire(d, d.effect);
       updateEchoTime(d);
       if (d.effect === 'drum' && d.on) startDrum(d); // entering DRUM while ON
+      updateNoiseDepth(d); // self-gating: closes the plate's noise exit outside NOISE
       if (d.effect === 'noise') {
-        // resync audio params to whatever TIME/LEVEL already show, so the
-        // sound doesn't lag the visible knob position after a switch
-        updateNoiseDepth(d);
+        // resync tempo to whatever LEVEL already shows, so the sound
+        // doesn't lag the visible knob position after a switch
         updateNoiseTempo(d);
         if (d.on) startNoise(d);
       }
@@ -691,6 +692,15 @@
   function updateNoiseDepth(d) { // TIME knob (0..1) -> tremolo depth
     if (!Engine.ctx) return;
     var t = Engine.ctx.currentTime, v = d.timeKnob;
+    // noiseOut is the shared plate's third exit and it is NOT gated by
+    // ON/OFF or the wet crossfade — outside NOISE mode both its base gain
+    // and the LFO swing must sit at 0, or the reverb/dub plate leaks to
+    // master even with the effect off.
+    if (d.effect !== 'noise') {
+      d.fx.noiseOut.gain.setTargetAtTime(0, t, TC);
+      d.fx.noiseLfoAmt.gain.setTargetAtTime(0, t, TC);
+      return;
+    }
     // base gain sits at 1-v/2, LFO swings +/- v/2: depth 0 = steady wash,
     // depth 1 = full 0..1 pump of the post-reverb tail
     d.fx.noiseOut.gain.setTargetAtTime(1 - v / 2, t, TC);
