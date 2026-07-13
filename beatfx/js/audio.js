@@ -425,11 +425,14 @@
       n.dubFb.gain.setTargetAtTime(dubFb(d), t, TC);
       return;
     }
-    n.wetIn.gain.setTargetAtTime(1, t, TC);
-    // Reverb depth is gated by the TIME knob: at min the crossfade stays
-    // fully dry, so no reverb is heard regardless of LEVEL/DEPTH.
-    if (d.effect === 'reverb') m *= d.timeKnob;
-    n.dry.gain.setTargetAtTime(Math.cos(m * Math.PI / 2), t, TC);
+    // Reverb (the only effect reaching here), send/return style exactly like
+    // the X-PAD throw: dry stays at full, LEVEL alone sets the wash level on
+    // the same sin curve as the pad, TIME only shapes pre-delay/doppler.
+    // (The old equal-power crossfade + TIME depth gate sounded much quieter
+    // than the pad at every knob position.) The send closes when OFF so the
+    // plate isn't silently double-fed underneath an X-PAD throw.
+    n.wetIn.gain.setTargetAtTime(d.on ? 1 : 0, t, TC);
+    n.dry.gain.setTargetAtTime(1, t, TC);
     n.wet.gain.setTargetAtTime(Math.sin(m * Math.PI / 2), t, TC);
   }
 
@@ -733,7 +736,6 @@
       // slow glide: sweeping TIME doppler-bends the reverb input, the
       // Pioneer-style pitch swoop (down when raising, up when lowering)
       .setTargetAtTime(v * 0.25, Engine.ctx.currentTime, 0.2);
-    if (d.effect === 'reverb') applyMix(d);    // reverb depth follows TIME
   };
 
   /* --- X-PAD: direct AudioParam writes, no debounce --- */
@@ -783,8 +785,8 @@
       // self-oscillation (classic dub swell)
       n.dubFb.gain.setTargetAtTime(x * 1.05, t, 0.01);
     } else {
-      // reverb: pad drives wet amount, still gated by TIME (silent at min)
-      n.wet.gain.setTargetAtTime(Math.sin(x * d.timeKnob * Math.PI / 2), t, 0.01);
+      // reverb: pad drives wet amount, same curve as LEVEL (no TIME gate)
+      n.wet.gain.setTargetAtTime(Math.sin(x * Math.PI / 2), t, 0.01);
     }
   };
 
