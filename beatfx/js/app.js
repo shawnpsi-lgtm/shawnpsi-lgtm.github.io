@@ -6,7 +6,7 @@
   // effect order for the EFFECT SELECT knob (reverb..drum); ECHO_FX is the
   // knob value that lands on the default effect. Declared up here because the
   // per-deck default FX snapshot (deckFxUI) is built before the knob section.
-  var FX = ['reverb', 'echo', 'dub', 'drum'];
+  var FX = ['reverb', 'echo', 'dub', 'drum', 'noise'];
   var ECHO_FX = 1 / (FX.length - 1);
 
   /* iOS: create/resume AudioContext inside the first user gesture */
@@ -324,18 +324,31 @@
   var timeLabel = $('time-label'), levelLabel = $('level-label');
   function drumNameFor(v) { return DRUM_NAMES[Math.min(DRUM_NAMES.length - 1, Math.floor(v * DRUM_NAMES.length))]; }
   function updateKnobLabels(effect, levelVal) {
-    var drum = effect === 'drum';
-    timeLabel.textContent = drum ? 'PITCH' : 'TIME';
-    levelLabel.textContent = drum ? drumNameFor(levelVal) : 'LEVEL/DEPTH';
+    var drum = effect === 'drum', noise = effect === 'noise';
+    timeLabel.textContent = drum ? 'PITCH' : noise ? 'TREMOLO' : 'TIME';
+    levelLabel.textContent = drum ? drumNameFor(levelVal) : noise ? 'TEMPO' : 'LEVEL/DEPTH';
   }
   function litEffect(v) { // reflect the fx-knob position in the effect-name row
     var idx = fxIndex(v);
     fxLabels.forEach(function (s, i) { s.classList.toggle('lit', i === idx); });
     updateKnobLabels(FX[idx], levelKnob ? levelKnob.value : 0.5);
+    // DRUM: sample pick snaps to the 3 kit slots; other modes stay continuous
+    if (levelKnob) levelKnob.steps = FX[idx] === 'drum' ? DRUM_NAMES.length : 0;
   }
   var fxKnob = new Knob($('fx-knob'), {
     steps: FX.length, value: ECHO_FX, range: 160,
-    onInput: function (v) { litEffect(v); Engine.setEffect(FX[fxIndex(v)]); }
+    onInput: function (v) {
+      litEffect(v); Engine.setEffect(FX[fxIndex(v)]);
+      if (FX[fxIndex(v)] === 'drum') { // entering DRUM: pitch recenters (1x),
+        timeKnob.set(0.5);             // sample defaults to SNARE (knob max)
+        levelKnob.set(1);
+        Engine.setMix(1); // sync the pick even if the knob was already at max
+      }
+      if (FX[fxIndex(v)] === 'noise') { // entering NOISE: TEMPO recenters (1x beat)
+        levelKnob.set(0.5);             // (sweeping through DRUM parks it at max)
+        Engine.setMix(0.5); // sync even if the knob was already centered
+      }
+    }
   });
   var timeKnob = new Knob($('time-knob'), {
     value: 0.5, dblReset: 0.5, // double-tap snaps back to center (1x beat / 1x pitch)
@@ -347,6 +360,10 @@
       Engine.setMix(v);
       if (Engine.decks[curDeck].effect === 'drum') levelLabel.textContent = drumNameFor(v);
     }
+  });
+  var fxVolKnob = new Knob($('fxvol-knob'), {
+    value: 1, dblReset: 1, // double-tap restores full FX volume
+    onInput: function (v) { Engine.setFxVol(v); }
   });
 
   /* --- ON/OFF --- */
@@ -395,13 +412,13 @@
 
   /* --- per-deck FX panel state (see the DECK toggle above) --- */
   function defaultFxUI() {
-    return { fx: ECHO_FX, time: 0.5, level: 0.5, divIdx: 2,
-             bands: [], padValue: 'fx', on: false, q: false };
+    return { fx: ECHO_FX, time: 0.5, level: 0.5, vol: 1, divIdx: 2,
+             bands: [], padValue: 'filter', on: false, q: false };
   }
   function grabFxUI() { // snapshot the visible panel for the deck we're leaving
     return {
       fx: fxKnob.value, time: timeKnob.value, level: levelKnob.value,
-      divIdx: divIdx,
+      vol: fxVolKnob.value, divIdx: divIdx,
       bands: freqBtns.filter(function (b) { return b.classList.contains('active'); })
                      .map(function (b) { return b.dataset.band; }),
       padValue: padMenu.querySelector('.dd-item.selected').dataset.value,
@@ -413,6 +430,7 @@
     fxKnob.set(u.fx, true); litEffect(u.fx);   // the engine chain already holds it)
     timeKnob.set(u.time, true);
     levelKnob.set(u.level, true);
+    fxVolKnob.set(u.vol, true);
     divIdx = u.divIdx; $('beat-value').textContent = LABELS[divIdx];
     freqBtns.forEach(function (b) {
       b.classList.toggle('active', u.bands.indexOf(b.dataset.band) !== -1);

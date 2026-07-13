@@ -334,6 +334,19 @@ button:disabled { opacity: 0.35; }
   pointer-events: none;
 }
 
+/* FX VOL: mini trim knob parked in the section's top-right corner —
+   absolutely positioned so it adds no vertical height (100dvh invariant) */
+.select-section { position: relative; }
+.fxvol-cell {
+  position: absolute;
+  top: 0; right: 2px;
+  text-align: center;
+}
+.knob-sm {
+  width: clamp(32px, 5dvh, 40px);
+  height: clamp(32px, 5dvh, 40px);
+}
+
 .select-section .fx-labels {
   display: flex;
   max-width: 270px;

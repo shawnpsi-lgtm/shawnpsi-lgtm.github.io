@@ -16,10 +16,15 @@
              // per-deck FX: each deck has its own effect chain + settings, so
              // effects only touch the deck they're on
              fx: null, effect: 'echo', wired: null, on: false, mix: 0.5,
-             bands: [], quantize: false, padMode: 'fx', timeKnob: 0.5,
+             fxVol: 1, // FX VOL trim: scales what the effect adds, never the dry track
+             bands: [], quantize: false, padMode: 'filter', timeKnob: 0.5,
              division: 0.5, filterHold: null, _swap: null,
              // DRUM effect: beat-synced sample roll layered over the track
-             drumIndex: 0, drumRate: 1, _drumTimer: null, _drumNext: 0,
+             drumIndex: 2, drumRate: 1, _drumTimer: null, _drumNext: 0, // snare default
+             // NOISE effect: white-noise-through-reverb wash, tremolo'd.
+             // TIME (depth) reuses timeKnob above; tempo gets its own field
+             // since it's re-read by updateNoiseTempo on every BPM/division change
+             noiseTempo: 0.5,
              // transport cues + nudge (per deck)
              cuePoint: 0, hotCues: [null, null], _nudgeDir: null, _nudgeStart: 0 };
   }
@@ -139,6 +144,13 @@
     return buf;
   }
 
+  function makeNoiseBuffer(c) { // shared white-noise loop for the NOISE effect
+    var len = c.sampleRate * 2, buf = c.createBuffer(1, len, c.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+
   function loadDrums() { // fetch + decode each kit sample into Engine.drumBuffers[i]
     DRUM_FILES.forEach(function (f, i) {
       fetch('./drum/' + f)
@@ -160,6 +172,7 @@
     Engine.limiter.attack.value = 0.003; Engine.limiter.release.value = 0.25;
     Engine.limiter.connect(c.destination);
     loadDrums(); // fetch + decode the drum kit (async; scheduler skips until ready)
+    Engine.noiseBuffer = makeNoiseBuffer(c); // shared white-noise source for NOISE effect
     // each deck gets its own full FX chain so effects are deck-specific and
     // both decks' effects can run at once (they sum at the limiter)
     Engine.decks.forEach(function (d) {
@@ -180,7 +193,10 @@
     n.master = c.createGain();
     n.wetIn = c.createGain();
     n.input.connect(n.dry); n.dry.connect(n.master);
-    n.wet.connect(n.master);
+    // FX VOL: output trim on everything the effect adds (wet path + drum
+    // hits); the dry track goes straight to master, untouched
+    n.fxVol = c.createGain(); n.fxVol.gain.value = d.fxVol;
+    n.wet.connect(n.fxVol); n.fxVol.connect(n.master);
     // X-PAD lowpass/highpass modes: this deck's master-bus DJ filters in
     // series, both resting fully open so they're inaudible in other modes
     n.padLp = c.createBiquadFilter();
@@ -192,7 +208,7 @@
     // DRUM: scheduled kit hits sum into master (so the X-PAD filter rides them
     // too), layered on top of the untouched track — not an in-line processor.
     n.drumOut = c.createGain(); n.drumOut.gain.value = 0.9;
-    n.drumOut.connect(n.master);
+    n.drumOut.connect(n.fxVol);
 
     // FX FREQUENCY: three parallel band filters into the wet path, each
     // behind its own gain so any combination can be active. A plain gain
@@ -228,12 +244,17 @@
     n.padVerbRet = c.createGain(); n.padVerbRet.gain.value = 0;
     n.revShelf.connect(n.padVerbRet); n.padVerbRet.connect(n.master);
 
-    // Echo: delay <-> feedback gain -> lowpass (repeats get darker)
+    // Echo: delay <-> feedback gain -> lowpass (repeats get darker) -> soft
+    // clip. The clipper (unity slope at zero, so decay is untouched) bounds
+    // the loop: at max LEVEL the continuous send would otherwise build up to
+    // ~10x dry (steady state 1/(1-fb)) and run away.
     n.delay = c.createDelay(2);
     n.fb = c.createGain(); n.fb.gain.value = 0.45;
     n.fbFilter = c.createBiquadFilter();
     n.fbFilter.type = 'lowpass'; n.fbFilter.frequency.value = 3500;
-    n.delay.connect(n.fb); n.fb.connect(n.fbFilter); n.fbFilter.connect(n.delay);
+    n.fbClip = c.createWaveShaper(); n.fbClip.curve = tanhCurve();
+    n.delay.connect(n.fb); n.fb.connect(n.fbFilter);
+    n.fbFilter.connect(n.fbClip); n.fbClip.connect(n.delay);
 
     // Dub echo: tape-style loop — every repeat is band-limited and
     // saturated again, so it gets darker, thinner, grittier each pass.
@@ -259,9 +280,39 @@
     n.dubDelay.connect(n.dubVerbSend); n.dubVerbSend.connect(n.convolver);
     n.convolver.connect(n.dubOut);
 
+    // NOISE: white noise -> highpass -> tremolo -> the SAME shared reverb
+    // plate as REVERB/X-PAD reverb mode. Not an inline processor (no
+    // ENTRY/EXIT, like DRUM) — the track stays dry. The source loops forever
+    // (started once here, like dubLfo/noiseLfo below) and ON/OFF gates
+    // noiseSend instead of stopping it: once a BufferSource's audio-rate
+    // input to a subgraph stops, Chrome silently freezes setTargetAtTime
+    // automation on that subgraph's params (confirmed: ctx.currentTime keeps
+    // advancing but the gain value doesn't move) — keeping the source live
+    // sidesteps that. Gating one node earlier still lets the convolver's
+    // tail ring out naturally through the always-open noiseOut after OFF.
+    n.noiseSrc = c.createBufferSource();
+    n.noiseSrc.buffer = Engine.noiseBuffer; n.noiseSrc.loop = true;
+    n.noiseSend = c.createGain(); n.noiseSend.gain.value = 0;
+    n.noiseHp = c.createBiquadFilter();
+    n.noiseHp.type = 'highpass'; n.noiseHp.frequency.value = 600; // ponytail: fixed cutoff, add a knob if tunable shaping is wanted
+    n.noiseSrc.connect(n.noiseSend); n.noiseSend.connect(n.noiseHp);
+    n.noiseHp.connect(n.preDelay);
+    n.noiseSrc.start();
+    n.noiseOut = c.createGain(); // post-reverb tap, parity with drumOut
+    n.revShelf.connect(n.noiseOut); n.noiseOut.connect(n.fxVol);
+    // tremolo pumps the post-reverb tap: modulating before the convolver is
+    // inaudible (the 5s plate smears any chop flat), after it you hear the
+    // classic LFO pump. Depth rides noiseOut's base gain +/- the LFO.
+    n.noiseLfo = c.createOscillator(); n.noiseLfo.frequency.value = 4;
+    n.noiseLfoAmt = c.createGain(); n.noiseLfoAmt.gain.value = 0;
+    n.noiseLfo.connect(n.noiseLfoAmt); n.noiseLfoAmt.connect(n.noiseOut.gain);
+    n.noiseLfo.start();
+
     wire(d, d.effect);   // initialise this deck's effect state
     applyBands(d);
     updateEchoTime(d);
+    updateNoiseDepth(d);
+    updateNoiseTempo(d);
     applyMix(d);
   }
 
@@ -279,15 +330,10 @@
   }
 
   /* --- DRUM roll scheduler (per deck) -------------------------------------
-     A lookahead timer fires the selected kit sample on the beat grid at the
-     BEAT division rate, pitched by the TIME knob. Free-running from engage
-     (or the next beat when QUANTIZE is lit), independent of track playback so
-     it works as a stand-alone drum machine. */
-  function deckPos(d) {
-    if (!d.buffer) return 0;
-    var p = d.playing ? d.offset + Engine.ctx.currentTime - d.startTime : d.offset;
-    return Math.min(p, d.buffer.duration);
-  }
+     A lookahead timer fires the selected kit sample at the BEAT division
+     rate, pitched by the TIME knob. While the track plays, every hit is
+     locked to its beat grid so the roll always matches the song; paused,
+     it free-runs as a stand-alone drum machine. */
   function fireDrum(d, when) {
     var buf = Engine.drumBuffers[d.drumIndex];
     if (!buf) return; // sample not decoded yet: skip this hit
@@ -296,27 +342,45 @@
     s.connect(d.fx.drumOut); s.start(when);
   }
   function drumScheduler(d) {
-    var c = Engine.ctx, lookahead = 0.1;
-    while (d._drumNext < c.currentTime + lookahead) {
-      fireDrum(d, d._drumNext);
-      // recompute spacing each hit so BEAT / TIME changes apply mid-roll
-      d._drumNext += Math.max(0.03, (60 / d.bpm) * d.division);
+    var c = Engine.ctx, horizon = c.currentTime + 0.1; // lookahead
+    // recompute spacing each tick so BEAT / TAP changes apply mid-roll
+    var step = Math.max(0.03, (60 / d.bpm) * d.division);
+    if (d.playing) {
+      // grid-locked: hits land on the track's beat-grid subdivisions, so the
+      // roll always matches the song. Re-anchored from the live transport
+      // every tick, so seek / hot cue / nudge can't drift it. _drumNext is a
+      // watermark (first grid time not yet scheduled) to avoid re-fires.
+      var gridT = d.startTime - d.offset + d.gridOffset; // ctx time of grid zero
+      var from = Math.max(d._drumNext, c.currentTime);
+      var t = gridT + Math.ceil((from - gridT) / step - 1e-9) * step;
+      for (; t < horizon; t += step) fireDrum(d, t);
+      d._drumNext = Math.max(d._drumNext, t);
+    } else { // paused: free-run from the last hit (stand-alone drum machine)
+      while (d._drumNext < horizon) {
+        fireDrum(d, d._drumNext);
+        d._drumNext += step;
+      }
     }
   }
   function startDrum(d) {
     if (d._drumTimer) return;
-    var c = Engine.ctx, t0 = c.currentTime + 0.06;
-    if (d.quantize && d.playing) { // align the first hit to the next beat
-      var beat = 60 / d.bpm;
-      var phase = ((deckPos(d) - d.gridOffset) % beat + beat) % beat;
-      t0 = c.currentTime + (beat - phase);
-    }
-    d._drumNext = t0;
+    // playing: the scheduler grid-aligns every hit, first one included
+    d._drumNext = Engine.ctx.currentTime + (d.playing ? 0 : 0.06);
     d._drumTimer = setInterval(function () { drumScheduler(d); }, 25);
     drumScheduler(d);
   }
   function stopDrum(d) {
     if (d._drumTimer) { clearInterval(d._drumTimer); d._drumTimer = null; }
+  }
+
+  /* --- NOISE roll (per deck): the white-noise source loops forever (started
+     once in buildDeckFx); ON/OFF gates noiseSend so the tail still rings out
+     through the always-open noiseOut, same trick echo's wetIn gating uses. --- */
+  function startNoise(d) {
+    d.fx.noiseSend.gain.setTargetAtTime(1, Engine.ctx.currentTime, TC);
+  }
+  function stopNoise(d) {
+    d.fx.noiseSend.gain.setTargetAtTime(0, Engine.ctx.currentTime, TC);
   }
 
   function echoFb(d) { return Math.min(0.9, d.mix * 0.9); } // repeat regen amount
@@ -342,8 +406,9 @@
   function applyMix(d, at) { // `at`: schedule the change in the future (quantize)
     var c = Engine.ctx, n = d.fx, t = at || c.currentTime;
     var m = d.on ? d.mix : 0;
-    if (d.effect === 'drum') {
-      // DRUM adds hits via drumOut; the track itself stays fully dry, untouched
+    if (d.effect === 'drum' || d.effect === 'noise') {
+      // DRUM/NOISE add their own layer via drumOut/noiseOut; the track
+      // itself stays fully dry, untouched
       n.dry.gain.setTargetAtTime(1, t, TC);
       n.wet.gain.setTargetAtTime(0, t, TC);
       return;
@@ -525,18 +590,26 @@
   Engine.setEffect = function (fx) {
     var d = Engine.decks[Engine.deck];
     if (fx === d.effect) return;
-    var wasDrum = d.effect === 'drum';
+    var wasDrum = d.effect === 'drum', wasNoise = d.effect === 'noise';
     d.effect = fx;
     if (!Engine.ctx) return;
     if (wasDrum) stopDrum(d); // leaving DRUM: silence the roll
+    if (wasNoise) stopNoise(d); // leaving NOISE: let the tail ring out
     var n = d.fx, c = Engine.ctx;
     n.wet.gain.setTargetAtTime(0, c.currentTime, TC); // fade wet out...
     clearTimeout(d._swap);
     d._swap = setTimeout(function () {                // ...rewire, fade back in
       wire(d, d.effect);
       updateEchoTime(d);
-      applyMix(d);
       if (d.effect === 'drum' && d.on) startDrum(d); // entering DRUM while ON
+      if (d.effect === 'noise') {
+        // resync audio params to whatever TIME/LEVEL already show, so the
+        // sound doesn't lag the visible knob position after a switch
+        updateNoiseDepth(d);
+        updateNoiseTempo(d);
+        if (d.on) startNoise(d);
+      }
+      applyMix(d);
     }, 120);
   };
 
@@ -546,6 +619,10 @@
     if (!Engine.ctx) return;
     if (d.effect === 'drum') { // ON starts/stops the roll (track stays dry)
       if (on) startDrum(d); else stopDrum(d);
+      return;
+    }
+    if (d.effect === 'noise') { // ON starts/stops the noise wash (track stays dry)
+      if (on) startNoise(d); else stopNoise(d);
       return;
     }
     var at = Engine.ctx.currentTime;
@@ -561,10 +638,21 @@
 
   Engine.setQuantize = function (q) { Engine.decks[Engine.deck].quantize = q; };
 
+  Engine.setFxVol = function (v) { // FX VOL knob: effect-output level, 0..1
+    var d = Engine.decks[Engine.deck];
+    d.fxVol = v;
+    if (Engine.ctx) d.fx.fxVol.gain.setTargetAtTime(v, Engine.ctx.currentTime, TC);
+  };
+
   Engine.setMix = function (v) {
     var d = Engine.decks[Engine.deck];
     if (d.effect === 'drum') { // LEVEL/DEPTH picks the kit sample (3 slots)
       d.drumIndex = Math.min(DRUM_FILES.length - 1, Math.floor(v * DRUM_FILES.length));
+      return;
+    }
+    if (d.effect === 'noise') { // LEVEL/DEPTH sets the tremolo tempo (BEAT-synced)
+      d.noiseTempo = v;
+      updateNoiseTempo(d);
       return;
     }
     d.mix = v;
@@ -582,10 +670,12 @@
     var d = Engine.decks[Engine.deck];
     d.bpm = bpm; d.baseBpm = bpm; // manual/detected native tempo (sync reference)
     updateEchoTime(d);
+    updateNoiseTempo(d);
   };
   Engine.setDivision = function (v) {
-    Engine.decks[Engine.deck].division = v;
-    updateEchoTime(Engine.decks[Engine.deck]);
+    var d = Engine.decks[Engine.deck];
+    d.division = v;
+    updateEchoTime(d); // noise tempo ignores division on purpose
   };
 
   function updateEchoTime(d) {
@@ -598,6 +688,27 @@
       .setTargetAtTime(Math.min(t, 1.99), Engine.ctx.currentTime, 0.05);
   }
 
+  function updateNoiseDepth(d) { // TIME knob (0..1) -> tremolo depth
+    if (!Engine.ctx) return;
+    var t = Engine.ctx.currentTime, v = d.timeKnob;
+    // base gain sits at 1-v/2, LFO swings +/- v/2: depth 0 = steady wash,
+    // depth 1 = full 0..1 pump of the post-reverb tail
+    d.fx.noiseOut.gain.setTargetAtTime(1 - v / 2, t, TC);
+    d.fx.noiseLfoAmt.gain.setTargetAtTime(v / 2, t, TC);
+  }
+
+  function updateNoiseTempo(d) { // LEVEL knob (0..1) -> tremolo rate
+    if (!Engine.ctx) return;
+    // BPM-synced but deliberately ignores d.division: the BEAT arrows steer
+    // echo/dub/drum, the pump speed is the TEMPO knob's job alone
+    var beat = 60 / d.bpm;
+    // knob up = faster pump: 1/16x..16x the beat rate (period shrinks as v
+    // rises), clamped to a 4s crawl .. ~33Hz buzz
+    var mult = Math.pow(2, (0.5 - d.noiseTempo) * 8);
+    var period = Math.max(0.03, Math.min(4, beat * mult));
+    d.fx.noiseLfo.frequency.setTargetAtTime(1 / period, Engine.ctx.currentTime, 0.05);
+  }
+
   Engine.setTimeKnob = function (v) {
     var d = Engine.decks[Engine.deck];
     d.timeKnob = v;
@@ -606,6 +717,7 @@
       d.drumRate = Math.pow(2, (v - 0.5) * 2);
       return;
     }
+    if (d.effect === 'noise') { updateNoiseDepth(d); return; } // TIME -> tremolo depth
     updateEchoTime(d);                         // echo/dub: delay time scale
     d.fx.preDelay.delayTime                    //  reverb: pre-delay 0..0.25s
       // slow glide: sweeping TIME doppler-bends the reverb input, the
