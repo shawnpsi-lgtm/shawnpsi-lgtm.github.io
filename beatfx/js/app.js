@@ -188,8 +188,100 @@
   }
   bindDrag(seekBar, seekStart, seekMove, seekEnd);
 
-  (function tick() { // progress readout
-    if (!seeking && Engine.buffer) {
+  /* --- strip pager: controls view <-> live 2-deck waveform close-up ------
+     Both decks stacked in one canvas, each scrolling under its own centred
+     playhead. Drawn straight from the AudioBuffer every frame (no precompute):
+     one min/max+colour scan per pixel column over the visible window. */
+  var stripEl = $('track-strip'), zoomWave = $('wave-zoom'), stripView = 0;
+  var ZOOM_HALF = 4; // seconds visible each side of the playhead
+  function flipStrip() {
+    stripView = 1 - stripView;
+    stripEl.classList.toggle('waves', stripView === 1);
+  }
+  $('strip-prev').addEventListener('click', flipStrip);
+  $('strip-next').addEventListener('click', flipStrip);
+
+  // scratch: grab a deck's wave (top half = deck 1, bottom = deck 2) and drag
+  // it under the fixed playhead — 1:1 with the pixels, so drag speed = pitch
+  var scratchDeck = null, scratchX0 = 0, scratchPos0 = 0, scratchW = 1;
+  bindDrag(zoomWave, function (x, y) {
+    if (scratchDeck != null) return; // one finger at a time
+    var r = zoomWave.getBoundingClientRect();
+    var i = (y - r.top) < r.height / 2 ? 0 : 1;
+    if (!Engine.decks[i].buffer) return;
+    scratchDeck = i; scratchX0 = x; scratchW = r.width;
+    scratchPos0 = Engine.posOf(i);
+    Engine.scratchStart(i);
+  }, function (x) {
+    if (scratchDeck == null) return;
+    // wave follows the finger: dragging left pulls later audio to the playhead
+    Engine.scratchMove(scratchDeck, scratchPos0 - (x - scratchX0) / scratchW * ZOOM_HALF * 2);
+  }, function () {
+    if (scratchDeck == null) return;
+    Engine.scratchEnd(scratchDeck);
+    scratchDeck = null;
+  });
+
+  function drawDeckZoom(g, i, y0, w, hh, dpr) {
+    var d = Engine.decks[i], mid = y0 + hh / 2;
+    g.font = 9 * dpr + 'px sans-serif';
+    g.fillStyle = 'rgba(255,255,255,0.35)';
+    g.fillText('DECK ' + (i + 1), 6 * dpr, y0 + 12 * dpr);
+    if (!d.buffer) { // empty deck: dim flat centreline
+      g.fillStyle = 'rgba(255,255,255,0.12)';
+      g.fillRect(0, mid - dpr / 2, w, dpr);
+      return;
+    }
+    var ch = d.buffer.getChannelData(0), sr = d.buffer.sampleRate;
+    var span = ZOOM_HALF * 2, t0 = Engine.posOf(i) - ZOOM_HALF;
+    // beat grid behind the wave: faint ticks, brighter every 4th beat
+    var beat = 60 / d.bpm, k = Math.ceil((t0 - d.gridOffset) / beat);
+    for (var t = d.gridOffset + k * beat; t < t0 + span; t += beat, k++) {
+      g.fillStyle = k % 4 === 0 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)';
+      g.fillRect((t - t0) / span * w, y0, dpr, hh);
+    }
+    var spc = span * sr / w;                          // samples per pixel column
+    var stride = Math.max(1, Math.floor(spc / 96));   // cap the per-column scan
+    for (var x = 0; x < w; x++) {
+      var s0 = Math.floor((t0 + x / w * span) * sr), s1 = s0 + spc;
+      if (s1 <= 0 || s0 >= ch.length) continue;
+      var peak = 0, e = 0, de = 0, prev = 0, v, a, s;
+      for (s = Math.max(0, s0); s < s1 && s < ch.length; s += stride) {
+        v = ch[s]; a = v < 0 ? -v : v;
+        if (a > peak) peak = a;
+        e += v * v; de += (v - prev) * (v - prev); prev = v;
+      }
+      if (peak === 0) continue;
+      // colour by brightness: successive-difference ratio approximates the
+      // spectral centroid (bass columns stay red, hats/transients go green-white)
+      var c = Math.min(1, Math.sqrt(de / (e + 1e-12)) * 1.4);
+      var bh = Math.max(dpr, peak * (hh / 2) * 0.92);
+      g.fillStyle = 'hsl(' + (8 + c * 130) + ',85%,' + (40 + c * 32) + '%)';
+      g.fillRect(x, mid - bh, 1, bh * 2);
+    }
+  }
+
+  function drawZoom() {
+    var dpr = window.devicePixelRatio || 1;
+    var w = Math.floor(stripEl.clientWidth * dpr);
+    var h = Math.floor(stripEl.clientHeight * dpr);
+    if (!w || !h) return;
+    if (zoomWave.width !== w || zoomWave.height !== h) {
+      zoomWave.width = w; zoomWave.height = h;
+    }
+    var g = zoomWave.getContext('2d'), hh = h / 2;
+    g.fillStyle = '#04050a'; g.fillRect(0, 0, w, h);
+    drawDeckZoom(g, 0, 0, w, hh, dpr);
+    drawDeckZoom(g, 1, hh, w, hh, dpr);
+    g.fillStyle = 'rgba(255,255,255,0.1)';
+    g.fillRect(0, hh - dpr / 2, w, dpr);        // deck divider
+    g.fillStyle = '#ff3b30';
+    g.fillRect(w / 2 - dpr, 0, dpr * 2, h);     // centred playheads
+  }
+
+  (function tick() { // progress readout / live waveform
+    if (stripView === 1) drawZoom();
+    else if (!seeking && Engine.buffer) {
       updateProgress(Engine.pos() / Engine.buffer.duration);
     }
     requestAnimationFrame(tick);
@@ -501,7 +593,7 @@
         e.preventDefault();
         el.setPointerCapture(e.pointerId);
         active = true;
-        onStart(e.clientX);
+        onStart(e.clientX, e.clientY);
       });
       el.addEventListener('pointermove', function (e) { if (active) onMove(e.clientX); });
       ['pointerup', 'pointercancel'].forEach(function (ev) {
@@ -509,7 +601,8 @@
       });
     } else {
       el.addEventListener('touchstart', function (e) {
-        e.preventDefault(); active = true; onStart(e.touches[0].clientX);
+        e.preventDefault(); active = true;
+        onStart(e.touches[0].clientX, e.touches[0].clientY);
       }, { passive: false });
       el.addEventListener('touchmove', function (e) {
         e.preventDefault(); if (active) onMove(e.touches[0].clientX);
@@ -517,7 +610,7 @@
       el.addEventListener('touchend', function (e) {
         if (active) { active = false; onEnd(e.changedTouches[0].clientX); }
       });
-      el.addEventListener('mousedown', function (e) { e.preventDefault(); active = true; onStart(e.clientX); });
+      el.addEventListener('mousedown', function (e) { e.preventDefault(); active = true; onStart(e.clientX, e.clientY); });
       window.addEventListener('mousemove', function (e) { if (active) onMove(e.clientX); });
       window.addEventListener('mouseup', function (e) { if (active) { active = false; onEnd(e.clientX); } });
     }

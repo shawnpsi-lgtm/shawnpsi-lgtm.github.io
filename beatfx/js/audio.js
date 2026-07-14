@@ -442,15 +442,15 @@
       n.dubFb.gain.setTargetAtTime(dubFb(d), t, TC);
       return;
     }
-    // Reverb (the only effect reaching here), send/return style exactly like
-    // the X-PAD throw: dry stays at full, LEVEL alone sets the wash level on
-    // the same sin curve as the pad, TIME only shapes pre-delay/doppler.
-    // (The old equal-power crossfade + TIME depth gate sounded much quieter
-    // than the pad at every knob position.) The send closes when OFF so the
-    // plate isn't silently double-fed underneath an X-PAD throw.
-    n.wetIn.gain.setTargetAtTime(d.on ? 1 : 0, t, TC);
+    // Reverb (the only effect reaching here): sonically identical to the X-PAD
+    // reverb throw, and it tails out the same way. Same shared 5s plate
+    // (updateReverbTime keeps it long-only), dry stays full, and LEVEL drives
+    // the return on the exact same sin curve and unity gain the pad uses
+    // (send sin(x) x return 1 == wetIn 1 x wet sin(m)).
     n.dry.gain.setTargetAtTime(1, t, TC);
-    n.wet.gain.setTargetAtTime(Math.sin(m * Math.PI / 2), t, TC);
+    n.wetIn.gain.setTargetAtTime(d.on ? 1 : 0, t, TC); // OFF stops feeding the plate
+    if (d.on) n.wet.gain.setTargetAtTime(Math.sin(d.mix * Math.PI / 2), t, TC);
+    else n.wet.gain.setTargetAtTime(0, t, 0.6); // ...but the return rings the tail out (like padEnd)
   }
 
   /* --- transport (operates on the focused deck) --- */
@@ -490,7 +490,8 @@
     f.offset *= ratio; f.gridOffset *= ratio;
     if (f.offset >= f.buffer.duration) f.offset = 0;
     if (wasPlaying) Engine.play();              // restart on the new buffer
-    Engine.bpm = f.bpm; updateEchoTime(f);      // echoes follow what's heard
+    Engine.bpm = f.bpm;                         // FX follow what's heard
+    updateEchoTime(f); updateReverbTime(f);
     return f.synced;
   };
 
@@ -506,15 +507,15 @@
     });
   };
 
-  Engine.play = function () {
-    var d = Engine.decks[Engine.deck];
+  Engine.play = function (idx) { // idx: optional deck override (default focused)
+    var deckIndex = idx == null ? Engine.deck : idx;
+    var d = Engine.decks[deckIndex];
     if (!d.buffer || d.playing) return;
     var c = Engine.ensure();
     if (d.offset >= d.buffer.duration) d.offset = 0;
     var src = c.createBufferSource();
     src.buffer = d.buffer;
     src.connect(d.srcGain);
-    var deckIndex = Engine.deck;
     src.onended = function () {
       if (d.source !== src) return; // manual stop already handled
       d.playing = false; d.source = null; d.offset = 0;
@@ -527,8 +528,8 @@
     d.srcGain.gain.setTargetAtTime(1, c.currentTime, TC);
   };
 
-  Engine.pause = function () {
-    var d = Engine.decks[Engine.deck];
+  Engine.pause = function (idx) { // idx: optional deck override (default focused)
+    var d = Engine.decks[idx == null ? Engine.deck : idx];
     if (!d.playing) return;
     var c = Engine.ctx, src = d.source;
     d.offset = Math.min(d.offset + c.currentTime - d.startTime,
@@ -549,13 +550,14 @@
     if (wasPlaying) Engine.play();
   };
 
-  Engine.pos = function () {
-    var d = Engine.decks[Engine.deck];
+  Engine.posOf = function (i) { // live position of either deck (s into its buffer)
+    var d = Engine.decks[i];
     if (!d.buffer) return 0;
     var p = d.playing
       ? d.offset + Engine.ctx.currentTime - d.startTime : d.offset;
     return Math.min(p, d.buffer.duration);
   };
+  Engine.pos = function () { return Engine.posOf(Engine.deck); };
 
   /* --- CUE / HOT CUE / NUDGE (focused deck) --- */
   // Momentary cue preview: press plays from the current spot; release stops and
@@ -605,6 +607,89 @@
       d.startTime -= d._nudgeDir * 0.06 * elapsed; // keep pos() ~accurate
     }
     d._nudgeDir = null;
+  };
+
+  /* --- SCRATCH (waveform view): vinyl-style scrub on either deck ----------
+     A BufferSource can't play backwards, so scratching runs through a tiny
+     AudioWorklet that reads the buffer at a position slewed toward the
+     finger each sample — the slew velocity IS the playback rate, so drag
+     speed and direction become pitch, both ways, with no direction-flip
+     seams. Scratching pauses the deck (offset = the finger), feeds the
+     deck's FX input (so effects ride the scrub), and release resumes play
+     if the deck was playing (vinyl let-go). */
+  var SCRATCH_SRC =
+    "class S extends AudioWorkletProcessor {\n" +
+    "  constructor() { super(); this.chs = null; this.bsr = 48000;\n" +
+    "    this.pos = 0; this.tgt = 0; this.on = false;\n" +
+    "    var self = this;\n" +
+    "    this.port.onmessage = function (e) { var m = e.data;\n" +
+    "      if (m.buf) { self.chs = m.buf; self.bsr = m.sr; }\n" +
+    "      if (m.jump != null) { self.pos = m.jump; self.tgt = m.jump; }\n" +
+    "      if (m.target != null) self.tgt = m.target;\n" +
+    "      if (m.active != null) self.on = m.active; }; }\n" +
+    "  process(inputs, outputs) {\n" +
+    "    var o = outputs[0];\n" +
+    "    if (!this.chs || !this.on) return true; // outputs pre-zeroed\n" +
+    "    var k = 1 - Math.exp(-1 / (sampleRate * 0.02)); // ~20ms position slew\n" +
+    "    for (var i = 0; i < o[0].length; i++) {\n" +
+    "      this.pos += (this.tgt - this.pos) * k;\n" +
+    "      var idx = this.pos * this.bsr, i0 = Math.floor(idx), fr = idx - i0;\n" +
+    "      for (var c = 0; c < o.length; c++) {\n" +
+    "        var d = this.chs[c < this.chs.length ? c : 0];\n" +
+    "        var a = d[i0] || 0, b = d[i0 + 1] || 0;\n" +
+    "        o[c][i] = a + (b - a) * fr;\n" +
+    "      }\n" +
+    "    }\n" +
+    "    return true;\n" +
+    "  }\n" +
+    "}\n" +
+    "registerProcessor('scratch', S);";
+  var scratchModule = null;
+  function ensureScratchModule() {
+    if (!scratchModule) {
+      var url = URL.createObjectURL(new Blob([SCRATCH_SRC], { type: 'application/javascript' }));
+      scratchModule = Engine.ctx.audioWorklet.addModule(url);
+    }
+    return scratchModule;
+  }
+
+  Engine.scratchStart = function (i) {
+    var d = Engine.decks[i];
+    if (!d.buffer || d._scratching) return;
+    Engine.ensure(); // pointerdown = the required user gesture
+    d._scratchWasPlaying = d.playing;
+    if (d.playing) Engine.pause(i); // commits offset = live position
+    d._scratching = true;
+    ensureScratchModule().then(function () {
+      if (!d._scratching) return; // finger already lifted
+      if (!d._scratchNode) {
+        d._scratchNode = new AudioWorkletNode(Engine.ctx, 'scratch', { outputChannelCount: [2] });
+        d._scratchNode.connect(d.fx.input); // post-srcGain: FX ride the scrub
+      }
+      if (d._scratchBuf !== d.buffer) { // (re)send on new track / sync swap
+        // ponytail: full channel copy into the worklet (~2x track memory);
+        // stream windows instead if mobile memory becomes a problem
+        var chs = [];
+        for (var c = 0; c < Math.min(2, d.buffer.numberOfChannels); c++)
+          chs.push(d.buffer.getChannelData(c));
+        d._scratchNode.port.postMessage({ buf: chs, sr: d.buffer.sampleRate });
+        d._scratchBuf = d.buffer;
+      }
+      d._scratchNode.port.postMessage({ active: true, jump: d.offset });
+    });
+  };
+  Engine.scratchMove = function (i, pos) { // pos: finger's buffer position (s)
+    var d = Engine.decks[i];
+    if (!d._scratching || !d.buffer) return;
+    d.offset = Math.max(0, Math.min(pos, d.buffer.duration)); // view + resume point
+    if (d._scratchNode) d._scratchNode.port.postMessage({ target: d.offset });
+  };
+  Engine.scratchEnd = function (i) {
+    var d = Engine.decks[i];
+    if (!d._scratching) return;
+    d._scratching = false;
+    if (d._scratchNode) d._scratchNode.port.postMessage({ active: false });
+    if (d._scratchWasPlaying) Engine.play(i); // vinyl let-go: resume from here
   };
 
   /* --- effect + parameter control (all act on the focused deck) --- */
@@ -692,12 +777,14 @@
     var d = Engine.decks[Engine.deck];
     d.bpm = bpm; d.baseBpm = bpm; // manual/detected native tempo (sync reference)
     updateEchoTime(d);
+    updateReverbTime(d);
     updateNoiseTempo(d);
   };
   Engine.setDivision = function (v) {
     var d = Engine.decks[Engine.deck];
     d.division = v;
-    updateEchoTime(d); // noise tempo ignores division on purpose
+    updateEchoTime(d);
+    updateReverbTime(d); // noise tempo ignores division on purpose
   };
 
   function updateEchoTime(d) {
@@ -710,16 +797,18 @@
       .setTargetAtTime(Math.min(t, 1.99), Engine.ctx.currentTime, 0.05);
   }
 
-  function updateReverbTime(d) { // TIME -> reverb length: 0 = no reverb,
-    if (!Engine.ctx) return;     // low = tight 1.2s plate, high = the 5s wash
+  function updateReverbTime(d) { // knob reverb == the X-PAD throw: the full 5s
+    if (!Engine.ctx) return;     // long plate only, LEVEL sets the amount.
     var t = Engine.ctx.currentTime, v = d.timeKnob;
-    var cross = Math.min(1, Math.max(0, (v - 0.3) / 0.7)); // short -> long
-    var level = Math.min(1, v / 0.15); // fast fade up from silence at 0
-    d.fx.revLongG.gain.setTargetAtTime(level * cross, t, TC);
-    // 2.07 makeup: convolver normalization leaves the 1.2s plate ~2x quieter
-    // than the 5s one in steady state (measured offline with broadband noise),
-    // so the TIME sweep stays level-flat across the blend
-    d.fx.revShortG.gain.setTargetAtTime(level * (1 - cross) * 2.07, t, TC);
+    var beat = (60 / d.bpm) * d.division;
+    // long plate only (revMix == revShelf), so the wet is the exact same
+    // signal the X-PAD reverb taps; the short plate stays out of the blend
+    d.fx.revLongG.gain.setTargetAtTime(1, t, TC);
+    d.fx.revShortG.gain.setTargetAtTime(0, t, TC);
+    // pre-delay rides the grid (shared node, so the X-PAD reverb inherits the
+    // same swoop): TIME sweeps 0..1 beat-division, the Pioneer-style pitch
+    // bend when TIME/tempo moves. 0.5s = delay line max.
+    d.fx.preDelay.delayTime.setTargetAtTime(Math.min(0.5, beat * v), t, 0.2);
   }
 
   function updateNoiseDepth(d) { // TIME knob (0..1) -> tremolo depth
@@ -762,11 +851,7 @@
     }
     if (d.effect === 'noise') { updateNoiseDepth(d); return; } // TIME -> tremolo depth
     updateEchoTime(d);                         // echo/dub: delay time scale
-    updateReverbTime(d);                       //  reverb: decay length + kill at 0
-    d.fx.preDelay.delayTime                    //  reverb: pre-delay 0..0.25s
-      // slow glide: sweeping TIME doppler-bends the reverb input, the
-      // Pioneer-style pitch swoop (down when raising, up when lowering)
-      .setTargetAtTime(v * 0.25, Engine.ctx.currentTime, 0.2);
+    updateReverbTime(d);                       // reverb: pre-delay swoop (5s plate fixed)
   };
 
   /* --- X-PAD: direct AudioParam writes, no debounce --- */
