@@ -503,3 +503,13 @@
   box-shadow: 0 0 14px rgba(53, 224, 160, 0.5), inset 0 0 10px rgba(53, 224, 160, 0.32);
   text-shadow: 0 0 8px rgba(130, 255, 210, 0.9);
 }
+
+/* strip pager arrows: bare glyphs in the faceplate gutter, not glossy keys */
+.skin-rmx .strip-arrow,
+.skin-rmx .strip-arrow:active {
+  background: none;
+  border: none;
+  box-shadow: none;
+  transform: translateY(-50%); /* keep centred (skin :active nudges buttons) */
+}
+.skin-rmx .strip-arrow:active { color: #fff; }

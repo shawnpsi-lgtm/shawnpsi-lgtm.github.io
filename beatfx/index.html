@@ -5,13 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#111111">
   <title>BEAT FX</title>
-  <link rel="stylesheet" href="./css/style.css?v=19">
-  <link rel="stylesheet" href="./css/skin-rmx.css?v=24">
+  <link rel="stylesheet" href="./css/style.css?v=21">
+  <link rel="stylesheet" href="./css/skin-rmx.css?v=25">
 </head>
 <body>
   <main class="panel">
-    <!-- 0. Track strip -->
-    <section class="track-strip">
+    <!-- 0. Track strip: pages between the controls and the live 2-deck
+         waveform close-up; the pager arrows live in the panel gutter -->
+    <section class="track-strip" id="track-strip">
+      <button id="strip-prev" class="strip-arrow strip-arrow-l" aria-label="Switch strip view">&#9664;</button>
+      <button id="strip-next" class="strip-arrow strip-arrow-r" aria-label="Switch strip view">&#9654;</button>
+      <canvas id="wave-zoom" class="wave-zoom"></canvas>
       <div class="file-row">
         <button id="deck-btn" class="deck-btn" aria-label="Switch deck">DECK 1</button>
         <label class="file-label" for="file-input">
@@ -138,7 +142,7 @@
   </main>
 
   <script src="./js/knob.js?v=6"></script>
-  <script src="./js/audio.js?v=34"></script>
-  <script src="./js/app.js?v=26"></script>
+  <script src="./js/audio.js?v=36"></script>
+  <script src="./js/app.js?v=28"></script>
 </body>
 </html>
