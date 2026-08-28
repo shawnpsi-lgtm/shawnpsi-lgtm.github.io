@@ -29,3 +29,7 @@ videos/vr_trim_desktop.mp4
 fonts/Inter-Latin.woff2
 fonts/PlayfairDisplay-Bold.woff2
 fonts/PlayfairDisplay-BoldItalic.woff2
+
+# Build tooling
+node_modules/
+dist/

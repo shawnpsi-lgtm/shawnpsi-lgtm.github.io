@@ -12,6 +12,59 @@
   <link rel="modulepreload" crossorigin href="/assets/styles-GID8uTDy.js">
   <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css">
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
+
+  <style>
+    /* Grid + purple glow background (from gradient-blur-bg) */
+    :root { --grid-line: #f0f0f0; --grid-glow: #d5c5ff; }
+    [data-theme=dark] { --grid-line: #26262b; --grid-glow: #2e2350; }
+
+    body { background-color: var(--bg-off); position: relative; }
+
+    /* Own layer so the mask fades the grid without touching page content */
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px),
+        radial-gradient(circle 800px at 100% 200px, var(--grid-glow), transparent);
+      background-size: 96px 64px, 96px 64px, 100% 100%;
+      /* Horizontal fade only: strongest on the right, gone by the left edge.
+         No vertical falloff, so the layer works at any page length. */
+      -webkit-mask-image: linear-gradient(to left, #000 30%, transparent 95%);
+      mask-image: linear-gradient(to left, #000 30%, transparent 95%);
+    }
+
+    /* .section paints solid #fff over body; let the gradient through */
+    .section, [data-theme=dark] .section { background: transparent; }
+
+    /* Liquid-glass pill. Replaces the full-width band + hairline rule:
+       the pill is the anchor now, so the old border-bottom goes. */
+    .section-label {
+      display: inline-block;
+      color: var(--black);
+      padding: 11px 22px;
+      border: 1px solid color-mix(in srgb, var(--black) 12%, transparent);
+      border-radius: 980px;                       /* matches .skill-tag */
+      background: color-mix(in srgb, var(--bg-off) 55%, transparent);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      backdrop-filter: blur(16px) saturate(180%);
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / .05),
+        0 10px 28px rgb(0 0 0 / .07),
+        inset 0 1px 0 rgb(255 255 255 / .75);     /* top highlight = the "glass" */
+    }
+    [data-theme=dark] .section-label {
+      border-color: rgb(255 255 255 / .12);
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / .4),
+        0 10px 28px rgb(0 0 0 / .35),
+        inset 0 1px 0 rgb(255 255 255 / .08);
+    }
+  </style>
 </head>
 <body>
   <div id="root"></div>
