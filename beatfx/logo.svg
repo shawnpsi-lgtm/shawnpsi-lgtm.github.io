@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="BEAT FX">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22242a"/>
+      <stop offset=".45" stop-color="#101115"/>
+      <stop offset="1" stop-color="#08090b"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".14"/>
+      <stop offset=".55" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- faceplate -->
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="url(#plate)" stroke="#05060a"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="12.5" fill="url(#sheen)"/>
+
+  <!-- X-PAD well -->
+  <rect x="9" y="9" width="46" height="46" rx="5" fill="#040507" stroke="#2a2d34"/>
+
+  <!-- pad segments -->
+  <g stroke="#4a68ff" stroke-opacity=".3" stroke-width="1.5">
+    <path d="M20.5 10v44M32 10v44M43.5 10v44M10 20.5h44M10 32h44M10 43.5h44"/>
+  </g>
+
+  <!-- touch point: red LED + crosshair -->
+  <g stroke="#ff2c1e" stroke-width="2" stroke-linecap="round">
+    <path d="M32 13v10M32 41v10M13 32h10M51 32h-10" stroke-opacity=".9"/>
+  </g>
+  <circle cx="32" cy="32" r="10" fill="#ff2c1e" opacity=".18"/>
+  <circle cx="32" cy="32" r="6" fill="#ff2c1e" opacity=".35"/>
+  <circle cx="32" cy="32" r="3.4" fill="#ff5a4a"/>
+</svg>
