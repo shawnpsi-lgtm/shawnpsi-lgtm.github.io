@@ -147,6 +147,9 @@
       display: block;
       width: 56px;
       height: 72px;
+      overflow: hidden;
+      background: #fff;
+      border-radius: 2px;
     }
     .pdf-icon img {
       width: 56px;
@@ -155,9 +158,6 @@
       max-height: none;
       object-fit: cover;
       object-position: top;
-      border-radius: 2px;
-      background: #fff;
-      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
     }
     .desktop-pdf { width: 108px; }
     .desktop-pdf figcaption {
@@ -535,9 +535,9 @@
     }
 
     @media (max-width: 560px) {
-      #ql-audio-main { grid-template-columns: 1fr; justify-items: center; gap: 16px; padding: 18px; }
+      #ql-audio-main { grid-template-columns: 1fr; justify-items: center; gap: 8px; padding: 18px; }
       #ql-art { width: min(100%, 240px); height: auto; aspect-ratio: 1; }
-      #ql-vol { align-self: center; }
+      #ql-vol { align-self: center; margin-bottom: 18px; }
       #ql-meta { margin: 0; text-align: center; }
       #ql-title { font-size: 20px; }
       #ql-transport { gap: 8px; padding: 7px 11px; }
@@ -556,6 +556,12 @@
     @media (max-width: 900px) {
       .desktop-icon { width: 92px; }
       .desktop-file img { max-width: 72px; max-height: 66px; }
+      .pdf-icon img { max-width: none; max-height: none; }
+      /* Page margins in the PNG letterbox the text; zoom so the resume fills the paper. */
+      .desktop-icon[data-full$="resume.pdf"] .pdf-icon img {
+        transform: scale(1.18);
+        transform-origin: center;
+      }
       .desktop-file figcaption { font-size: 10.5px; }
       /* px, not %: body runs wider than the viewport here, so a % left lands
          off-screen. These three fit even a 320px phone. */
@@ -565,10 +571,10 @@
       .desktop-icon[data-full$="resume.pdf"] { left: 310px !important; top: calc(100svh - 148px) !important; }
       [data-full$="5494.jpg"] { left: 10px !important; }
       [data-full$="5496.jpg"] { left: 110px !important; }
-      .desktop-icon[data-full$=".mp3"] { left: 210px !important; }
+      .desktop-icon[data-full$=".mp3"] { left: calc(100vw - 102px) !important; }
+      .desktop-icon[data-full$="lethimgo.mp4"] { display: none; }
       /* Videos sit on the hero floor, under the photos / dock. */
       .desktop-icon[data-full$=".mp4"] { top: calc(100svh - 148px) !important; }
-      [data-full$="lethimgo.mp4"] { left: 10px !important; }
       [data-full$="chicago.mp4"] { left: 110px !important; }
       [data-full="/videos/go.mp4"] { left: 210px !important; }
 
@@ -596,12 +602,11 @@
       #ql-audio { width: calc(100vw - 16px); }
     }
 
-    /* iPhone: videos as a backwards L — two stacked on the right, one left. */
+    /* iPhone: remaining videos sit on the hero floor — chicago right, go left. */
     @media (max-width: 430px) {
-      .desktop-icon[data-full$=".mp3"] { left: 210px !important; top: 96px !important; }
+      .desktop-icon[data-full$=".mp3"] { left: calc(100vw - 102px) !important; top: 96px !important; }
       .desktop-icon[data-full$="resume.pdf"] { left: 110px !important; top: calc(100svh - 148px) !important; }
       .desktop-icon[data-full$=".mp4"] { left: calc(100vw - 102px) !important; }
-      .desktop-icon[data-full$="lethimgo.mp4"] { top: calc(100svh - 248px) !important; }
       .desktop-icon[data-full="/videos/go.mp4"] { left: 10px !important; }
     }
 
