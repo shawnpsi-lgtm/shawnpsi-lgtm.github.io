@@ -64,9 +64,733 @@
         0 10px 28px rgb(0 0 0 / .35),
         inset 0 1px 0 rgb(255 255 255 / .08);
     }
+
+    /* Desktop-style draggable icons */
+    .desktop-icon {
+      position: absolute;   /* scrolls away with the hero */
+      z-index: 50;
+      cursor: grab;
+      /* Touch pans the page over icons (they only drag with a mouse); double-tap
+         zoom stays off so double-tap opens Quick Look. Ignored for mouse input. */
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-drag: none;
+      -webkit-touch-callout: none;  /* iOS: no "Save Image" sheet on long-press */
+      filter: drop-shadow(0 6px 14px rgb(0 0 0 / .25));
+    }
+    .desktop-icon:active { cursor: grabbing; }
+    /* Finder's selected-icon look: darker, bluer */
+    .desktop-icon.selected {
+      filter: drop-shadow(0 6px 14px rgb(0 0 0 / .25)) brightness(.82) saturate(1.4) hue-rotate(-8deg);
+    }
+
+    /* Folder gets the same caption treatment as a file */
+    #desktop-folder { left: 32px; top: 96px; }
+    /* Videos live in a right-hand column. 100vw, not % — body is wider than
+       the viewport, so a right: offset would sit off-screen. */
+    .desktop-icon[data-full$=".mp4"] { left: calc(100vw - 124px); }
+    .desktop-icon[data-full="/videos/go.mp4"] {
+      left: calc(50vw - 46px);
+      top: calc(100vh - 148px);
+    }
+    #desktop-folder img {
+      width: 80px;
+      max-width: none;
+      max-height: none;
+    }
+
+    /* Image files: Finder renders the photo itself, name underneath */
+    .desktop-file {
+      margin: 0;
+      width: 92px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+    .desktop-file img {
+      display: block;
+      max-width: 72px;
+      max-height: 80px;
+      border-radius: 6px;
+    }
+    .desktop-file figcaption {
+      font: 500 11.5px/1.25 var(--sans);
+      color: #fff;
+      text-align: center;
+      padding: 1px 5px;
+      border-radius: 4px;
+      /* White-on-shadow, like Finder — the only pairing that survives both the
+         dark hero and the white sections further down the page. */
+      text-shadow: 0 1px 3px rgb(0 0 0 / .9), 0 0 2px rgb(0 0 0 / .8);
+      word-break: break-all;
+    }
+    /* Selection tints the thumbnail and pills the filename, same as Finder */
+    .desktop-file.selected { filter: drop-shadow(0 6px 14px rgb(0 0 0 / .25)); }
+    .desktop-file.selected img { filter: brightness(.86) saturate(1.15); }
+    .desktop-file.selected figcaption {
+      background: var(--accent);
+      color: #fff;
+      text-shadow: none;
+    }
+
+    /* Quick Look — liquid glass, same vocabulary as .section-label: a tinted
+       translucent fill, a hairline, and an inset top highlight for the specular
+       edge. Dark tint throughout so photos, video and audio share one chrome. */
+    #quicklook[hidden] { display: none; }
+    #quicklook {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: grid;
+      place-items: center;
+      padding: 48px 24px;
+      background: rgb(0 0 0 / .28);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      backdrop-filter: blur(18px) saturate(140%);
+      animation: ql-in .3s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes ql-in { from { opacity: 0 } }
+    /* Child combinator: the folder view nests <figure> file cards inside this
+       panel, and a descendant selector would paint each one as its own panel. */
+    #quicklook > figure {
+      position: relative;
+      margin: 0;
+      width: fit-content;
+      max-width: 100%;
+      max-height: 100%;
+      display: flex;
+      flex-direction: column;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgb(28 28 30 / .52);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      backdrop-filter: blur(40px) saturate(180%);
+      box-shadow:
+        0 40px 90px -18px rgb(0 0 0 / .62),
+        0 2px 10px rgb(0 0 0 / .3),
+        inset 0 0 0 .5px rgb(255 255 255 / .11),    /* hairline */
+        inset 0 1px 0 rgb(255 255 255 / .2);        /* specular top edge */
+      /* Overshoot past 1 and settle: the panel pops rather than fades in. */
+      animation: ql-pop .44s cubic-bezier(.32,1.5,.52,1);
+    }
+    @keyframes ql-pop {
+      from { transform: scale(.9) translateY(12px); opacity: 0; filter: blur(6px) }
+    }
+    /* Sheen: one soft diagonal wipe across the glass, above the content but
+       inert. Kept at 7% so it reads as a highlight, not a scrim over photos. */
+    #quicklook > figure::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      border-radius: inherit;
+      background: linear-gradient(148deg, rgb(255 255 255 / .07), transparent 46%);
+    }
+    /* Toolbar: round glass buttons, then the filename in bold — Quick Look's
+       own chrome, left-aligned like the reference. */
+    #quicklook > figure > figcaption {
+      position: relative;
+      z-index: 6;
+      flex: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      font: 700 15px/1.2 var(--sans);
+      letter-spacing: -.015em;
+      color: #fff;
+      border-bottom: .5px solid rgb(255 255 255 / .1);
+    }
+    #ql-name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    #ql-close {
+      display: grid;
+      place-items: center;
+      flex: none;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: rgb(255 255 255 / .13);
+      box-shadow: inset 0 .5px 0 rgb(255 255 255 / .2);
+      color: rgb(255 255 255 / .82);
+      font: 500 12px/1 var(--sans);
+      cursor: pointer;
+      transition: background .2s, color .2s, scale .2s;
+    }
+    #ql-close:hover { background: rgb(255 255 255 / .24); color: #fff; }
+    #ql-close:active { scale: .9; }
+    #ql-img, #ql-video {
+      display: block;
+      /* Shrink-wrap to the media's aspect ratio so contain doesn't paint
+         letterbox/pillarbox bars inside a too-wide flex child. */
+      width: auto;
+      height: auto;
+      /* Don't shrink: as a flex item in this column panel the media's base size
+         is its intrinsic height, and shrinking it drags the width down with the
+         aspect ratio. Opting out leaves the two max-* rules as the only limits. */
+      flex: none;
+      max-width: min(76vw, 900px);
+      /* Overlay padding (~96) + title bar (~52). Too tall and overflow:hidden
+         on the figure clips the video's native control bar. */
+      max-height: calc(100dvh - 160px);
+      object-fit: contain;
+    }
+    #ql-video {
+      max-width: min(92vw, 1280px);
+    }
+
+    /* display:block above beats the UA [hidden] rule, so restate it */
+    #ql-img[hidden], #ql-video[hidden], #ql-folder[hidden], #ql-audio[hidden] { display: none; }
+
+    /* Folder window: glass tiles that pop in one after another */
+    #ql-folder {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      /* stretch, not flex-start: the tiles are visible boxes now, so a name that
+         wraps to two lines must not make its box taller than its neighbours'. */
+      align-items: stretch;
+      gap: 12px;
+      padding: 20px;
+      max-width: min(calc(100vw - 48px), 460px);
+    }
+    #ql-folder .desktop-file {
+      width: 124px;
+      gap: 10px;
+      padding: 14px 8px 12px;
+      border-radius: 16px;
+      background: rgb(255 255 255 / .05);
+      box-shadow: inset 0 .5px 0 rgb(255 255 255 / .13);
+      cursor: pointer;
+      transition: background .22s, scale .3s cubic-bezier(.34,1.4,.5,1);
+      /* backwards fill so the staggered tiles start invisible, not at full size */
+      animation: ql-tile-pop .46s cubic-bezier(.32,1.5,.52,1) backwards;
+    }
+    @keyframes ql-tile-pop { from { scale: .82; opacity: 0 } }
+    #ql-folder .desktop-file:nth-child(2) { animation-delay: .06s; }
+    #ql-folder .desktop-file:nth-child(3) { animation-delay: .12s; }
+    #ql-folder .desktop-file:hover,
+    #ql-folder .desktop-file:focus-visible {
+      background: rgb(255 255 255 / .13);
+      outline: none;
+      scale: 1.04;
+    }
+    #ql-folder .desktop-file:active { scale: .97; }
+    #ql-folder .desktop-file img {
+      max-width: 84px;
+      max-height: 84px;
+      border-radius: 8px;
+      filter: drop-shadow(0 8px 16px rgb(0 0 0 / .35));
+    }
+    /* Caption sits on the glass here, not the wallpaper. break-all would split
+       mid-token; these names are meant to wrap at their spaces. */
+    #ql-folder figcaption {
+      color: #fff;
+      text-shadow: none;
+      font: 600 12.5px/1.35 var(--sans);
+      letter-spacing: -.01em;
+      word-break: normal;
+      overflow-wrap: break-word;
+    }
+    #ql-folder .dur {
+      display: block;
+      margin-top: 4px;
+      font-weight: 500;
+      color: rgb(255 255 255 / .5);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Audio Quick Look. The chrome is shared with the other views; what's local
+       to audio is the floating glass controls — volume and transport each ride
+       in their own pill rather than sitting flat on the panel. */
+    #ql-open-music[hidden] { display: none; }
+    #ql-open-music {
+      flex: none;
+      padding: 6px 13px;
+      border-radius: 980px;
+      background: rgb(255 255 255 / .15);
+      box-shadow: inset 0 .5px 0 rgb(255 255 255 / .22);
+      font: 600 12.5px/1 var(--sans);
+      letter-spacing: -.01em;
+      color: #fff;
+      pointer-events: none;
+    }
+    #ql-audio {
+      display: flex;
+      flex-direction: column;
+      /* 48px = #quicklook's own horizontal padding. A plain vw here overshoots
+         the panel, and the transport pill gets clipped on a phone. */
+      width: min(calc(100vw - 48px), 700px);
+      color: #fff;
+      animation: ql-audio-in .4s cubic-bezier(.32,1.4,.52,1);
+    }
+    /* Runs on unhide, so stepping folder -> track pops the player in too */
+    @keyframes ql-audio-in { from { scale: .96; opacity: 0 } }
+    #ql-audio-main {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 26px;
+      padding: 24px 20px 16px;
+    }
+    #ql-art {
+      width: 208px;
+      height: 208px;
+      border-radius: 10px;
+      background: #f2f2f2;
+      box-shadow: 0 20px 44px rgb(0 0 0 / .45), inset 0 0 0 .5px rgb(0 0 0 / .06);
+    }
+    /* Volume pinned top-right, the duration centred in what's left below it */
+    #ql-audio-side { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+    #ql-audio .time {
+      margin: auto 0;
+      font: 500 30px/1.1 var(--sans);
+      letter-spacing: -.02em;
+      color: rgb(255 255 255 / .66);
+      font-variant-numeric: tabular-nums;
+    }
+    #ql-audio .time b { font-weight: 700; color: #fff; }
+
+    /* The two glass pills */
+    #ql-vol, #ql-transport {
+      display: flex;
+      align-items: center;
+      border-radius: 980px;
+      background: rgb(255 255 255 / .13);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      backdrop-filter: blur(20px) saturate(180%);
+      box-shadow:
+        0 2px 8px rgb(0 0 0 / .22),
+        inset 0 0 0 .5px rgb(255 255 255 / .1),
+        inset 0 .5px 0 rgb(255 255 255 / .22);
+    }
+    #ql-vol {
+      align-self: flex-end;
+      gap: 11px;
+      padding: 9px 15px;
+      color: #fff;
+    }
+    #ql-vol input { width: 124px; }
+    #ql-transport {
+      gap: 12px;
+      margin: 0 14px 14px;
+      padding: 7px 15px;
+      font: 600 12.5px/1 var(--sans);
+      letter-spacing: -.01em;
+      color: rgb(255 255 255 / .62);
+      font-variant-numeric: tabular-nums;
+    }
+    #ql-transport button {
+      display: grid;
+      place-items: center;
+      flex: none;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      transition: background .2s, scale .2s;
+    }
+    #ql-transport button:hover { background: rgb(255 255 255 / .15); }
+    #ql-transport button:active { scale: .88; }
+    #ql-transport text { font: 700 8.5px var(--sans); }
+    #ql-play .i-pause, #ql-play[data-playing] .i-play { display: none; }
+    #ql-play[data-playing] .i-pause { display: inline; }
+    #ql-seek { flex: 1; min-width: 0; }
+
+    /* --p is written from JS: the played portion is an opaque white layer sized
+       over the translucent track, since neither browser fills a range for us. */
+    #ql-audio input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 980px;
+      background:
+        linear-gradient(#fff, #fff) left / var(--p, 0%) 100% no-repeat,
+        rgb(255 255 255 / .2);
+    }
+    #ql-audio input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border: none;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 4px rgb(0 0 0 / .4);
+      cursor: pointer;
+    }
+    #ql-audio input[type=range]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border: none;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 4px rgb(0 0 0 / .4);
+    }
+
+    @media (max-width: 560px) {
+      #ql-audio-main { grid-template-columns: 1fr; justify-items: center; gap: 16px; padding: 18px; }
+      #ql-art { width: min(100%, 240px); height: auto; aspect-ratio: 1; }
+      #ql-vol { align-self: center; }
+      #ql-audio .time { margin: 4px 0 0; font-size: 26px; }
+      #ql-transport { gap: 8px; padding: 7px 11px; }
+      /* The duration is already spelled out in the Time readout above, so drop
+         the repeat here — otherwise the seek bar shrinks to ~40px. */
+      #ql-total { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #quicklook, #quicklook > figure, #ql-audio, #ql-folder .desktop-file { animation: none; }
+    }
+
+    /* Phones: same icons, re-laid out into the empty sky above the dock so they
+       don't sit on top of the hero. !important because the initial left/top are
+       inline (the drag writes there too, so it wins once you actually move one). */
+    @media (max-width: 900px) {
+      .desktop-icon { width: 92px; }
+      .desktop-file img { max-width: 72px; max-height: 66px; }
+      .desktop-file figcaption { font-size: 10.5px; }
+      /* px, not %: body runs wider than the viewport here, so a % left lands
+         off-screen. These three fit even a 320px phone. */
+      #desktop-folder { left: 10px !important; top: 96px !important; }
+      .desktop-icon[data-full] { top: 196px !important; }
+      [data-full$="5494.jpg"] { left: 10px !important; }
+      [data-full$="5496.jpg"] { left: 110px !important; }
+      [data-full$="5500.jpg"] { left: 210px !important; }
+      /* Videos sit on the hero floor, under the photos / dock. */
+      .desktop-icon[data-full$=".mp4"] { top: calc(100dvh - 148px) !important; }
+      [data-full$="lethimgo.mp4"] { left: 10px !important; }
+      [data-full$="chicago.mp4"] { left: 110px !important; }
+      [data-full="/videos/go.mp4"] { left: 210px !important; }
+
+      /* Photo/video Quick Look. The panel gets a definite width and the media
+         fills it, rather than the panel shrink-wrapping the media — left to
+         shrink-wrap, iOS resolves a tall photo to a fraction of its max-width (a
+         933x1400 shot came out 159px wide on an iPhone) because the panel's width
+         depends on the media whose height depends on the panel. The .85 pulls the
+         media in from the screen edges; it's on both axes so the photo scales
+         evenly whichever limit it hits. The 88px leaves headroom for the title
+         bar so the video control strip isn't clipped by overflow:hidden. */
+      #quicklook { padding: 12px 8px; }
+      #quicklook > figure:has(#ql-img:not([hidden])),
+      #quicklook > figure:has(#ql-video:not([hidden])) {
+        width: calc((100vw - 16px) * .85);
+      }
+      #ql-img, #ql-video {
+        width: 100%;
+        max-width: none;
+        max-height: calc((100dvh - 88px) * .85);
+      }
+      /* Full width: the transport pill needs every pixel it can get. Definite
+         length rather than a % so the panel still shrink-wraps to it cleanly. */
+      #ql-audio { width: calc(100vw - 16px); }
+    }
+
+    /* iPhone: videos as a backwards L — two stacked on the right, one left.
+       The right photo sits on the folder's row instead of the photo row below. */
+    @media (max-width: 430px) {
+      .desktop-icon[data-full$="5500.jpg"] { top: 96px !important; }
+      .desktop-icon[data-full$=".mp4"] { left: calc(100vw - 102px) !important; }
+      .desktop-icon[data-full$="lethimgo.mp4"] { top: calc(100dvh - 248px) !important; }
+      .desktop-icon[data-full="/videos/go.mp4"] { left: 10px !important; }
+    }
+
   </style>
 </head>
 <body>
+  <figure id="desktop-folder" class="desktop-icon desktop-file">
+    <img src="/images/folder-icon-macos.png" alt="Folder" draggable="false" />
+    <figcaption>untitled folder</figcaption>
+  </figure>
+
+  <figure class="desktop-icon desktop-file" style="left:148px;top:232px" data-full="/images/desk/IMG_5494.jpg">
+    <img src="/images/desk/IMG_5494-thumb.jpg" alt="Artist seated on a director's chair in a white cyc studio" draggable="false" />
+    <figcaption>IMG_5494.jpg</figcaption>
+  </figure>
+  <figure class="desktop-icon desktop-file" style="left:32px;top:376px" data-full="/images/desk/IMG_5496.jpg">
+    <img src="/images/desk/IMG_5496-thumb.jpg" alt="Two people embracing on set" draggable="false" />
+    <figcaption>IMG_5496.jpg</figcaption>
+  </figure>
+  <figure class="desktop-icon desktop-file" style="left:32px;top:520px" data-full="/images/desk/IMG_5500.jpg">
+    <img src="/images/desk/IMG_5500-thumb.jpg" alt="Artist in a yellow jacket looking off camera" draggable="false" />
+    <figcaption>IMG_5500.jpg</figcaption>
+  </figure>
+  <figure class="desktop-icon desktop-file" style="top:96px" data-full="/videos/lethimgo.mp4">
+    <img src="/images/desk/lethimgo-thumb.jpg" alt="Music production desk at night" draggable="false" />
+    <figcaption>lethimgo.mp4</figcaption>
+  </figure>
+  <figure class="desktop-icon desktop-file" style="top:232px" data-full="/videos/chicago.mp4">
+    <img src="/images/desk/chicago-thumb.jpg" alt="Looking up at Chicago skyscrapers through trees" draggable="false" />
+    <figcaption>chicago.mp4</figcaption>
+  </figure>
+  <figure class="desktop-icon desktop-file" style="left:66%;top:564px" data-full="/videos/go.mp4">
+    <img src="/images/desk/go-thumb.jpg" alt="Portrait clip outdoors" draggable="false" />
+    <figcaption>go.mp4</figcaption>
+  </figure>
+
+  <div id="quicklook" hidden>
+    <figure>
+      <figcaption><button id="ql-close" aria-label="Close">✕</button><span id="ql-name"></span><span id="ql-open-music" hidden>Open with Music</span></figcaption>
+      <img id="ql-img" alt="" />
+      <video id="ql-video" hidden controls playsinline></video>
+      <div id="ql-folder" hidden>
+        <figure class="desktop-file" role="button" tabindex="0" data-src="/audio/dirty-talk.m4a" data-name="dirty talk.wav">
+          <img src="/images/music-file-icon.png" alt="" draggable="false" />
+          <figcaption>dirty talk.wav<span class="dur">00:00</span></figcaption>
+        </figure>
+        <figure class="desktop-file" role="button" tabindex="0" data-src="/audio/see-us-in-the-club.m4a" data-name="see us in the club.wav">
+          <img src="/images/music-file-icon.png" alt="" draggable="false" />
+          <figcaption>see us in the club.wav<span class="dur">00:00</span></figcaption>
+        </figure>
+        <figure class="desktop-file" role="button" tabindex="0" data-src="/audio/let-him-go.m4a" data-name="let him go.wav">
+          <img src="/images/music-file-icon.png" alt="" draggable="false" />
+          <figcaption>let him go.wav<span class="dur">00:00</span></figcaption>
+        </figure>
+      </div>
+      <div id="ql-audio" hidden>
+        <div id="ql-audio-main">
+          <img id="ql-art" src="/images/music-file-icon.png" alt="" draggable="false" />
+          <div id="ql-audio-side">
+            <label id="ql-vol">
+              <input id="ql-volume" type="range" min="0" max="1" step=".01" value="1" aria-label="Volume" />
+              <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true">
+                <path d="M11 5 6.5 9H3v6h3.5L11 19z" fill="currentColor"/>
+                <path d="M14.6 9.4a3.6 3.6 0 0 1 0 5.2M17.2 6.8a7.3 7.3 0 0 1 0 10.4"
+                      fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+            </label>
+            <p class="time">Time: <b id="ql-total-long">0:00</b></p>
+          </div>
+        </div>
+        <div id="ql-transport">
+          <button id="ql-back" aria-label="Back 15 seconds"><svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true" fill="none"
+             stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 4.6a7.4 7.4 0 1 1-7.4 7.4"/><path d="M14.4 2.2 11.4 4.6l3 2.4"/>
+          <text x="12" y="15.6" text-anchor="middle" fill="currentColor" stroke="none">15</text>
+        </svg></button>
+          <button id="ql-play" aria-label="Play or pause">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+              <path class="i-play" d="M7 4.6a1 1 0 0 1 1.5-.87l11 7.4a1 1 0 0 1 0 1.74l-11 7.4A1 1 0 0 1 7 19.4z"/>
+              <g class="i-pause">
+                <rect x="6.4" y="4.4" width="4.2" height="15.2" rx="1.5"/>
+                <rect x="13.4" y="4.4" width="4.2" height="15.2" rx="1.5"/>
+              </g>
+            </svg>
+          </button>
+          <button id="ql-fwd" aria-label="Forward 15 seconds"><svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true" fill="none"
+             stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <g transform="translate(24 0) scale(-1 1)"><path d="M12 4.6a7.4 7.4 0 1 1-7.4 7.4"/><path d="M14.4 2.2 11.4 4.6l3 2.4"/></g>
+          <text x="12" y="15.6" text-anchor="middle" fill="currentColor" stroke="none">15</text>
+        </svg></button>
+          <span id="ql-elapsed">00:00</span>
+          <input id="ql-seek" type="range" min="0" max="0" step=".01" value="0" aria-label="Seek" />
+          <span id="ql-total">00:00</span>
+          <button id="ql-next" aria-label="Next track"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none"
+             stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.5 5.5 11 12l-6.5 6.5"/><path d="M13 5.5 19.5 12 13 18.5"/>
+          </svg></button>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <script>
+    (() => {
+      const clamp = (v, max) => Math.min(Math.max(v, 0), Math.max(max, 0));
+      // left/top are document-relative, so drag in page coords too — otherwise
+      // the icon jumps by scrollY the moment the page isn't at the top.
+      const pageX = e => e.clientX + scrollX, pageY = e => e.clientY + scrollY;
+      const icons = [...document.querySelectorAll('.desktop-icon')];
+      const files = icons.filter(el => el.dataset.full);
+      let z = 50;
+
+      icons.forEach(el => {
+        // Icons start life positioned by CSS; keep the live coords per element so
+        // a dragged icon doesn't re-read a stale offsetLeft mid-gesture.
+        let dx = 0, dy = 0, group = [];
+
+        const grab = e => {
+          el.setPointerCapture(e.pointerId);
+          // Cmd/Shift extends the selection; a bare click on an unselected icon
+          // replaces it — but clicking one of several selected keeps the group,
+          // so you can drag the whole pile.
+          if (e.metaKey || e.shiftKey) el.classList.toggle('selected');
+          else if (!el.classList.contains('selected')) {
+            icons.forEach(o => o.classList.toggle('selected', o === el));
+          }
+          group = icons.filter(o => o.classList.contains('selected'));
+          if (!group.includes(el)) group = [el];
+          // Whatever you grabbed last sits on top of the pile.
+          group.forEach(o => { o._x = o.offsetLeft; o._y = o.offsetTop; o.style.zIndex = ++z; });
+        };
+
+        el.addEventListener('pointerdown', e => {
+          // Rolled by hand: cancelling pointerdown can swallow the compat
+          // dblclick event, and this works the same on touch.
+          const dbl = e.timeStamp - (el._t || 0) < 400;
+          el._t = e.timeStamp;
+          // Mouse only. On touch a swipe over an icon has to scroll the page, so
+          // nothing here claims the gesture — tap twice to open, that's it.
+          if (e.pointerType !== 'touch') {
+            e.preventDefault();
+            dx = pageX(e); dy = pageY(e);
+            grab(e);
+          }
+          if (dbl) open(el);
+        });
+
+        el.addEventListener('pointermove', e => {
+          if (!el.hasPointerCapture(e.pointerId)) return;
+          const mx = pageX(e) - dx, my = pageY(e) - dy;
+          const doc = document.documentElement;
+          group.forEach(o => {
+            o.style.left = clamp(o._x + mx, doc.scrollWidth - o.offsetWidth) + 'px';
+            o.style.top = clamp(o._y + my, doc.scrollHeight - o.offsetHeight) + 'px';
+          });
+        });
+
+      });
+
+      // Click anywhere else deselects, like the desktop.
+      addEventListener('pointerdown', e => {
+        icons.forEach(el => { if (!el.contains(e.target)) el.classList.remove('selected'); });
+      }, true);
+
+      // --- Quick Look ---
+      const ql = document.getElementById('quicklook');
+      const qlImg = document.getElementById('ql-img');
+      const qlVid = document.getElementById('ql-video');
+      const qlName = document.getElementById('ql-name');
+      const qlFolder = document.getElementById('ql-folder');
+      const qlAudio = document.getElementById('ql-audio');
+      const qlMusic = document.getElementById('ql-open-music');
+      const folder = document.getElementById('desktop-folder');
+      const tracks = [...qlFolder.querySelectorAll('[data-src]')];
+      const seek = document.getElementById('ql-seek');
+      const playBtn = document.getElementById('ql-play');
+      let at = -1;
+
+      const player = new Audio();
+      let playing = null;
+      const pad = n => String(n | 0).padStart(2, '0');
+      const fmt = t => pad(t / 60) + ':' + pad(t % 60);
+      // Neither engine paints the played half of a range, so --p sizes a white
+      // background layer behind the thumb. Has to be re-run on every change.
+      const fill = el => el.style.setProperty('--p', (el.max > 0 ? el.value / el.max * 100 : 0) + '%');
+      const paint = () => {
+        const d = player.duration || 0;
+        document.getElementById('ql-elapsed').textContent = fmt(player.currentTime);
+        document.getElementById('ql-total').textContent = fmt(d);
+        document.getElementById('ql-total-long').textContent = (d / 60 | 0) + ':' + pad(d % 60);
+        if (!seek.matches(':active')) { seek.max = d; seek.value = player.currentTime; }
+        fill(seek);
+      };
+      const stop = () => {
+        player.pause();
+        player.removeAttribute('src');
+        playBtn.removeAttribute('data-playing');
+        playing = null;
+        qlVid.pause();
+        qlVid.removeAttribute('src');
+        qlVid.load();
+      };
+      tracks.forEach(f => {
+        const a = new Audio();
+        a.preload = 'metadata';
+        a.src = f.dataset.src;
+        a.addEventListener('loadedmetadata', () => { f.querySelector('.dur').textContent = fmt(a.duration); });
+      });
+      player.addEventListener('timeupdate', paint);
+      player.addEventListener('loadedmetadata', paint);
+      player.addEventListener('play', () => playBtn.dataset.playing = '');
+      player.addEventListener('pause', () => playBtn.removeAttribute('data-playing'));
+      player.addEventListener('ended', () => playBtn.removeAttribute('data-playing'));
+      const playTrack = f => {
+        playing = f;
+        player.src = f.dataset.src;
+        player.play();
+        qlImg.hidden = true;
+        qlFolder.hidden = true;
+        qlAudio.hidden = false;
+        qlMusic.hidden = false;
+        qlName.textContent = f.dataset.name;
+      };
+      const pick = e => { const f = e.target.closest('[data-src]'); if (f) playTrack(f); };
+      qlFolder.addEventListener('click', pick);
+      qlFolder.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(e); }
+      });
+      playBtn.addEventListener('click', () => player.paused ? player.play() : player.pause());
+      document.getElementById('ql-back').addEventListener('click', () => { player.currentTime = Math.max(0, player.currentTime - 15); });
+      document.getElementById('ql-fwd').addEventListener('click', () => { player.currentTime += 15; });
+      document.getElementById('ql-next').addEventListener('click', () => {
+        if (playing) playTrack(tracks[(tracks.indexOf(playing) + 1) % tracks.length]);
+      });
+      const vol = document.getElementById('ql-volume');
+      vol.addEventListener('input', e => { player.volume = +e.target.value; fill(vol); });
+      seek.addEventListener('input', () => { player.currentTime = +seek.value; fill(seek); });
+      fill(vol);
+
+      function open(el) {
+        const i = files.indexOf(el);
+        if (i < 0 && el !== folder) return;      // nothing else has a preview
+        at = i;
+        stop();
+        qlAudio.hidden = true;
+        qlMusic.hidden = true;
+        const vid = i >= 0 && /\.mp4$/i.test(el.dataset.full);
+        qlImg.hidden = i < 0 || vid;
+        qlVid.hidden = !vid;
+        qlFolder.hidden = i >= 0;
+        if (vid) {
+          qlVid.src = el.dataset.full;
+          qlVid.play();
+        } else if (i >= 0) {
+          qlImg.src = el.dataset.full;
+          qlImg.alt = el.querySelector('img').alt;
+        }
+        qlName.textContent = el.querySelector('figcaption').childNodes[0].textContent.trim();
+        ql.hidden = false;
+      }
+      const close = () => { ql.hidden = true; at = -1; stop(); };
+      // Arrows walk the photos; the folder window isn't part of that ring.
+      const step = n => { if (at >= 0) open(files[(at + n + files.length) % files.length]); };
+
+      document.getElementById('ql-close').addEventListener('click', close);
+      // Clicking the dimmed area closes; clicking the panel itself doesn't.
+      ql.addEventListener('pointerdown', e => { if (e.target === ql) close(); });
+
+      addEventListener('keydown', e => {
+        if (!ql.hidden) {
+          if (e.key === 'Escape') { e.preventDefault(); close(); }
+          if (e.key === ' ' && !qlAudio.hidden) { e.preventDefault(); player.paused ? player.play() : player.pause(); return; }
+          if (e.key === ' ' && !qlVid.hidden) { e.preventDefault(); qlVid.paused ? qlVid.play() : qlVid.pause(); return; }
+          if (e.key === ' ' ) { e.preventDefault(); close(); }
+          if (e.key === 'ArrowRight') step(1);
+          if (e.key === 'ArrowLeft') step(-1);
+          return;
+        }
+        // Space or Return on a selected icon opens it, same as the Finder.
+        if (e.key !== ' ' && e.key !== 'Enter') return;
+        const sel = icons.find(el => el.classList.contains('selected'));
+        if (!sel) return;
+        e.preventDefault();
+        open(sel);
+      });
+    })();
+  </script>
   <div id="root"></div>
+
 </body>
 </html>
