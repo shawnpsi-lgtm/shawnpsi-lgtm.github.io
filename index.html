@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2c699a" />
   <title>Shawn Singh</title>
   <meta name="description" content="Shawn Singh — [YOUR_TITLE] based in [YOUR_LOCATION]." />
   <link rel="icon" type="image/svg+xml" href="/shawnlogo.svg" />
@@ -84,14 +85,21 @@
       filter: drop-shadow(0 6px 14px rgb(0 0 0 / .25)) brightness(.82) saturate(1.4) hue-rotate(-8deg);
     }
 
-    /* Folder gets the same caption treatment as a file */
-    #desktop-folder { left: 32px; top: 96px; }
-    /* Videos live in a right-hand column. 100vw, not % — body is wider than
-       the viewport, so a right: offset would sit off-screen. */
-    .desktop-icon[data-full$=".mp4"] { left: calc(100vw - 124px); }
-    .desktop-icon[data-full="/videos/go.mp4"] {
-      left: calc(50vw - 46px);
-      top: calc(100svh - 148px);
+    /* Scattered desktop defaults. 100vw/svh, not % — body is wider than the
+       viewport, so a % left would sit off-screen. */
+    #desktop-folder { left: 2.3vw; top: 13.9svh; }
+    .desktop-icon[data-full$="5494.jpg"] { left: 9.7vw; top: 31.5svh; }
+    .desktop-icon[data-full$="5496.jpg"] { left: 2.3vw; top: 51.1svh; }
+    .desktop-icon[data-full*="Psychiatric"] { left: 22.5vw; top: 78.5svh; }
+    .desktop-icon[data-full$="resume.pdf"] { left: 32.2vw; top: 78.5svh; }
+    .desktop-icon[data-full$="chicago.mp4"] { left: 61vw; top: 13.5svh; }
+    .desktop-icon[data-full$="lethimgo.mp4"] { left: calc(100vw - 124px); top: 13.5svh; }
+    .desktop-icon[data-full$=".mp3"] { left: 84.8vw; top: 49.7svh; }
+    .desktop-icon[data-full="/videos/go.mp4"] { left: 69.2vw; top: 84.7svh; }
+    /* Song name wraps at spaces, not mid-letter like the photo filenames. */
+    .desktop-icon[data-full$=".mp3"] figcaption {
+      word-break: normal;
+      overflow-wrap: break-word;
     }
     #desktop-folder img {
       width: 80px;
@@ -134,6 +142,31 @@
       text-shadow: none;
     }
 
+    /* PDF: page 1 as the icon */
+    .pdf-icon {
+      display: block;
+      width: 56px;
+      height: 72px;
+    }
+    .pdf-icon img {
+      width: 56px;
+      height: 72px;
+      max-width: none;
+      max-height: none;
+      object-fit: cover;
+      object-position: top;
+      border-radius: 2px;
+      background: #fff;
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+    }
+    .desktop-pdf { width: 108px; }
+    .desktop-pdf figcaption {
+      word-break: normal;
+      overflow-wrap: break-word;
+    }
+    .desktop-pdf.selected img { filter: none; }
+    .desktop-pdf.selected .pdf-icon { filter: brightness(.86); }
+
     /* Quick Look — liquid glass, same vocabulary as .section-label: a tinted
        translucent fill, a hairline, and an inset top highlight for the specular
        edge. Dark tint throughout so photos, video and audio share one chrome. */
@@ -145,10 +178,24 @@
       display: grid;
       place-items: center;
       padding: 48px 24px;
+      /* Scrim lives on ::before so fading it doesn't put opacity on the
+         panel — that traps the title bar's backdrop-filter and it flashes. */
+      animation: none;
+    }
+    #quicklook::before {
+      content: "";
+      /* Cover behind the iOS toolbar: visual viewport (inset:0) stops short. */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100lvh;
       background: rgb(0 0 0 / .28);
       -webkit-backdrop-filter: blur(18px) saturate(140%);
       backdrop-filter: blur(18px) saturate(140%);
       animation: ql-in .3s cubic-bezier(.2,.8,.2,1);
+      pointer-events: none;
     }
     @keyframes ql-in { from { opacity: 0 } }
     /* Child combinator: the folder view nests <figure> file cards inside this
@@ -210,6 +257,13 @@
       white-space: nowrap;
       text-overflow: ellipsis;
     }
+    #ql-page {
+      flex: none;
+      font: 500 13px/1 var(--sans);
+      font-variant-numeric: tabular-nums;
+      color: rgb(255 255 255 / .62);
+    }
+    #ql-page[hidden] { display: none; }
     #ql-close {
       flex: none;
       width: 12px;
@@ -226,20 +280,23 @@
     /* Opaque photos/video flatten the panel's backdrop-filter, so the title
        bar goes solid. Glass the caption itself and let the media sit below. */
     #quicklook > figure:has(#ql-img:not([hidden])),
-    #quicklook > figure:has(#ql-video:not([hidden])) {
+    #quicklook > figure:has(#ql-video:not([hidden])),
+    #quicklook > figure:has(#ql-pdf:not([hidden])) {
       overflow: visible;
       background: transparent;
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
-      /* Opacity-only pop: transform on this box would trap the caption's
-         backdrop-filter and the bar would sample black instead of the page. */
-      animation: ql-in .3s cubic-bezier(.2,.8,.2,1);
+      /* Don't fade this box: opacity (like transform) traps the caption's
+         backdrop-filter, so the bar paints solid then flashes to glass. */
+      animation: none;
       box-shadow: 0 40px 90px -18px rgb(0 0 0 / .62), 0 2px 10px rgb(0 0 0 / .3);
     }
     #quicklook > figure:has(#ql-img:not([hidden]))::after,
-    #quicklook > figure:has(#ql-video:not([hidden]))::after { display: none; }
+    #quicklook > figure:has(#ql-video:not([hidden]))::after,
+    #quicklook > figure:has(#ql-pdf:not([hidden]))::after { display: none; }
     #quicklook > figure:has(#ql-img:not([hidden])) > figcaption,
-    #quicklook > figure:has(#ql-video:not([hidden])) > figcaption {
+    #quicklook > figure:has(#ql-video:not([hidden])) > figcaption,
+    #quicklook > figure:has(#ql-pdf:not([hidden])) > figcaption {
       border-radius: 8px 8px 0 0;
       background: rgb(28 28 30 / .52);
       -webkit-backdrop-filter: blur(40px) saturate(180%);
@@ -248,6 +305,17 @@
         inset 0 0 0 .5px rgb(255 255 255 / .11),
         inset 0 1px 0 rgb(255 255 255 / .2);
     }
+    #ql-pdf {
+      position: relative;
+      overflow: auto;
+      overscroll-behavior: contain;
+      flex: none;
+      width: min(62vw, calc((100dvh - 160px) * .81));
+      max-height: calc(100dvh - 160px);
+      background: #fff;
+      border-radius: 0 0 8px 8px;
+    }
+    #ql-pdf img { display: block; width: 100%; }
     #ql-img, #ql-video {
       display: block;
       border-radius: 0 0 8px 8px;
@@ -270,19 +338,16 @@
     }
 
     /* display:block above beats the UA [hidden] rule, so restate it */
-    #ql-img[hidden], #ql-video[hidden], #ql-folder[hidden], #ql-audio[hidden] { display: none; }
+    #ql-img[hidden], #ql-video[hidden], #ql-folder[hidden], #ql-audio[hidden], #ql-pdf[hidden] { display: none; }
 
     /* Folder window: glass tiles that pop in one after another */
     #ql-folder {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(2, 124px);
       justify-content: center;
-      /* stretch, not flex-start: the tiles are visible boxes now, so a name that
-         wraps to two lines must not make its box taller than its neighbours'. */
       align-items: stretch;
       gap: 12px;
       padding: 20px;
-      max-width: min(calc(100vw - 48px), 460px);
     }
     #ql-folder .desktop-file {
       width: 124px;
@@ -299,6 +364,7 @@
     @keyframes ql-tile-pop { from { scale: .82; opacity: 0 } }
     #ql-folder .desktop-file:nth-child(2) { animation-delay: .06s; }
     #ql-folder .desktop-file:nth-child(3) { animation-delay: .12s; }
+    #ql-folder .desktop-file:nth-child(4) { animation-delay: .18s; }
     #ql-folder .desktop-file:hover,
     #ql-folder .desktop-file:focus-visible {
       background: rgb(255 255 255 / .13);
@@ -333,8 +399,8 @@
     /* Audio Quick Look. The chrome is shared with the other views; what's local
        to audio is the floating glass controls — volume and transport each ride
        in their own pill rather than sitting flat on the panel. */
-    #ql-open-music[hidden] { display: none; }
-    #ql-open-music {
+    #ql-open-music[hidden], #ql-download[hidden] { display: none; }
+    #ql-open-music, #ql-download {
       flex: none;
       padding: 6px 13px;
       border-radius: 980px;
@@ -343,8 +409,9 @@
       font: 600 12.5px/1 var(--sans);
       letter-spacing: -.01em;
       color: #fff;
-      pointer-events: none;
+      text-decoration: none;
     }
+    #ql-open-music { pointer-events: none; }
     #ql-audio {
       display: flex;
       flex-direction: column;
@@ -365,20 +432,27 @@
     #ql-art {
       width: 208px;
       height: 208px;
-      border-radius: 10px;
+      object-fit: cover;
+      border-radius: 4px;
       background: #f2f2f2;
       box-shadow: 0 20px 44px rgb(0 0 0 / .45), inset 0 0 0 .5px rgb(0 0 0 / .06);
     }
-    /* Volume pinned top-right, the duration centred in what's left below it */
-    #ql-audio-side { display: flex; flex-direction: column; align-items: center; min-width: 0; }
-    #ql-audio .time {
-      margin: auto 0;
-      font: 500 30px/1.1 var(--sans);
+    /* Volume pinned top-right; title / artist / album / time sit left, like Finder. */
+    #ql-audio-side { display: flex; flex-direction: column; min-width: 0; }
+    #ql-meta { margin: auto 0; min-width: 0; }
+    #ql-title {
+      margin: 0 0 10px;
+      font: 700 22px/1.15 var(--sans);
       letter-spacing: -.02em;
-      color: rgb(255 255 255 / .66);
+      color: #fff;
+    }
+    #ql-meta .kv {
+      margin: 3px 0 0;
+      font: 500 16px/1.4 var(--sans);
+      color: rgb(255 255 255 / .55);
       font-variant-numeric: tabular-nums;
     }
-    #ql-audio .time b { font-weight: 700; color: #fff; }
+    #ql-meta .kv b { font-weight: 700; color: #fff; }
 
     /* The two glass pills */
     #ql-vol, #ql-transport {
@@ -464,7 +538,8 @@
       #ql-audio-main { grid-template-columns: 1fr; justify-items: center; gap: 16px; padding: 18px; }
       #ql-art { width: min(100%, 240px); height: auto; aspect-ratio: 1; }
       #ql-vol { align-self: center; }
-      #ql-audio .time { margin: 4px 0 0; font-size: 26px; }
+      #ql-meta { margin: 0; text-align: center; }
+      #ql-title { font-size: 20px; }
       #ql-transport { gap: 8px; padding: 7px 11px; }
       /* The duration is already spelled out in the Time readout above, so drop
          the repeat here — otherwise the seek bar shrinks to ~40px. */
@@ -486,9 +561,11 @@
          off-screen. These three fit even a 320px phone. */
       #desktop-folder { left: 10px !important; top: 96px !important; }
       .desktop-icon[data-full] { top: 196px !important; }
+      .desktop-icon[data-full*="Psychiatric"] { display: none; }
+      .desktop-icon[data-full$="resume.pdf"] { left: 310px !important; top: calc(100svh - 148px) !important; }
       [data-full$="5494.jpg"] { left: 10px !important; }
       [data-full$="5496.jpg"] { left: 110px !important; }
-      [data-full$="5500.jpg"] { left: 210px !important; }
+      .desktop-icon[data-full$=".mp3"] { left: 210px !important; }
       /* Videos sit on the hero floor, under the photos / dock. */
       .desktop-icon[data-full$=".mp4"] { top: calc(100svh - 148px) !important; }
       [data-full$="lethimgo.mp4"] { left: 10px !important; }
@@ -505,10 +582,11 @@
          bar so the video control strip isn't clipped by overflow:hidden. */
       #quicklook { padding: 12px 8px; }
       #quicklook > figure:has(#ql-img:not([hidden])),
-      #quicklook > figure:has(#ql-video:not([hidden])) {
+      #quicklook > figure:has(#ql-video:not([hidden])),
+      #quicklook > figure:has(#ql-pdf:not([hidden])) {
         width: calc((100vw - 16px) * .85);
       }
-      #ql-img, #ql-video {
+      #ql-img, #ql-video, #ql-pdf {
         width: 100%;
         max-width: none;
         max-height: calc((100dvh - 88px) * .85);
@@ -518,10 +596,10 @@
       #ql-audio { width: calc(100vw - 16px); }
     }
 
-    /* iPhone: videos as a backwards L — two stacked on the right, one left.
-       The right photo sits on the folder's row instead of the photo row below. */
+    /* iPhone: videos as a backwards L — two stacked on the right, one left. */
     @media (max-width: 430px) {
-      .desktop-icon[data-full$="5500.jpg"] { top: 96px !important; }
+      .desktop-icon[data-full$=".mp3"] { left: 210px !important; top: 96px !important; }
+      .desktop-icon[data-full$="resume.pdf"] { left: 110px !important; top: calc(100svh - 148px) !important; }
       .desktop-icon[data-full$=".mp4"] { left: calc(100vw - 102px) !important; }
       .desktop-icon[data-full$="lethimgo.mp4"] { top: calc(100svh - 248px) !important; }
       .desktop-icon[data-full="/videos/go.mp4"] { left: 10px !important; }
@@ -535,36 +613,46 @@
     <figcaption>untitled folder</figcaption>
   </figure>
 
-  <figure class="desktop-icon desktop-file" style="left:148px;top:232px" data-full="/images/desk/IMG_5494.jpg">
+  <figure class="desktop-icon desktop-file desktop-pdf" data-full="/files/The%20Psychiatric%20Bible%20-%20Shawn%20Singh.pdf" data-stem="psychiatric-bible" data-pages="10">
+    <span class="pdf-icon"><img src="/images/desk/psychiatric-bible-1.png" alt="The Psychiatric Bible, first page" draggable="false" /></span>
+    <figcaption>The Psychiatric Bible - Shawn Singh.pdf</figcaption>
+  </figure>
+  <figure class="desktop-icon desktop-file desktop-pdf" data-full="/files/resume.pdf" data-stem="resume" data-pages="1">
+    <span class="pdf-icon"><img src="/images/desk/resume-1.png" alt="Resume, first page" draggable="false" /></span>
+    <figcaption>resume.pdf</figcaption>
+  </figure>
+  <figure class="desktop-icon desktop-file" data-full="/audio/all-by-myself.mp3"
+          data-title="All By Myself" data-artist="Mita Gami" data-album="All By Myself">
+    <img src="/images/desk/all-by-myself.jpg" alt="All By Myself album art" draggable="false" />
+    <figcaption>All By Myself - Maccabi House.mp3</figcaption>
+  </figure>
+  <figure class="desktop-icon desktop-file" data-full="/images/desk/IMG_5494.jpg">
     <img src="/images/desk/IMG_5494-thumb.jpg" alt="Artist seated on a director's chair in a white cyc studio" draggable="false" />
     <figcaption>IMG_5494.jpg</figcaption>
   </figure>
-  <figure class="desktop-icon desktop-file" style="left:32px;top:376px" data-full="/images/desk/IMG_5496.jpg">
+  <figure class="desktop-icon desktop-file" data-full="/images/desk/IMG_5496.jpg">
     <img src="/images/desk/IMG_5496-thumb.jpg" alt="Two people embracing on set" draggable="false" />
     <figcaption>IMG_5496.jpg</figcaption>
   </figure>
-  <figure class="desktop-icon desktop-file" style="left:32px;top:520px" data-full="/images/desk/IMG_5500.jpg">
-    <img src="/images/desk/IMG_5500-thumb.jpg" alt="Artist in a yellow jacket looking off camera" draggable="false" />
-    <figcaption>IMG_5500.jpg</figcaption>
-  </figure>
-  <figure class="desktop-icon desktop-file" style="top:96px" data-full="/videos/lethimgo.mp4">
+  <figure class="desktop-icon desktop-file" data-full="/videos/lethimgo.mp4">
     <img src="/images/desk/lethimgo-thumb.jpg" alt="Music production desk at night" draggable="false" />
     <figcaption>lethimgo.mp4</figcaption>
   </figure>
-  <figure class="desktop-icon desktop-file" style="top:232px" data-full="/videos/chicago.mp4">
+  <figure class="desktop-icon desktop-file" data-full="/videos/chicago.mp4">
     <img src="/images/desk/chicago-thumb.jpg" alt="Looking up at Chicago skyscrapers through trees" draggable="false" />
     <figcaption>chicago.mp4</figcaption>
   </figure>
   <figure class="desktop-icon desktop-file" data-full="/videos/go.mp4">
-    <img src="/images/desk/go-thumb.jpg" alt="Portrait clip outdoors" draggable="false" />
+    <img src="/images/desk/go-thumb.jpg" alt="Performer on stage with a mic, crowd filming" draggable="false" />
     <figcaption>go.mp4</figcaption>
   </figure>
 
   <div id="quicklook" hidden>
     <figure>
-      <figcaption><button id="ql-close" aria-label="Close"></button><span id="ql-name"></span><span id="ql-open-music" hidden>Open with Music</span></figcaption>
+      <figcaption><button id="ql-close" aria-label="Close"></button><span id="ql-name"></span><span id="ql-page" hidden></span><a id="ql-download" hidden href="/files/resume.pdf" download="resume.pdf">Download</a><span id="ql-open-music" hidden>Open with Music</span></figcaption>
       <img id="ql-img" alt="" />
       <video id="ql-video" hidden controls playsinline preload="none"></video>
+      <div id="ql-pdf" hidden></div>
       <div id="ql-folder" hidden>
         <figure class="desktop-file" role="button" tabindex="0" data-src="/audio/dirty-talk.m4a" data-name="dirty talk.wav">
           <img src="/images/music-file-icon.png" alt="" draggable="false" />
@@ -577,6 +665,10 @@
         <figure class="desktop-file" role="button" tabindex="0" data-src="/audio/let-him-go.m4a" data-name="let him go.wav">
           <img src="/images/music-file-icon.png" alt="" draggable="false" />
           <figcaption>let him go.wav<span class="dur">00:00</span></figcaption>
+        </figure>
+        <figure class="desktop-file" role="button" tabindex="0" data-src="/audio/positive.m4a" data-name="positive.wav">
+          <img src="/images/music-file-icon.png" alt="" draggable="false" />
+          <figcaption>positive.wav<span class="dur">00:00</span></figcaption>
         </figure>
       </div>
       <div id="ql-audio" hidden>
@@ -591,7 +683,12 @@
                       fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
               </svg>
             </label>
-            <p class="time">Time: <b id="ql-total-long">0:00</b></p>
+            <div id="ql-meta">
+              <p id="ql-title"></p>
+              <p class="kv" id="ql-artist-row">Artist: <b id="ql-artist"></b></p>
+              <p class="kv" id="ql-album-row">Album: <b id="ql-album"></b></p>
+              <p class="kv">Time: <b id="ql-total-long">0:00</b></p>
+            </div>
           </div>
         </div>
         <div id="ql-transport">
@@ -657,6 +754,7 @@
         };
 
         el.addEventListener('pointerdown', e => {
+          if (e.target.closest('a')) return;
           // Rolled by hand: cancelling pointerdown can swallow the compat
           // dblclick event, and this works the same on touch.
           const dbl = e.timeStamp - (el._t || 0) < 400;
@@ -692,15 +790,20 @@
       const ql = document.getElementById('quicklook');
       const qlImg = document.getElementById('ql-img');
       const qlVid = document.getElementById('ql-video');
+      const qlPdf = document.getElementById('ql-pdf');
       const qlName = document.getElementById('ql-name');
+      const qlPage = document.getElementById('ql-page');
       const qlFolder = document.getElementById('ql-folder');
       const qlAudio = document.getElementById('ql-audio');
       const qlMusic = document.getElementById('ql-open-music');
+      const qlDl = document.getElementById('ql-download');
       const folder = document.getElementById('desktop-folder');
       const tracks = [...qlFolder.querySelectorAll('[data-src]')];
       const seek = document.getElementById('ql-seek');
       const playBtn = document.getElementById('ql-play');
       let at = -1;
+      let fromFolder = false;
+      let pdfAt = 0, pdfN = 0;
 
       const player = new Audio();
       let playing = null;
@@ -726,6 +829,9 @@
         qlVid.removeAttribute('src');
         qlVid.removeAttribute('poster');
         qlVid.load();
+        qlPdf.scrollTop = 0;
+        qlPage.hidden = true;
+        qlDl.hidden = true;
       };
       tracks.forEach(f => {
         const a = new Audio();
@@ -740,13 +846,23 @@
       player.addEventListener('ended', () => playBtn.removeAttribute('data-playing'));
       const playTrack = f => {
         playing = f;
-        player.src = f.dataset.src;
+        player.src = f.dataset.src || f.dataset.full;
         player.play();
+        const art = f.querySelector('img');
+        document.getElementById('ql-art').src = art ? art.src : '/images/music-file-icon.png';
         qlImg.hidden = true;
+        qlVid.hidden = true;
+        qlPdf.hidden = true;
         qlFolder.hidden = true;
         qlAudio.hidden = false;
         qlMusic.hidden = false;
-        qlName.textContent = f.dataset.name;
+        const fileName = f.dataset.name || f.querySelector('figcaption').childNodes[0].textContent.trim();
+        qlName.textContent = fileName;
+        document.getElementById('ql-title').textContent = f.dataset.title || fileName.replace(/\.[^.]+$/, '');
+        document.getElementById('ql-artist').textContent = f.dataset.artist || '';
+        document.getElementById('ql-album').textContent = f.dataset.album || '';
+        document.getElementById('ql-artist-row').hidden = !f.dataset.artist;
+        document.getElementById('ql-album-row').hidden = !f.dataset.album;
       };
       const pick = e => { const f = e.target.closest('[data-src]'); if (f) playTrack(f); };
       qlFolder.addEventListener('click', pick);
@@ -768,25 +884,71 @@
         const i = files.indexOf(el);
         if (i < 0 && el !== folder) return;      // nothing else has a preview
         at = i;
+        fromFolder = el === folder;
         stop();
+        const src = el.dataset.full || '';
+        const vid = i >= 0 && /\.mp4$/i.test(src);
+        const pdf = i >= 0 && /\.pdf$/i.test(src);
+        const aud = i >= 0 && /\.(mp3|m4a|wav)$/i.test(src);
+        if (aud) {
+          qlPdf.hidden = true;
+          qlVid.hidden = true;
+          playTrack(el);
+          ql.hidden = false;
+          return;
+        }
         qlAudio.hidden = true;
         qlMusic.hidden = true;
-        const vid = i >= 0 && /\.mp4$/i.test(el.dataset.full);
-        qlImg.hidden = i < 0 || vid;
+        qlImg.hidden = i < 0 || vid || pdf;
         qlVid.hidden = !vid;
+        qlPdf.hidden = !pdf;
         qlFolder.hidden = i >= 0;
-        if (vid) {
+        if (pdf) {
+          const stem = el.dataset.stem;
+          pdfN = +el.dataset.pages || 1;
+          pdfAt = 0;
+          qlPdf.replaceChildren(...Array.from({ length: pdfN }, (_, i) => {
+            const img = new Image();
+            img.src = '/images/desk/' + stem + '-' + (i + 1) + '.png';
+            img.alt = 'Page ' + (i + 1);
+            if (i) img.loading = 'lazy';
+            return img;
+          }));
+          qlPage.hidden = pdfN < 2;
+          qlPage.textContent = '1 / ' + pdfN;
+          qlPdf.scrollTop = 0;
+          qlDl.hidden = stem !== 'resume';
+        } else if (vid) {
           qlVid.poster = el.querySelector('img').src;
-          qlVid.src = el.dataset.full;
+          qlVid.src = src;
           qlVid.play();
         } else if (i >= 0) {
-          qlImg.src = el.dataset.full;
+          qlImg.src = src;
           qlImg.alt = el.querySelector('img').alt;
         }
         qlName.textContent = el.querySelector('figcaption').childNodes[0].textContent.trim();
         ql.hidden = false;
       }
-      const close = () => { ql.hidden = true; at = -1; stop(); };
+      const pdfImgs = () => [...qlPdf.querySelectorAll('img')];
+      const flipPdf = d => {
+        if (qlPdf.hidden || !pdfN) return false;
+        pdfAt = (pdfAt + d + pdfN) % pdfN;
+        qlPdf.scrollTop = pdfImgs()[pdfAt].offsetTop;
+        qlPage.textContent = (pdfAt + 1) + ' / ' + pdfN;
+        return true;
+      };
+      qlPdf.addEventListener('scroll', () => {
+        if (qlPdf.hidden) return;
+        const imgs = pdfImgs();
+        const i = imgs.findLastIndex(img => img.offsetTop <= qlPdf.scrollTop + 48);
+        if (i < 0) return;
+        pdfAt = i;
+        qlPage.textContent = (i + 1) + ' / ' + pdfN;
+      });
+      const close = () => {
+        if (!qlAudio.hidden && fromFolder) { open(folder); return; }
+        ql.hidden = true; at = -1; stop();
+      };
       // Arrows walk the photos; the folder window isn't part of that ring.
       const step = n => { if (at >= 0) open(files[(at + n + files.length) % files.length]); };
 
@@ -800,8 +962,8 @@
           if (e.key === ' ' && !qlAudio.hidden) { e.preventDefault(); player.paused ? player.play() : player.pause(); return; }
           if (e.key === ' ' && !qlVid.hidden) { e.preventDefault(); qlVid.paused ? qlVid.play() : qlVid.pause(); return; }
           if (e.key === ' ' ) { e.preventDefault(); close(); }
-          if (e.key === 'ArrowRight') step(1);
-          if (e.key === 'ArrowLeft') step(-1);
+          if (e.key === 'ArrowRight') { e.preventDefault(); if (!flipPdf(1)) step(1); }
+          if (e.key === 'ArrowLeft') { e.preventDefault(); if (!flipPdf(-1)) step(-1); }
           return;
         }
         // Space or Return on a selected icon opens it, same as the Finder.
