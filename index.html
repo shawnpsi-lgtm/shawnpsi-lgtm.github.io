@@ -91,7 +91,7 @@
     .desktop-icon[data-full$=".mp4"] { left: calc(100vw - 124px); }
     .desktop-icon[data-full="/videos/go.mp4"] {
       left: calc(50vw - 46px);
-      top: calc(100vh - 148px);
+      top: calc(100svh - 148px);
     }
     #desktop-folder img {
       width: 80px;
@@ -469,7 +469,7 @@
       [data-full$="5496.jpg"] { left: 110px !important; }
       [data-full$="5500.jpg"] { left: 210px !important; }
       /* Videos sit on the hero floor, under the photos / dock. */
-      .desktop-icon[data-full$=".mp4"] { top: calc(100dvh - 148px) !important; }
+      .desktop-icon[data-full$=".mp4"] { top: calc(100svh - 148px) !important; }
       [data-full$="lethimgo.mp4"] { left: 10px !important; }
       [data-full$="chicago.mp4"] { left: 110px !important; }
       [data-full="/videos/go.mp4"] { left: 210px !important; }
@@ -502,7 +502,7 @@
     @media (max-width: 430px) {
       .desktop-icon[data-full$="5500.jpg"] { top: 96px !important; }
       .desktop-icon[data-full$=".mp4"] { left: calc(100vw - 102px) !important; }
-      .desktop-icon[data-full$="lethimgo.mp4"] { top: calc(100dvh - 248px) !important; }
+      .desktop-icon[data-full$="lethimgo.mp4"] { top: calc(100svh - 248px) !important; }
       .desktop-icon[data-full="/videos/go.mp4"] { left: 10px !important; }
     }
 
@@ -534,7 +534,7 @@
     <img src="/images/desk/chicago-thumb.jpg" alt="Looking up at Chicago skyscrapers through trees" draggable="false" />
     <figcaption>chicago.mp4</figcaption>
   </figure>
-  <figure class="desktop-icon desktop-file" style="left:66%;top:564px" data-full="/videos/go.mp4">
+  <figure class="desktop-icon desktop-file" data-full="/videos/go.mp4">
     <img src="/images/desk/go-thumb.jpg" alt="Portrait clip outdoors" draggable="false" />
     <figcaption>go.mp4</figcaption>
   </figure>
@@ -543,7 +543,7 @@
     <figure>
       <figcaption><button id="ql-close" aria-label="Close">✕</button><span id="ql-name"></span><span id="ql-open-music" hidden>Open with Music</span></figcaption>
       <img id="ql-img" alt="" />
-      <video id="ql-video" hidden controls playsinline></video>
+      <video id="ql-video" hidden controls playsinline preload="none"></video>
       <div id="ql-folder" hidden>
         <figure class="desktop-file" role="button" tabindex="0" data-src="/audio/dirty-talk.m4a" data-name="dirty talk.wav">
           <img src="/images/music-file-icon.png" alt="" draggable="false" />
@@ -703,6 +703,7 @@
         playing = null;
         qlVid.pause();
         qlVid.removeAttribute('src');
+        qlVid.removeAttribute('poster');
         qlVid.load();
       };
       tracks.forEach(f => {
@@ -754,6 +755,7 @@
         qlVid.hidden = !vid;
         qlFolder.hidden = i >= 0;
         if (vid) {
+          qlVid.poster = el.querySelector('img').src;
           qlVid.src = el.dataset.full;
           qlVid.play();
         } else if (i >= 0) {
