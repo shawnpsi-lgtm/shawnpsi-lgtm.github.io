@@ -211,25 +211,46 @@
       text-overflow: ellipsis;
     }
     #ql-close {
-      display: grid;
-      place-items: center;
       flex: none;
-      width: 26px;
-      height: 26px;
+      width: 12px;
+      height: 12px;
       padding: 0;
-      border: none;
+      border: .5px solid rgb(0 0 0 / .28);
       border-radius: 50%;
-      background: rgb(255 255 255 / .13);
-      box-shadow: inset 0 .5px 0 rgb(255 255 255 / .2);
-      color: rgb(255 255 255 / .82);
-      font: 500 12px/1 var(--sans);
+      background: #ff5f57;
+      box-shadow: inset 0 .5px 0 rgb(255 255 255 / .28);
       cursor: pointer;
-      transition: background .2s, color .2s, scale .2s;
+      transition: scale .15s;
     }
-    #ql-close:hover { background: rgb(255 255 255 / .24); color: #fff; }
     #ql-close:active { scale: .9; }
+    /* Opaque photos/video flatten the panel's backdrop-filter, so the title
+       bar goes solid. Glass the caption itself and let the media sit below. */
+    #quicklook > figure:has(#ql-img:not([hidden])),
+    #quicklook > figure:has(#ql-video:not([hidden])) {
+      overflow: visible;
+      background: transparent;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      /* Opacity-only pop: transform on this box would trap the caption's
+         backdrop-filter and the bar would sample black instead of the page. */
+      animation: ql-in .3s cubic-bezier(.2,.8,.2,1);
+      box-shadow: 0 40px 90px -18px rgb(0 0 0 / .62), 0 2px 10px rgb(0 0 0 / .3);
+    }
+    #quicklook > figure:has(#ql-img:not([hidden]))::after,
+    #quicklook > figure:has(#ql-video:not([hidden]))::after { display: none; }
+    #quicklook > figure:has(#ql-img:not([hidden])) > figcaption,
+    #quicklook > figure:has(#ql-video:not([hidden])) > figcaption {
+      border-radius: 8px 8px 0 0;
+      background: rgb(28 28 30 / .52);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      backdrop-filter: blur(40px) saturate(180%);
+      box-shadow:
+        inset 0 0 0 .5px rgb(255 255 255 / .11),
+        inset 0 1px 0 rgb(255 255 255 / .2);
+    }
     #ql-img, #ql-video {
       display: block;
+      border-radius: 0 0 8px 8px;
       /* Shrink-wrap to the media's aspect ratio so contain doesn't paint
          letterbox/pillarbox bars inside a too-wide flex child. */
       width: auto;
@@ -541,7 +562,7 @@
 
   <div id="quicklook" hidden>
     <figure>
-      <figcaption><button id="ql-close" aria-label="Close">✕</button><span id="ql-name"></span><span id="ql-open-music" hidden>Open with Music</span></figcaption>
+      <figcaption><button id="ql-close" aria-label="Close"></button><span id="ql-name"></span><span id="ql-open-music" hidden>Open with Music</span></figcaption>
       <img id="ql-img" alt="" />
       <video id="ql-video" hidden controls playsinline preload="none"></video>
       <div id="ql-folder" hidden>
