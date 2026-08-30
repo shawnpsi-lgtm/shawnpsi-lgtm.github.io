@@ -10,13 +10,15 @@
 .card-wrap:nth-child(2) .card{border-top-right-radius:2rem}
 .card-wrap:nth-last-child(2) .card{border-bottom-left-radius:2rem}
 .card-wrap:last-child .card{border-bottom-right-radius:2rem}
-.card-wrap:hover .card{transform:translateY(-4px);box-shadow:inset 0 -20px 80px -20px #8686f03d,0 18px 50px #00000047}
-.card__info{position:absolute;inset:auto 0 0 0;z-index:20;padding:.7rem 1.25rem;background:#000000a6;border-top:1px solid #ffffff1a;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border-radius:0 0 .5rem .5rem}
+.card-wrap:hover .card{transform:none;box-shadow:inset 0 -20px 80px -20px #8686f01f}
+.card-wrap:hover .card__img{transform:none}
+.card-wrap:hover .card__img--hover{opacity:0}
+.card__overlay{display:none}
+.card__info{display:none}
 .card-wrap:nth-last-child(2) .card__info{border-bottom-left-radius:2rem}
 .card-wrap:last-child .card__info{border-bottom-right-radius:2rem}
 .card__title{color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card__tagline{color:#ffffffb8;max-width:none;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card__overlay{padding-bottom:5.5rem;z-index:15}
 @media (width<=900px){
 .grid{grid-template-columns:1fr;gap:16px}
 /* one card per row: repeat the desktop selectors so the reset actually outweighs
@@ -38,33 +40,23 @@
 }
 /* ---- mock slots for the next two projects ---- */
 .card-wrap--mock{cursor:default}
-.card--mock{background:#0b0b0d;border:1px dashed #ffffff30;box-shadow:none;place-items:center;display:grid}
+.card--mock{background:#0b0b0d;box-shadow:none;place-items:center;display:grid}
 .card-wrap--mock:hover .card{transform:none;box-shadow:none}
 .card__mock-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
-/* ---- box 8: HUD grid + cycling logos ---- */
-.card-wrap--lines .card{isolation:isolate;overflow:hidden;background:#f3f3f5;border-color:#00000022}
-.card-wrap--lines .card::before{
-content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-background-image:
-  radial-gradient(circle,rgba(40,50,70,.22) 1px,transparent 1.5px),
-  linear-gradient(rgba(40,50,70,.1) 1px,transparent 1px),
-  linear-gradient(90deg,rgba(40,50,70,.1) 1px,transparent 1px);
-background-size:32px 32px;
--webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 42%,#000 22%,transparent 78%);
-mask-image:radial-gradient(ellipse 80% 70% at 50% 42%,#000 22%,transparent 78%);
-animation:box8-line-drift 18s linear infinite,djai-dot-breathe 7s ease-in-out infinite}
-@keyframes box8-line-drift{to{background-position:32px 32px}}
-.card-wrap--lines .card::after{
-content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
-background:url(/images/ngc2-logo.png) center 36%/13.5rem auto no-repeat}
-.card-wrap--lines .card{padding-bottom:4.25rem}
-.card-wrap--lines .ngc2-logo{display:none!important}
-.card-wrap--lines .box8-track--b{display:none}
+/* ---- NGC2: Anduril Lattice-style point field ---- */
+.card-wrap--lines .card{
+isolation:isolate;overflow:hidden;display:block;
+background:#e6e6e3;border:1px solid #00000014;box-shadow:none}
+.card-wrap--lines .card::before,.card-wrap--lines .card::after,.card-wrap--lines::after{content:none;display:none}
+.card-wrap--lines .box8-track--b,.card-wrap--lines .ngc2-logo{display:none!important}
+.ngc2-field{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.ngc2-copy{position:absolute;z-index:3;left:1.3rem;bottom:3.25rem;color:#111;pointer-events:none}
+.ngc2-copy span{display:block;letter-spacing:.18em;font-size:.62rem;font-weight:700;margin-bottom:.4rem}
+.ngc2-copy b{display:block;font:700 clamp(1.55rem,2.8vw,2.2rem)/.95 var(--sans);letter-spacing:-.045em}
 .card-wrap--lines .box8-track--a{
-position:absolute;z-index:1;left:0;right:0;bottom:5.5rem;transform:none;
-display:flex;align-items:center;justify-content:center;gap:1.15rem;
-width:100%;padding:0 1.2rem;box-sizing:border-box}
+position:absolute;z-index:3;left:1.3rem;right:1.3rem;bottom:1.3rem;
+display:flex;align-items:center;gap:1.1rem;pointer-events:none}
 .card-wrap--lines .box8-track--a img:nth-child(1){order:5}
 .card-wrap--lines .box8-track--a img:nth-child(2){order:3}
 .card-wrap--lines .box8-track--a img:nth-child(3){order:2}
@@ -72,59 +64,36 @@ width:100%;padding:0 1.2rem;box-sizing:border-box}
 .card-wrap--lines .box8-track--a img:nth-child(5){order:4}
 .card-wrap--lines .box8-track--a img:nth-child(n+6){display:none}
 .card-wrap--lines .box8-track img{
-position:static;inset:auto;margin:0;flex:none;
-height:1.05rem;width:auto;max-width:17%;max-height:none;
-opacity:.38;object-fit:contain;filter:brightness(0)}
+height:1.15rem;width:auto;max-width:18%;object-fit:contain;opacity:.88;filter:brightness(0)}
 @media (width<=900px){
-.card-wrap--lines .card::after{background-size:8.5rem auto}
-.card-wrap--lines .box8-track--a{bottom:4.6rem;gap:1.1rem}
-.card-wrap--lines .box8-track img{height:.9rem}}
-@media (prefers-reduced-motion:reduce){
-.card-wrap--lines .card::before{animation:none}}
+.ngc2-copy{bottom:2.7rem;left:1.1rem}
+.ngc2-copy b{font-size:1.45rem}
+.card-wrap--lines .box8-track--a{left:1.1rem;right:1.1rem;bottom:1.1rem;gap:.75rem}
+.card-wrap--lines .box8-track img{height:.95rem}}
 
-/* desktop: center in the artwork above the caption bar */
-.card-wrap[href="project-djai.html"] .card__img{padding-bottom:4.25rem}
-@media (width<=900px){
-.card-wrap[href="project-djai.html"] .card__img{padding-bottom:0}
-.card-wrap[href="project-djai.html"] .card__img img{transform:translateY(-70%)}
-}
-
-/* ---- DJai card: drifting dot field + outward wave pulse ---- */
 .card-wrap[href="project-djai.html"] .card{isolation:isolate}
-.card-wrap[href="project-djai.html"] .card::before,
-.card-wrap[href="project-djai.html"] .card::after{
-content:"";position:absolute;inset:0;z-index:-1;
-background-size:26px 26px;
-background-position:0 0}
-/* base field: slow diagonal drift, gentle breathe */
-.card-wrap[href="project-djai.html"] .card::before{
-background-image:radial-gradient(circle,#ffffff30 1px,transparent 1.6px);
--webkit-mask-image:radial-gradient(ellipse 75% 65% at 45% 38%,#000 30%,transparent 80%);
-mask-image:radial-gradient(ellipse 75% 65% at 45% 38%,#000 30%,transparent 80%);
-animation:djai-dot-drift 14s linear infinite,djai-dot-breathe 6s ease-in-out infinite}
-/* second field, brighter, revealed only by a ring that expands from the phone */
-.card-wrap[href="project-djai.html"] .card::after{
-background-image:radial-gradient(circle,#ffffffc7 1.4px,transparent 2px);
--webkit-mask-image:radial-gradient(circle,transparent 34%,#000 44%,#000 50%,transparent 62%);
-mask-image:radial-gradient(circle,transparent 34%,#000 44%,#000 50%,transparent 62%);
--webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
--webkit-mask-position:45% 38%;mask-position:45% 38%;
-animation:djai-dot-wave 5s ease-out infinite}
-@keyframes djai-dot-drift{to{background-position:26px 26px}}
-@keyframes djai-dot-breathe{0%,to{opacity:.55}50%{opacity:1}}
-@keyframes djai-dot-wave{
-0%{-webkit-mask-size:0 0;mask-size:0 0;opacity:0}
-15%{opacity:.9}
-100%{-webkit-mask-size:230% 230%;mask-size:230% 230%;opacity:0}}
-@media (prefers-reduced-motion:reduce){
-.card-wrap[href="project-djai.html"] .card::before{animation:none}
-.card-wrap[href="project-djai.html"] .card::after{display:none}}
-
-/* No hover on touch: the overlay would stick after a tap and cover the card */
-@media (hover:none){.card__overlay{display:none}}
-
-/* The giant Emmy type is centred in the card. On the short mobile card the info
-   panel covers its second line, so pin the type to the top instead. */
+.card-wrap[href="project-djai.html"] .card__img{position:relative;z-index:1}
+.card-wrap[href="project-djai.html"] .card__img img{
+filter:drop-shadow(0 0 10px rgb(255 255 255 / .45)) drop-shadow(0 0 28px rgb(255 255 255 / .22));
+animation:djai-glow-breathe 6s ease-in-out infinite}
+.djai-field{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;
+-webkit-mask-image:radial-gradient(ellipse 92% 78% at 50% 38%,#000 28%,transparent 84%);
+mask-image:radial-gradient(ellipse 92% 78% at 50% 38%,#000 28%,transparent 84%)}
 @media (width<=900px){
-.card-wrap[href="project-emmy.html"] .card__img>div:last-child{justify-content:flex-start!important;padding-top:7%!important}
-}
+.djai-field{
+-webkit-mask-image:radial-gradient(ellipse 96% 76% at 50% 32%,#000 22%,transparent 86%);
+mask-image:radial-gradient(ellipse 96% 76% at 50% 32%,#000 22%,transparent 86%)}}
+@keyframes djai-glow-breathe{
+0%,to{filter:drop-shadow(0 0 8px rgb(255 255 255 / .28)) drop-shadow(0 0 18px rgb(255 255 255 / .12))}
+50%{filter:drop-shadow(0 0 12px rgb(255 255 255 / .55)) drop-shadow(0 0 36px rgb(255 255 255 / .3))}}
+@media (prefers-reduced-motion:reduce){
+.card-wrap[href="project-djai.html"] .card__img img{animation:none}}
+
+.card-copy{position:absolute;z-index:13;left:1.3rem;right:1.3rem;bottom:1.3rem;color:#fff;pointer-events:none;text-shadow:0 1px 14px rgb(0 0 0 / .65),0 0 2px rgb(0 0 0 / .8)}
+.card-copy span{display:block;letter-spacing:.18em;font-size:.62rem;font-weight:700;margin-bottom:.4rem;opacity:.88}
+.card-copy b{display:block;font:700 clamp(1.2rem,2.2vw,1.7rem)/1.05 var(--sans);letter-spacing:-.04em}
+.card-wrap:not(.card-wrap--lines) .card::after{content:"";position:absolute;inset:auto 0 0;height:7.2rem;z-index:2;pointer-events:none;background:linear-gradient(transparent,rgb(0 0 0 / .55))}
+@media (width<=900px){
+.card-copy{left:1.1rem;right:1.1rem;bottom:1.1rem}
+.card-copy b{font-size:1.2rem}}
+
