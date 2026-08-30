@@ -8,22 +8,22 @@
 .card{aspect-ratio:auto;height:29rem;background:#000;border:1px solid #ffffff1a;border-radius:.5rem;box-shadow:inset 0 -20px 80px -20px #8686f01f}
 .card-wrap:nth-child(1) .card{border-top-left-radius:2rem}
 .card-wrap:nth-child(2) .card{border-top-right-radius:2rem}
-.card-wrap:nth-child(6) .card{border-bottom-left-radius:2rem}
-.card-wrap:nth-child(7) .card{border-bottom-right-radius:2rem}
+.card-wrap:nth-last-child(2) .card{border-bottom-left-radius:2rem}
+.card-wrap:last-child .card{border-bottom-right-radius:2rem}
 .card-wrap:hover .card{transform:translateY(-4px);box-shadow:inset 0 -20px 80px -20px #8686f03d,0 18px 50px #00000047}
-.card__info{position:absolute;inset:auto 0 0 0;z-index:20;padding:1.1rem 1.5rem;background:#000000a6;border-top:1px solid #ffffff1a;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border-radius:0 0 .5rem .5rem}
-.card-wrap:nth-child(6) .card__info{border-bottom-left-radius:2rem}
-.card-wrap:nth-child(7) .card__info{border-bottom-right-radius:2rem}
-.card__title{color:#fff}
-.card__tagline{color:#ffffffb8;max-width:600px;min-height:2lh}
-.card__overlay{padding-bottom:9rem;z-index:15}
+.card__info{position:absolute;inset:auto 0 0 0;z-index:20;padding:.7rem 1.25rem;background:#000000a6;border-top:1px solid #ffffff1a;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border-radius:0 0 .5rem .5rem}
+.card-wrap:nth-last-child(2) .card__info{border-bottom-left-radius:2rem}
+.card-wrap:last-child .card__info{border-bottom-right-radius:2rem}
+.card__title{color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card__tagline{color:#ffffffb8;max-width:none;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card__overlay{padding-bottom:5.5rem;z-index:15}
 @media (width<=900px){
 .grid{grid-template-columns:1fr;gap:16px}
 /* one card per row: repeat the desktop selectors so the reset actually outweighs
    them — .card-wrap:nth-child(n) alone loses to the two-pseudo span-2 rule */
 .card-wrap:nth-child(-n+2),.card-wrap:nth-child(n+6),.card-wrap:nth-child(n+3):nth-child(-n+5){grid-column:auto}
 .card-wrap:nth-child(n) .card{height:20rem;border-radius:.5rem}
-.card-wrap:nth-child(n) .card__info{border-radius:0 0 .5rem .5rem;padding:1.5rem}
+.card-wrap:nth-child(n) .card__info{border-radius:0 0 .5rem .5rem;padding:.7rem 1.25rem}
 .card-wrap:first-child .card{border-radius:2rem 2rem .5rem .5rem}
 .card-wrap:last-child .card{border-radius:.5rem .5rem 2rem 2rem}
 .card-wrap:last-child .card__info{border-radius:0 0 2rem 2rem}
@@ -42,8 +42,48 @@
 .card-wrap--mock:hover .card{transform:none;box-shadow:none}
 .card__mock-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
+/* ---- box 8: HUD grid + cycling logos ---- */
+.card-wrap--lines .card{isolation:isolate;overflow:hidden;background:#f3f3f5;border-color:#00000022}
+.card-wrap--lines .card::before{
+content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+background-image:
+  radial-gradient(circle,rgba(40,50,70,.22) 1px,transparent 1.5px),
+  linear-gradient(rgba(40,50,70,.1) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(40,50,70,.1) 1px,transparent 1px);
+background-size:32px 32px;
+-webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 42%,#000 22%,transparent 78%);
+mask-image:radial-gradient(ellipse 80% 70% at 50% 42%,#000 22%,transparent 78%);
+animation:box8-line-drift 18s linear infinite,djai-dot-breathe 7s ease-in-out infinite}
+@keyframes box8-line-drift{to{background-position:32px 32px}}
+.card-wrap--lines .card::after{
+content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+background:url(/images/ngc2-logo.png) center 36%/13.5rem auto no-repeat}
+.card-wrap--lines .card{padding-bottom:4.25rem}
+.card-wrap--lines .ngc2-logo{display:none!important}
+.card-wrap--lines .box8-track--b{display:none}
+.card-wrap--lines .box8-track--a{
+position:absolute;z-index:1;left:0;right:0;bottom:5.5rem;transform:none;
+display:flex;align-items:center;justify-content:center;gap:1.15rem;
+width:100%;padding:0 1.2rem;box-sizing:border-box}
+.card-wrap--lines .box8-track--a img:nth-child(1){order:5}
+.card-wrap--lines .box8-track--a img:nth-child(2){order:3}
+.card-wrap--lines .box8-track--a img:nth-child(3){order:2}
+.card-wrap--lines .box8-track--a img:nth-child(4){order:1}
+.card-wrap--lines .box8-track--a img:nth-child(5){order:4}
+.card-wrap--lines .box8-track--a img:nth-child(n+6){display:none}
+.card-wrap--lines .box8-track img{
+position:static;inset:auto;margin:0;flex:none;
+height:1.05rem;width:auto;max-width:17%;max-height:none;
+opacity:.38;object-fit:contain;filter:brightness(0)}
+@media (width<=900px){
+.card-wrap--lines .card::after{background-size:8.5rem auto}
+.card-wrap--lines .box8-track--a{bottom:4.6rem;gap:1.1rem}
+.card-wrap--lines .box8-track img{height:.9rem}}
+@media (prefers-reduced-motion:reduce){
+.card-wrap--lines .card::before{animation:none}}
+
 /* desktop: center in the artwork above the caption bar */
-.card-wrap[href="project-djai.html"] .card__img{padding-bottom:7.125rem}
+.card-wrap[href="project-djai.html"] .card__img{padding-bottom:4.25rem}
 @media (width<=900px){
 .card-wrap[href="project-djai.html"] .card__img{padding-bottom:0}
 .card-wrap[href="project-djai.html"] .card__img img{transform:translateY(-70%)}
@@ -59,8 +99,8 @@ background-position:0 0}
 /* base field: slow diagonal drift, gentle breathe */
 .card-wrap[href="project-djai.html"] .card::before{
 background-image:radial-gradient(circle,#ffffff30 1px,transparent 1.6px);
--webkit-mask-image:radial-gradient(ellipse 75% 65% at 50% 40%,#000 30%,transparent 80%);
-mask-image:radial-gradient(ellipse 75% 65% at 50% 40%,#000 30%,transparent 80%);
+-webkit-mask-image:radial-gradient(ellipse 75% 65% at 45% 38%,#000 30%,transparent 80%);
+mask-image:radial-gradient(ellipse 75% 65% at 45% 38%,#000 30%,transparent 80%);
 animation:djai-dot-drift 14s linear infinite,djai-dot-breathe 6s ease-in-out infinite}
 /* second field, brighter, revealed only by a ring that expands from the phone */
 .card-wrap[href="project-djai.html"] .card::after{
@@ -68,7 +108,7 @@ background-image:radial-gradient(circle,#ffffffc7 1.4px,transparent 2px);
 -webkit-mask-image:radial-gradient(circle,transparent 34%,#000 44%,#000 50%,transparent 62%);
 mask-image:radial-gradient(circle,transparent 34%,#000 44%,#000 50%,transparent 62%);
 -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
--webkit-mask-position:50% 40%;mask-position:50% 40%;
+-webkit-mask-position:45% 38%;mask-position:45% 38%;
 animation:djai-dot-wave 5s ease-out infinite}
 @keyframes djai-dot-drift{to{background-position:26px 26px}}
 @keyframes djai-dot-breathe{0%,to{opacity:.55}50%{opacity:1}}
