@@ -9,7 +9,7 @@
   <meta name="description" content="Shawn Singh — [YOUR_TITLE] based in [YOUR_LOCATION]." />
   <link rel="icon" type="image/svg+xml" href="/shawnlogo.svg" />
 
-  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js"></script>
+  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js?v=2"></script>
   <link rel="modulepreload" crossorigin href="/assets/styles-GID8uTDy.js">
   <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css">
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
@@ -610,6 +610,53 @@
       .desktop-icon[data-full="/videos/go.mp4"] { left: 10px !important; }
     }
 
+    @keyframes box8-line-drift { to { background-position: 32px 32px; } }
+    .card-wrap--lines .card::before {
+      animation: box8-line-drift 18s linear infinite, djai-dot-breathe 7s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card-wrap--lines .card::before { animation: none; }
+    }
+    .card-wrap--lines .ngc2-logo { display: none !important; }
+    .card-wrap--lines .card::after {
+      z-index: 2 !important;
+      background: url(/images/ngc2-logo.png) center 36% / 13.5rem auto no-repeat !important;
+      filter: none;
+      -webkit-mask-image: none !important;
+      mask-image: none !important;
+      animation: none !important;
+    }
+    .card-wrap--lines .box8-track--b { display: none !important; }
+    .card-wrap--lines .box8-track--a {
+      animation: none !important;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 5.5rem;
+      transform: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.15rem;
+      width: 100%;
+      padding: 0 1.2rem;
+      box-sizing: border-box;
+    }
+    .card-wrap--lines .box8-track--a img:nth-child(1) { order: 5; } /* Palantir */
+    .card-wrap--lines .box8-track--a img:nth-child(2) { order: 3; } /* Anduril */
+    .card-wrap--lines .box8-track--a img:nth-child(3) { order: 2; } /* Lockheed */
+    .card-wrap--lines .box8-track--a img:nth-child(4) { order: 1; } /* C3 */
+    .card-wrap--lines .box8-track--a img:nth-child(5) { order: 4; } /* RTX */
+    .card-wrap--lines .box8-track--a img:nth-child(n+6) { display: none; }
+    .card-wrap--lines .box8-track img { height: 1.05rem !important; max-width: 17%; opacity: .38; }
+    @media (width <= 900px) {
+      .card-wrap--lines .card::after { background-size: 8.5rem auto !important; }
+      .card-wrap--lines .box8-track--a { bottom: 4.6rem; gap: 1.1rem; }
+      .card-wrap--lines .box8-track img { height: .9rem !important; }
+    }
+
+    .card-wrap:last-child .card__mock-video { object-fit: contain; }
+
   </style>
 </head>
 <body>
@@ -977,6 +1024,23 @@
         if (!sel) return;
         e.preventDefault();
         open(sel);
+      });
+
+      const fillEmpty = () => {
+        const card = document.querySelector('.grid .card-wrap:last-child .card--mock');
+        if (!card || card.querySelector('video[src$="go.mp4"]')) return;
+        let v = card.querySelector('video');
+        if (!v) {
+          v = document.createElement('video');
+          v.className = 'card__mock-video';
+          v.autoplay = v.muted = v.loop = v.playsInline = true;
+          card.prepend(v);
+        }
+        v.src = '/videos/go.mp4';
+      };
+      addEventListener('DOMContentLoaded', () => {
+        fillEmpty();
+        new MutationObserver(fillEmpty).observe(document.getElementById('root'), { childList: true, subtree: true });
       });
     })();
   </script>
