@@ -610,49 +610,15 @@
       .desktop-icon[data-full="/videos/go.mp4"] { left: 10px !important; }
     }
 
-    @keyframes box8-line-drift { to { background-position: 32px 32px; } }
-    .card-wrap--lines .card::before {
-      animation: box8-line-drift 18s linear infinite, djai-dot-breathe 7s ease-in-out infinite;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .card-wrap--lines .card::before { animation: none; }
-    }
+    .card-wrap--lines .box8-track--b,
     .card-wrap--lines .ngc2-logo { display: none !important; }
+    .card-wrap--lines::after,
+    .card-wrap--lines .card::before,
     .card-wrap--lines .card::after {
-      z-index: 2 !important;
-      background: url(/images/ngc2-logo.png) center 36% / 13.5rem auto no-repeat !important;
-      filter: none;
-      -webkit-mask-image: none !important;
-      mask-image: none !important;
+      content: none !important;
+      display: none !important;
       animation: none !important;
-    }
-    .card-wrap--lines .box8-track--b { display: none !important; }
-    .card-wrap--lines .box8-track--a {
-      animation: none !important;
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 5.5rem;
-      transform: none;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 1.15rem;
-      width: 100%;
-      padding: 0 1.2rem;
-      box-sizing: border-box;
-    }
-    .card-wrap--lines .box8-track--a img:nth-child(1) { order: 5; } /* Palantir */
-    .card-wrap--lines .box8-track--a img:nth-child(2) { order: 3; } /* Anduril */
-    .card-wrap--lines .box8-track--a img:nth-child(3) { order: 2; } /* Lockheed */
-    .card-wrap--lines .box8-track--a img:nth-child(4) { order: 1; } /* C3 */
-    .card-wrap--lines .box8-track--a img:nth-child(5) { order: 4; } /* RTX */
-    .card-wrap--lines .box8-track--a img:nth-child(n+6) { display: none; }
-    .card-wrap--lines .box8-track img { height: 1.05rem !important; max-width: 17%; opacity: .38; }
-    @media (width <= 900px) {
-      .card-wrap--lines .card::after { background-size: 8.5rem auto !important; }
-      .card-wrap--lines .box8-track--a { bottom: 4.6rem; gap: 1.1rem; }
-      .card-wrap--lines .box8-track img { height: .9rem !important; }
+      background: none !important;
     }
 
     .card-wrap:last-child .card__mock-video { object-fit: contain; }
@@ -1027,20 +993,165 @@
       });
 
       const fillEmpty = () => {
-        const card = document.querySelector('.grid .card-wrap:last-child .card--mock');
-        if (!card || card.querySelector('video[src$="go.mp4"]')) return;
-        let v = card.querySelector('video');
-        if (!v) {
-          v = document.createElement('video');
-          v.className = 'card__mock-video';
-          v.autoplay = v.muted = v.loop = v.playsInline = true;
-          card.prepend(v);
+        const v = document.querySelector('.grid .card-wrap:last-child .card--mock video');
+        if (!v || v.dataset.queue) return;
+        const clips = ['/videos/chicago.mp4', '/videos/go.mp4', '/videos/lethimgo.mp4'];
+        let i = Math.max(0, clips.findIndex(c => (v.currentSrc || v.src).includes(c)));
+        v.dataset.queue = '1';
+        v.loop = false;
+        v.addEventListener('ended', () => { i = (i + 1) % clips.length; v.src = clips[i]; v.play(); });
+      };
+      const fillDjai = () => {
+        const card = document.querySelector('.card-wrap[href="project-djai.html"] .card');
+        if (!card || card.querySelector('.djai-field')) return;
+        const canvas = document.createElement('canvas');
+        canvas.className = 'djai-field';
+        canvas.setAttribute('aria-hidden', 'true');
+        card.prepend(canvas);
+        const ctx = canvas.getContext('2d');
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const hash = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+        const band = (p, k, seed) => {
+          const beat = p + seed;
+          const frac = beat - Math.floor(beat);
+          const bar = beat | 0;
+          const down = bar % 4 === 0 ? 1 : .55;
+          const phrase = .28 + hash(bar + seed * 13) * .5 + hash((bar >> 3) + seed) * .3;
+          const kick = Math.exp(-frac * 9) * down;
+          const snare = bar % 2 === 1 ? Math.exp(-frac * 13) : 0;
+          const hat = Math.exp(-((beat * 4) % 1) * 14) * (.25 + hash(bar * 3 + seed) * .4);
+          const sub = .2 + hash(bar + seed * 7) * .35;
+          const g = hash(bar * 11 + k * 9 + seed);
+          if (k === 0) return Math.min(1, (sub + kick * .95) * phrase);
+          if (k === 1) return Math.min(1, (.08 + snare * .85 + sub * .15 + g * .18) * phrase);
+          return Math.min(1, (hat + kick * .08 + g * .42) * phrase);
+        };
+        const resize = () => {
+          const r = card.getBoundingClientRect();
+          const d = Math.min(devicePixelRatio || 1, 2);
+          canvas.width = Math.max(1, r.width * d);
+          canvas.height = Math.max(1, r.height * d);
+        };
+        const draw = t => {
+          const w = canvas.width, h = canvas.height, d = Math.min(devicePixelRatio || 1, 2);
+          ctx.clearRect(0, 0, w, h);
+          const mid = h * (w / d < 520 ? .32 : .38);
+          const maxH = h * .34;
+          const scroll = reduce ? 0 : t * .00115;
+          const n = Math.max(90, Math.floor(w / (2.1 * d)));
+          const bw = w / n;
+          const decks = [[0, -1], [4.3, 1]];
+          for (const [seed, dir] of decks) {
+            for (let k = 0; k < 3; k++) {
+              const thick = k === 0 ? .76 : k === 1 ? .4 : .15;
+              const alpha = k === 0 ? .28 : k === 1 ? .52 : .95;
+              const scale = k === 0 ? 1 : k === 1 ? .7 : .44;
+              ctx.globalAlpha = 1;
+              ctx.fillStyle = 'rgba(255,255,255,' + alpha + ')';
+              for (let i = 0; i < n; i++) {
+                const a = band(i / n * 16 + scroll, k, seed) * scale;
+                const bh = Math.max(d, a * maxH);
+                ctx.fillRect(i * bw + bw * (1 - thick) / 2, mid, bw * thick, dir * bh);
+              }
+            }
+          }
+          ctx.globalAlpha = .28;
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, mid, w, d * .55);
+          const gx = w * .5, gw = 24 * d;
+          const g = ctx.createLinearGradient(gx - gw, 0, gx + gw, 0);
+          g.addColorStop(0, 'rgba(255,255,255,0)');
+          g.addColorStop(.5, 'rgba(255,255,255,.14)');
+          g.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = g;
+          ctx.fillRect(gx - gw, mid - maxH * 1.35, gw * 2, maxH * 2.7);
+        };
+        resize();
+        new ResizeObserver(resize).observe(card);
+        if (reduce) { draw(0); return; }
+        const loop = t => { draw(t); requestAnimationFrame(loop); };
+        requestAnimationFrame(loop);
+      };
+      const fillNgc2 = () => {
+        const card = document.querySelector('.card-wrap--lines .card');
+        if (!card || card.querySelector('.ngc2-field')) return;
+        const canvas = document.createElement('canvas');
+        canvas.className = 'ngc2-field';
+        canvas.setAttribute('aria-hidden', 'true');
+        card.prepend(canvas);
+        const copy = document.createElement('div');
+        copy.className = 'ngc2-copy';
+        copy.innerHTML = '<span>NGC2</span><b>Next-Gen Command & Control</b>';
+        card.append(copy);
+        const ctx = canvas.getContext('2d');
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const cols = 140, rows = 96;
+        const resize = () => {
+          const r = card.getBoundingClientRect();
+          const d = Math.min(devicePixelRatio || 1, 2);
+          canvas.width = Math.max(1, r.width * d);
+          canvas.height = Math.max(1, r.height * d);
+        };
+        const draw = t => {
+          const w = canvas.width, h = canvas.height, d = Math.min(devicePixelRatio || 1, 2);
+          ctx.clearRect(0, 0, w, h);
+          ctx.fillStyle = '#111';
+          const time = t / 1100;
+          const camH = .88, fov = 1.5, horizon = .28, lift = 2.35;
+          for (let j = rows - 1; j >= 0; j--) {
+            for (let i = 0; i < cols; i++) {
+              const u = j / (rows - 1);
+              const x = (i / (cols - 1) - .5) * 8.8;
+              const z = 5.3 + u * u * 16;
+              const zz = z + time * 1.35;
+              const y = .12
+                + Math.pow(1 - Math.abs(Math.sin(x * .2 + zz * .42)), 2) * .9
+                + Math.pow(1 - Math.abs(Math.sin(x * .09 - zz * .28)), 2) * .55
+                + Math.sin(x * .5 + zz * .55 + time) * .12;
+              const px = w * .47 + x / z * fov * w;
+              const py = h * horizon - (y - camH) / z * fov * h * lift;
+              if (px < -8 || px > w + 8 || py < -8 || py > h + 8) continue;
+              ctx.globalAlpha = .3 + Math.min(.5, 1.1 / z);
+              ctx.beginPath();
+              ctx.arc(px, py, Math.max(.5, 3.8 * d / z), 0, 7);
+              ctx.fill();
+            }
+          }
+          ctx.globalAlpha = 1;
+        };
+        resize();
+        new ResizeObserver(resize).observe(card);
+        if (reduce) { draw(0); return; }
+        const loop = t => { draw(t); requestAnimationFrame(loop); };
+        requestAnimationFrame(loop);
+      };
+      const fillCardCopy = () => {
+        const items = [
+          ['[href="project-djai.html"]', 'DJai', 'AI DJ in your pocket'],
+          ['[href="project-emmy.html"]', '', 'Award-winning animation and visual effects'],
+          ['[href="project-cloudexa.html"]', '', 'Banking-grade ATM operations dashboard'],
+          ['[href="/beatfx/"]', 'BEAT FX', 'a powerful notepad for on the go DJs'],
+          [':has([src$="igstory.mp4"])', 'MARTINIQUE, FRANCE', 'Hennessy'],
+          [':has([src$="trailer.mp4"])', 'LONDON, UK', 'LAB 54'],
+          ['[href="project-visuallyrepresented.html"]', 'Visually Represented', 'A Visual System for brands'],
+          [':last-child', 'SHAWN TV', ''],
+        ];
+        for (const [sel, kicker, line] of items) {
+          const card = document.querySelector('.grid .card-wrap' + sel + ' .card');
+          if (!card || card.querySelector('.card-copy')) continue;
+          const el = document.createElement('div');
+          el.className = 'card-copy';
+          el.innerHTML = '<span>' + kicker + '</span><b>' + line + '</b>';
+          card.append(el);
         }
-        v.src = '/videos/go.mp4';
       };
       addEventListener('DOMContentLoaded', () => {
         fillEmpty();
-        new MutationObserver(fillEmpty).observe(document.getElementById('root'), { childList: true, subtree: true });
+        fillNgc2();
+        fillDjai();
+        fillCardCopy();
+        new MutationObserver(() => { fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); }).observe(document.getElementById('root'), { childList: true, subtree: true });
       });
     })();
   </script>
