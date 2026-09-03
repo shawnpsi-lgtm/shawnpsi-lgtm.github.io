@@ -70,6 +70,8 @@
     .desktop-icon {
       position: absolute;   /* scrolls away with the hero */
       z-index: 50;
+      opacity: 0;           /* load images during splash; show after it unmounts */
+      pointer-events: none;
       cursor: grab;
       /* Touch pans the page over icons (they only drag with a mouse); double-tap
          zoom stays off so double-tap opens Quick Look. Ignored for mouse input. */
@@ -79,6 +81,12 @@
       -webkit-touch-callout: none;  /* iOS: no "Save Image" sheet on long-press */
       filter: drop-shadow(0 6px 14px rgb(0 0 0 / .25));
     }
+    body.desk-on .desktop-icon {
+      opacity: 1;
+      pointer-events: auto;
+      animation: desk-in .45s cubic-bezier(.32,1.4,.52,1) both;
+    }
+    @keyframes desk-in { from { opacity: 0; transform: scale(.92) translateY(8px) } to { opacity: 1 } }
     .desktop-icon:active { cursor: grabbing; }
     /* Finder's selected-icon look: darker, bluer */
     .desktop-icon.selected {
@@ -548,6 +556,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       #quicklook, #quicklook > figure, #ql-audio, #ql-folder .desktop-file { animation: none; }
+      body.desk-on .desktop-icon { animation: none; opacity: 1; }
     }
 
     /* Phones: same icons, re-laid out into the empty sky above the dock so they
@@ -610,6 +619,7 @@
       .desktop-icon[data-full="/videos/go.mp4"] { left: 10px !important; }
     }
 
+    .card-wrap--lines { cursor: pointer; }
     .card-wrap--lines .box8-track--b,
     .card-wrap--lines .ngc2-logo { display: none !important; }
     .card-wrap--lines::after,
@@ -620,8 +630,92 @@
       animation: none !important;
       background: none !important;
     }
+    .card-wrap--lines .card { background: #e6e6e3; }
+    .card-wrap--lines .ngc2-copy { color: #111; }
+    .card-wrap--lines .box8-track img { filter: brightness(0); }
+    .card-wrap--lines .ngc2-field canvas { filter: invert(1); }
+    [data-theme=dark] .card-wrap--lines .card { background: #000; }
+    [data-theme=dark] .card-wrap--lines .ngc2-copy { color: #f5f5f2; }
+    [data-theme=dark] .card-wrap--lines .box8-track img { filter: brightness(0) invert(1); }
+    [data-theme=dark] .card-wrap--lines .ngc2-field canvas { filter: none; }
 
     .card-wrap:last-child .card__mock-video { object-fit: contain; }
+
+    #ngc2-launch[hidden] { display: none; }
+    #ngc2-launch {
+      --launch-bg: #dcddd7;
+      --launch-accent: #735600;
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: var(--launch-accent);
+      background: #000;
+      clip-path: var(--launch-clip);
+      transition:
+        clip-path .72s cubic-bezier(.65,0,.2,1),
+        background-color .45s ease .2s;
+    }
+    [data-theme=dark] #ngc2-launch {
+      --launch-bg: #090a08;
+      --launch-accent: #ffc52b;
+    }
+    #ngc2-launch::before,
+    #ngc2-launch::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+    #ngc2-launch::before {
+      inset: -35%;
+      opacity: 0;
+      background:
+        linear-gradient(color-mix(in srgb, var(--launch-accent) 11%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--launch-accent) 11%, transparent) 1px, transparent 1px);
+      background-size: 44px 44px;
+      transform: perspective(500px) rotateX(62deg) scale(1.4);
+      transition: opacity .35s ease .25s;
+    }
+    #ngc2-launch::after {
+      inset: 18px;
+      opacity: 0;
+      border: 1px solid color-mix(in srgb, var(--launch-accent) 30%, transparent);
+      clip-path: polygon(0 0,70px 0,70px 1px,1px 1px,1px 70px,0 70px,0 0,100% 0,100% 70px,calc(100% - 1px) 70px,calc(100% - 1px) 1px,calc(100% - 70px) 1px,calc(100% - 70px) 0,100% 0,100% 100%,calc(100% - 70px) 100%,calc(100% - 70px) calc(100% - 1px),calc(100% - 1px) calc(100% - 1px),calc(100% - 1px) calc(100% - 70px),100% calc(100% - 70px),100% 100%,0 100%,0 calc(100% - 70px),1px calc(100% - 70px),1px calc(100% - 1px),70px calc(100% - 1px),70px 100%,0 100%);
+      transition: opacity .3s ease .35s;
+    }
+    #ngc2-launch img {
+      position: relative;
+      z-index: 1;
+      width: clamp(7rem, 14vw, 10rem);
+      height: auto;
+      display: block;
+      opacity: 0;
+      transform: scale(.72);
+      filter: drop-shadow(0 0 28px color-mix(in srgb, var(--launch-accent) 18%, transparent));
+      transition: opacity .3s ease .18s, transform .65s cubic-bezier(.2,.8,.2,1) .12s;
+    }
+    #ngc2-launch span {
+      position: absolute;
+      z-index: 1;
+      right: 30px;
+      bottom: 26px;
+      opacity: 0;
+      font: 600 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .18em;
+      transition: opacity .3s ease .38s;
+    }
+    #ngc2-launch.is-launching { background: var(--launch-bg); clip-path: inset(0 round 0); }
+    #ngc2-launch.is-launching::before,
+    #ngc2-launch.is-launching::after,
+    #ngc2-launch.is-launching img,
+    #ngc2-launch.is-launching span { opacity: 1; }
+    #ngc2-launch.is-launching img { transform: scale(1); }
+
+    @media (prefers-reduced-motion: reduce) {
+      #ngc2-launch { transition: none; }
+    }
 
   </style>
 </head>
@@ -741,6 +835,7 @@
     </figure>
   </div>
 
+  <script src="/assets/dotcloud.js"></script>
   <script>
     (() => {
       const clamp = (v, max) => Math.min(Math.max(v, 0), Math.max(max, 0));
@@ -1075,56 +1170,54 @@
       };
       const fillNgc2 = () => {
         const card = document.querySelector('.card-wrap--lines .card');
-        if (!card || card.querySelector('.ngc2-field')) return;
-        const canvas = document.createElement('canvas');
-        canvas.className = 'ngc2-field';
-        canvas.setAttribute('aria-hidden', 'true');
-        card.prepend(canvas);
+        if (!card) return;
+        if (card.querySelector('.ngc2-field')) return;
+        const field = document.createElement('div');
+        field.className = 'ngc2-field';
+        field.setAttribute('aria-hidden', 'true');
+        card.prepend(field);
         const copy = document.createElement('div');
         copy.className = 'ngc2-copy';
-        copy.innerHTML = '<span>NGC2</span><b>Next-Gen Command & Control</b>';
+        copy.innerHTML = '<span>U.S. ARMY NGC2</span><b>Next-Gen Command & Control</b>';
         card.append(copy);
-        const ctx = canvas.getContext('2d');
         const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const cols = 140, rows = 96;
-        const resize = () => {
-          const r = card.getBoundingClientRect();
-          const d = Math.min(devicePixelRatio || 1, 2);
-          canvas.width = Math.max(1, r.width * d);
-          canvas.height = Math.max(1, r.height * d);
-        };
-        const draw = t => {
-          const w = canvas.width, h = canvas.height, d = Math.min(devicePixelRatio || 1, 2);
-          ctx.clearRect(0, 0, w, h);
-          ctx.fillStyle = '#111';
-          const time = t / 1100;
-          const camH = .88, fov = 1.5, horizon = .28, lift = 2.35;
-          for (let j = rows - 1; j >= 0; j--) {
-            for (let i = 0; i < cols; i++) {
-              const u = j / (rows - 1);
-              const x = (i / (cols - 1) - .5) * 8.8;
-              const z = 5.3 + u * u * 16;
-              const zz = z + time * 1.35;
-              const y = .12
-                + Math.pow(1 - Math.abs(Math.sin(x * .2 + zz * .42)), 2) * .9
-                + Math.pow(1 - Math.abs(Math.sin(x * .09 - zz * .28)), 2) * .55
-                + Math.sin(x * .5 + zz * .55 + time) * .12;
-              const px = w * .47 + x / z * fov * w;
-              const py = h * horizon - (y - camH) / z * fov * h * lift;
-              if (px < -8 || px > w + 8 || py < -8 || py > h + 8) continue;
-              ctx.globalAlpha = .3 + Math.min(.5, 1.1 / z);
-              ctx.beginPath();
-              ctx.arc(px, py, Math.max(.5, 3.8 * d / z), 0, 7);
-              ctx.fill();
-            }
+        try {
+          DotCloud.mount(field, {
+            cols: 300, rows: 230, point: 2, dist: 4.8,
+            speed: reduce ? 0 : .6, spin: .15, tilt: .14, wobble: .07,
+            color: [.86, .88, .9], background: null,
+            place: `vec4 place(vec2 uv,float i,float t){
+              vec3 d=fib(i,uN);
+              float th=acos(clamp(d.y,-1.0,1.0)), ph=atan(d.z,d.x);
+              float y=sin(6.0*th)*0.5+sin(4.0*ph+t*0.5)*0.25*sin(3.0*th);
+              return vec4(d*(1.5+y*0.24),0.22+abs(y)*0.95);
+            }`
+          });
+        } catch {}
+      };
+      const wireNgc2Launch = () => {
+        if (document.getElementById('ngc2-launch')) return;
+        const launch = document.createElement('div');
+        launch.id = 'ngc2-launch';
+        launch.hidden = true;
+        launch.setAttribute('aria-hidden', 'true');
+        launch.innerHTML = '<img src="/images/ngc2-logo.svg" alt=""><span>SECURE LINK // NGC2</span>';
+        document.body.append(launch);
+        addEventListener('click', e => {
+          const link = e.target.closest('a[href$="project-ngc2.html"]');
+          if (!link || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            location.assign(link.href);
+            return;
           }
-          ctx.globalAlpha = 1;
-        };
-        resize();
-        new ResizeObserver(resize).observe(card);
-        if (reduce) { draw(0); return; }
-        const loop = t => { draw(t); requestAnimationFrame(loop); };
-        requestAnimationFrame(loop);
+          const r = link.querySelector('.card')?.getBoundingClientRect() || link.getBoundingClientRect();
+          launch.style.setProperty('--launch-clip', `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px round 8px)`);
+          launch.hidden = false;
+          try { sessionStorage.setItem('ngc2-entry', 'home'); } catch {}
+          requestAnimationFrame(() => launch.classList.add('is-launching'));
+          setTimeout(() => location.assign(link.href), 850);
+        }, true);
       };
       const fillCardCopy = () => {
         const items = [
@@ -1146,12 +1239,20 @@
           card.append(el);
         }
       };
+      const revealDesk = () => {
+        if (document.body.classList.contains('desk-on')) return;
+        const splash = [...document.querySelectorAll('#root div')].some(el => el.style.zIndex === '9999');
+        if (splash || !document.querySelector('.nav')) return;
+        document.body.classList.add('desk-on');
+      };
       addEventListener('DOMContentLoaded', () => {
         fillEmpty();
         fillNgc2();
         fillDjai();
         fillCardCopy();
-        new MutationObserver(() => { fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); }).observe(document.getElementById('root'), { childList: true, subtree: true });
+        wireNgc2Launch();
+        revealDesk();
+        new MutationObserver(() => { fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); revealDesk(); }).observe(document.getElementById('root'), { childList: true, subtree: true });
       });
     })();
   </script>
