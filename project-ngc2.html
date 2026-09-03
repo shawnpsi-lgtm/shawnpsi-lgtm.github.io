@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');</script>
+<title>NGC2 — Shawn Singh</title>
+<meta name="description" content="U.S. Army Next Generation Command and Control — turning OPORDs into a live synchronization matrix on Lattice and Foundry.">
+<link rel="icon" type="image/svg+xml" href="/shawnlogo.svg">
+<style>
+  :root{
+    --bg:#dcddd7;--ink:#1a1a1a;--muted:#5f6058;--line:#0002;
+    --hud-bg:#dcddd7;--hud-accent:#735600;--hud-grid:rgb(115 86 0/.11);--hud-glow:rgb(115 86 0/.2);
+    --nav-height:48px;--max-w:1200px
+  }
+  [data-theme=dark]{
+    --bg:#090a08;--ink:#f0f1eb;--muted:#a2a49b;--line:#fff2;
+    --hud-bg:#090a08;--hud-accent:#ffc52b;--hud-grid:rgb(255 197 43/.09);--hud-glow:rgb(255 197 43/.28)
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.6 "Helvetica Neue",Helvetica,Arial,sans-serif;transition:background .3s,color .3s}
+  .nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    height:var(--nav-height);display:flex;align-items:center;
+    background:color-mix(in srgb,var(--bg) 82%,transparent);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    backdrop-filter:saturate(180%) blur(20px);
+    box-shadow:0 1px var(--line);
+    font:400 .8rem/1 -apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",sans-serif
+  }
+  .nav__inner{width:100%;max-width:var(--max-w);margin:0 auto;display:flex;align-items:center;gap:32px;padding:0 40px}
+  .nav__logo{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:1.05rem;font-weight:600;letter-spacing:-.01em;text-decoration:none}
+  .nav__logo svg circle{fill:currentColor}
+  .nav__logo svg text{fill:#fff}
+  [data-theme=dark] .nav__logo svg text{fill:#000}
+  .nav__links{display:flex;gap:32px;margin:0 0 0 auto;padding:0;list-style:none}
+  .nav__links a{color:var(--ink);text-decoration:none;transition:color .2s}
+  .nav__links a:hover,.nav__links a.active{color:var(--hud-accent)}
+  .nav__right{display:flex;align-items:center;gap:8px}
+  .nav__theme-toggle{border:0;background:none;color:var(--ink);cursor:pointer;padding:4px;display:flex;opacity:.8}
+  .nav__theme-toggle:hover{opacity:1;color:var(--hud-accent)}
+  .nav__toggle{display:none;cursor:pointer;background:none;border:none;flex-direction:column;gap:5px;padding:4px}
+  .nav__toggle span{background:var(--ink);width:22px;height:1.5px;display:block;transition:all .3s}
+
+  .hero{position:relative;height:100vh;overflow:hidden}
+  .hero canvas{display:block;width:100%;height:100%}
+  .hero .copy{position:absolute;top:0;left:0;padding:calc(var(--nav-height) + 40px) 40px 0;pointer-events:none}
+  .hero h1{margin:0;font-size:clamp(40px,9vw,116px);line-height:.95;letter-spacing:-.03em}
+  .hero .eyebrow{font-size:12px;letter-spacing:.16em;margin:0 0 14px}
+
+  main{padding:clamp(60px,6vw,96px) clamp(24px,4vw,64px);max-width:1600px}
+  h2{font-size:13px;letter-spacing:.14em;font-weight:600;margin:64px 0 20px}
+  h2:first-child{margin-top:0}
+
+  .players{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin:8px 0 40px}
+  .players article{min-height:220px;background:var(--bg);padding:clamp(24px,2.5vw,38px);display:flex;flex-direction:column;align-items:flex-start}
+  .players img{height:30px;width:auto;max-width:160px;margin-bottom:24px}
+  .players img{object-fit:contain;object-position:left center;filter:brightness(0)}
+  .players .army-logo{max-width:190px;filter:none}
+  [data-theme=dark] .players img{filter:brightness(0) invert(1)}
+  [data-theme=dark] .players .army-logo{filter:brightness(0) invert(1)}
+  .players article>span:last-child{font-size:.9rem;color:var(--muted);line-height:1.65;max-width:38ch}
+
+  .gantt{border:1px solid var(--line);overflow:hidden;margin:28px 0 0}
+  .gantt__head,.gantt__row{display:grid;grid-template-columns:180px minmax(0,1fr)}
+  .gantt__head{background:var(--ink);color:var(--bg);font-size:11px;letter-spacing:.14em}
+  .gantt__phases{display:grid;grid-template-columns:1.1fr 1fr 1.2fr 1.3fr .9fr;min-width:0}
+  .gantt__phases span{display:flex;align-items:center;gap:.35em;padding:13px 16px;min-width:0;overflow:hidden;border-left:1px solid color-mix(in srgb,var(--bg) 18%,transparent)}
+  .gantt__phases span b{font-weight:600}
+  .gantt__phases span i{font-style:normal;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gantt__row{border-top:1px solid var(--line);min-height:68px}
+  .gantt__tf{display:flex;align-items:center;padding:0 18px;font-size:12px;font-weight:700;letter-spacing:.08em;border-right:1px solid var(--line);white-space:nowrap}
+  .gantt__bars{position:relative;min-width:0}
+  .bar{position:absolute;top:21px;height:26px;border:1.5px solid var(--ink);border-radius:2px;font-size:12px;display:flex;align-items:center;padding:0 10px;white-space:nowrap;overflow:hidden}
+  .bar--add{border-color:#3d9a5a;color:#3d9a5a}
+  .bar--mod{border-color:#c9a227;color:#c9a227}
+  .gantt__list{display:none}
+
+  .chant{height:200vh;margin:0 0 clamp(24px,4vw,48px)}
+  .chant__pin{
+    position:sticky;top:var(--nav-height);height:calc(100vh - var(--nav-height));
+    display:grid;align-items:center
+  }
+  .chant p{
+    margin:0;max-width:22ch;
+    font-size:clamp(32px,5.2vw,76px);font-weight:500;line-height:1.1;
+    letter-spacing:-.035em;text-transform:uppercase
+  }
+  .ink-words span{
+    color:color-mix(in srgb,var(--ink) 16%,var(--bg));
+    transition:color .18s linear
+  }
+  .ink-words span.is-on{color:var(--ink)}
+  @media (prefers-reduced-motion:reduce){
+    .chant{height:auto}
+    .chant__pin{position:static;height:auto;padding:48px 0}
+    .ink-words span{color:var(--ink);transition:none}
+  }
+  .problem{margin:0 0 clamp(88px,10vw,148px);padding-top:26px;border-top:1px solid var(--line)}
+  .problem__copy{margin-bottom:36px}
+  .problem__kicker{font-size:12px;letter-spacing:.18em;color:var(--muted);margin:0 0 16px}
+  .problem h2{margin:0;font-size:clamp(32px,4.2vw,58px);line-height:1.02;font-weight:400;letter-spacing:-.035em}
+  .problem__copy>p{margin:0;max-width:60ch;color:var(--muted);font-size:1rem;line-height:1.75}
+  .problem__flow{position:relative;display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;color:#f2f2ee;background:#090a08;border:1px solid #ffffff1f}
+  .problem__node{position:relative;z-index:1;padding:clamp(22px,2.4vw,32px) clamp(22px,2.8vw,40px) clamp(26px,2.6vw,36px);display:flex;flex-direction:column}
+  .problem__node + .problem__node{border-left:1px solid #ffffff14}
+  .problem__viz{position:relative;height:180px;margin:0 0 22px;display:flex;align-items:center}
+  .problem__docs{width:148px;height:118px;display:block;overflow:visible}
+  .problem__sheet{animation:sheet-fan 6.8s ease-in-out infinite}
+  .problem__sheet:nth-child(1){--fx:-16px;--fy:8px}
+  .problem__sheet:nth-child(2){--fx:18px;--fy:6px}
+  .problem__sheet:nth-child(3){--fx:0px;--fy:-12px}
+  .problem__rule{
+    transform-box:fill-box;transform-origin:left center;
+    animation:rule-rewrite 3.6s ease-in-out infinite alternate;
+    animation-delay:calc(var(--i)*-.55s)
+  }
+  .problem__extract{width:168px;height:100px;display:block}
+  .problem__extract circle{
+    animation:sort-unsort 6.8s ease-in-out infinite;
+    animation-delay:calc(var(--i)*-20ms)
+  }
+  .problem__sync{width:min(100%,248px);display:flex;flex-direction:column;gap:14px;padding:8px 0 8px 12px;border-left:1px solid #ffffff30}
+  .problem__sync div{position:relative;height:11px;background:#ffffff12;overflow:hidden}
+  .problem__sync b{position:absolute;inset:0 auto 0 0;width:var(--w);background:#e8e9e3;animation:bar-glide 2.8s ease-in-out infinite alternate}
+  .problem__sync div:nth-child(2) b{background:#9a9b96;animation-duration:3.4s;animation-delay:-.9s}
+  .problem__sync div:nth-child(3) b{background:#6a6b66;animation-duration:4s;animation-delay:-1.6s}
+  @keyframes sheet-fan{
+    0%,14%{translate:0}
+    40%,60%{translate:var(--fx) var(--fy)}
+    86%,100%{translate:0}
+  }
+  @keyframes rule-rewrite{to{scale:.38 1}}
+  @keyframes sort-unsort{
+    0%,14%{translate:var(--dx) var(--dy)}
+    40%,60%{translate:0}
+    86%,100%{translate:var(--dx) var(--dy)}
+  }
+  @keyframes bar-glide{to{left:calc(100% - var(--w))}}
+  .problem__node strong{font-size:clamp(20px,2.1vw,30px);font-weight:500;letter-spacing:-.03em;line-height:1.15}
+  .problem__node>span{color:#aeb0aa;font-size:13px;line-height:1.5;margin-top:8px}
+  .pipe__kicker{font-size:12px;letter-spacing:.18em;color:var(--muted);margin:0 0 16px}
+  h2.pipe__title{margin:0 0 16px;font-size:clamp(28px,3.6vw,46px);line-height:1.06;
+    font-weight:400;letter-spacing:-.025em;max-width:22ch}
+  .pipe__lead{margin:0;max-width:66ch;color:var(--ink)}
+  .pipe__cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:34px 0 0;margin:0 0 clamp(72px,8vw,120px)}
+  .pipe__col{background:#000;color:#f2f2f0;display:flex;flex-direction:column}
+  .pipe__art{position:relative;aspect-ratio:1/1}
+  .pipe__art .field{position:absolute;inset:0}
+  .pipe__say{padding:20px 22px 26px;display:flex;flex-direction:column;gap:10px;flex:1}
+  .pipe__say .tag{font-size:11px;letter-spacing:.16em;color:#8e9095}
+  .pipe__say h3{margin:0;font-size:19px;font-weight:400;letter-spacing:-.01em;line-height:1.2}
+  .pipe__say p{margin:0;font-size:14px;line-height:1.6;color:#c7c9cc}
+
+  .next-project{display:block;border-top:1px solid var(--line);padding:72px 0;color:var(--ink);text-decoration:none;transition:background .3s}
+  .next-project:hover{background:color-mix(in srgb,var(--ink) 4%,var(--bg))}
+  .next-project__label{letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 20px;font-size:.72rem;font-weight:600}
+  .next-project__inner{display:flex;justify-content:space-between;align-items:center;gap:24px}
+  .next-project__title{margin:0;letter-spacing:-.03em;font-size:clamp(2rem,5vw,3.8rem);font-weight:600;line-height:1.1}
+  .next-project__arrow{flex-shrink:0;width:clamp(28px,4vw,48px);height:clamp(28px,4vw,48px);transition:transform .3s}
+  .next-project:hover .next-project__arrow{transform:translateX(10px)}
+  .next-project__sub{margin:12px 0 0;color:var(--muted);font-size:.88rem}
+
+  .footer{border-top:1px solid var(--line);padding:48px 0 32px}
+  .footer .container,.next-project .container{width:100%;max-width:var(--max-w);margin:0 auto;padding:0 40px}
+  .footer__inner{display:grid;grid-template-columns:1fr 1fr;align-items:end;gap:48px;margin-bottom:24px;padding-bottom:32px;border-bottom:1px solid var(--line)}
+  .footer__logo{margin:0 0 6px;font-size:1.1rem;font-weight:600}
+  .footer__tagline{margin:0;color:var(--muted);font-size:.85rem}
+  .footer__links{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+  .footer__link{color:var(--muted);display:inline-flex;align-items:center;gap:8px;font-size:.82rem;text-decoration:none;transition:color .2s}
+  .footer__link:hover{color:var(--hud-accent)}
+  .footer__link svg{width:14px;height:14px}
+  .footer__copy{margin:0;color:var(--muted);font-size:.75rem}
+
+  @media (max-width:900px){
+    .nav__inner,.footer .container,.next-project .container{padding:0 24px}
+    .footer__inner{grid-template-columns:1fr;gap:32px}
+    .footer__links{align-items:flex-start}
+    .players,.pipe__cols{grid-template-columns:1fr}
+    .problem__flow{grid-template-columns:1fr}
+    .problem__node{min-height:0}
+    .problem__node + .problem__node{border-left:0;border-top:1px solid #ffffff14}
+    .players article{min-height:0}
+    .gantt__head,.gantt__row{grid-template-columns:1fr}
+    .gantt__head .gantt__tf{display:none}
+    .gantt__phases span{flex-direction:column;align-items:flex-start;gap:2px;padding:10px 8px;letter-spacing:.08em;font-size:10px}
+    .gantt__phases span:first-child{border-left:0}
+    .gantt__phases span i{display:block;font-size:9px;letter-spacing:.04em;opacity:.75}
+    .gantt__row{min-height:0}
+    .gantt__tf{padding:14px 14px 0;border-right:0;font-size:12px}
+    .gantt__bars{
+      height:40px;margin:8px 12px 10px;
+      background-image:linear-gradient(var(--line),var(--line)),linear-gradient(var(--line),var(--line)),linear-gradient(var(--line),var(--line)),linear-gradient(var(--line),var(--line));
+      background-size:1px 100%;background-repeat:no-repeat;
+      background-position:20% 0,38.18% 0,60% 0,83.64% 0
+    }
+    .bar{top:8px;height:24px;font-size:0;padding:0}
+    .gantt__list{display:flex;flex-direction:column;gap:6px;padding:0 12px 14px}
+    .gantt__item{display:flex;align-items:baseline;gap:10px;padding:9px 11px;border:1.5px solid var(--ink);border-radius:2px;font-size:13px}
+    .gantt__item b{flex-shrink:0;min-width:3.4em;font-size:11px;letter-spacing:.08em}
+    .gantt__item--add{border-color:#3d9a5a;color:#3d9a5a}
+    .gantt__item--mod{border-color:#c9a227;color:#c9a227}
+    .gantt__item--add::after,.gantt__item--mod::after{margin-left:auto;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+    .gantt__item--add::after{content:"New"}
+    .gantt__item--mod::after{content:"Changed"}
+  }
+  @media (max-width:640px){
+    main,.hero .copy,.footer .container,.next-project .container{padding-left:24px;padding-right:24px}
+    .problem{scroll-margin-top:var(--nav-height);padding-top:8px}
+    .problem__copy{margin-bottom:16px}
+    .problem h2{font-size:26px;line-height:1.2}
+    .problem__node{padding:22px 22px 24px}
+    .problem__viz{height:84px;margin-bottom:12px}
+    .problem__docs{width:112px;height:90px}
+    .problem__extract{width:132px;height:80px}
+    .problem__node strong{font-size:17px;line-height:1.3}
+    .nav__toggle{display:flex}
+    .nav__right{margin-left:auto}
+    .nav__links{
+      display:none;position:fixed;top:var(--nav-height);left:0;right:0;
+      flex-direction:column;gap:0;padding:12px 0;margin:0;
+      background:color-mix(in srgb,var(--bg) 95%,transparent);
+      -webkit-backdrop-filter:saturate(180%) blur(20px);
+      backdrop-filter:saturate(180%) blur(20px);
+      border-bottom:1px solid var(--line);box-shadow:0 8px 24px #0001
+    }
+    .nav__links.open{display:flex}
+    .nav__links a{padding:14px 24px;font-size:.9rem;display:block}
+    .gantt__phases span{align-items:center;padding:10px 2px}
+    .gantt__phases span i{display:none}
+  }
+
+  body.boot-cover{overflow:hidden}
+  body.boot-cover nav,
+  body.boot-cover .copy,
+  body.boot-cover main,
+  body.boot-cover .next-project,
+  body.boot-cover footer{visibility:hidden}
+  body.case-ready nav,
+  body.case-ready .copy{animation:case-in .8s cubic-bezier(.2,.8,.2,1) both}
+  .splash{
+    position:fixed;inset:0;z-index:200;overflow:hidden;
+    display:grid;place-items:center;
+    background:var(--hud-bg);color:var(--hud-accent);
+    font:600 10px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+    letter-spacing:.18em;
+    transition:clip-path .72s cubic-bezier(.65,0,.2,1),visibility .72s;
+    clip-path:inset(0);
+  }
+  .splash::before{
+    content:"";position:absolute;inset:-35%;opacity:.65;
+    background:
+      linear-gradient(var(--hud-grid) 1px,transparent 1px),
+      linear-gradient(90deg,var(--hud-grid) 1px,transparent 1px);
+    background-size:44px 44px;
+    transform:perspective(500px) rotateX(62deg) scale(1.4);
+    animation:hud-drift 7s linear infinite;
+  }
+  .splash::after{
+    content:"";position:absolute;left:0;right:0;top:-10%;height:1px;
+    background:var(--hud-accent);box-shadow:0 0 18px 3px var(--hud-glow);
+    animation:scan 1.4s ease-in-out infinite;
+  }
+  .splash__frame{position:absolute;inset:18px;border:1px solid color-mix(in srgb,var(--hud-accent) 28%,transparent)}
+  .splash__frame::before,.splash__frame::after{
+    content:"";position:absolute;width:70px;height:70px;border-color:var(--hud-accent)
+  }
+  .splash__frame::before{top:-1px;left:-1px;border-top:1px solid;border-left:1px solid}
+  .splash__frame::after{right:-1px;bottom:-1px;border-right:1px solid;border-bottom:1px solid}
+  .splash__meta{position:absolute;top:28px;left:30px}
+  .splash__link{position:absolute;right:30px;bottom:26px;text-align:right}
+  .splash__terminal{
+    position:absolute;left:30px;bottom:26px;margin:0;min-width:29ch;
+    color:var(--hud-accent);white-space:pre-wrap;font:inherit;letter-spacing:.08em
+  }
+  .splash__terminal::after{content:"█";animation:blink .8s step-end infinite}
+  .splash__mark{
+    position:relative;z-index:1;display:grid;justify-items:center;gap:24px;padding:28px
+  }
+  .splash__reticle{
+    position:relative;width:clamp(10rem,20vw,14rem);aspect-ratio:1;
+    display:grid;place-items:center;overflow:visible;
+    border:1px solid color-mix(in srgb,var(--hud-accent) 35%,transparent);border-radius:50%
+  }
+  .splash__reticle::before,.splash__reticle::after{
+    content:"";position:absolute;border:1px dashed color-mix(in srgb,var(--hud-accent) 42%,transparent);border-radius:50%
+  }
+  .splash__reticle::before{inset:12px;animation:spin 12s linear infinite}
+  .splash__reticle::after{inset:-16px;border-style:solid;border-color:transparent var(--hud-accent);animation:spin 5s linear infinite reverse}
+  .splash__logo{width:66%;height:auto;display:block;filter:drop-shadow(0 0 28px var(--hud-glow))}
+  .splash__auth{min-width:25ch;text-align:center}
+  .splash__auth::after{content:"";display:block;width:100%;height:1px;margin-top:10px;background:linear-gradient(90deg,transparent,var(--hud-accent),transparent);animation:pulse 1s ease-in-out infinite}
+  .splash.is-exit{clip-path:inset(50% 0);visibility:hidden}
+  .splash.is-exit .splash__mark{opacity:0;transition:opacity .2s}
+  @keyframes scan{from{top:-10%}to{top:110%}}
+  @keyframes spin{to{rotate:1turn}}
+  @keyframes blink{50%{visibility:hidden}}
+  @keyframes pulse{50%{opacity:.25;transform:scaleX(.65)}}
+  @keyframes hud-drift{to{background-position:0 44px,44px 0}}
+  @keyframes case-in{from{opacity:0;transform:translateY(16px)}}
+  @media (prefers-reduced-motion:reduce){
+    .splash,.splash::before,.splash::after,.splash__reticle::before,.splash__reticle::after,.splash__auth::after,.splash__terminal::after,.problem__sheet,.problem__rule,.problem__extract g,.problem__extract circle,.problem__sync b{animation:none;transition:none}
+  }
+  @media (max-width:640px){
+    .splash__terminal{left:24px;bottom:24px;font-size:8px}
+    .splash__link{display:none}
+  }
+</style>
+</head>
+<body class="boot-cover">
+
+<div class="splash" id="splash" role="dialog" aria-label="NGC2 secure system entry">
+  <div class="splash__frame" aria-hidden="true"></div>
+  <span class="splash__meta">NGC2 // COMMAND INTERFACE</span>
+  <span class="splash__link">LATTICE MESH<br>ENCRYPTED</span>
+  <pre class="splash__terminal" id="terminal" aria-hidden="true"></pre>
+  <div class="splash__mark">
+    <div class="splash__reticle"><img class="splash__logo" src="/images/ngc2-logo.svg" alt="NGC2"></div>
+    <span class="splash__auth" id="boot" aria-live="polite">ESTABLISHING SECURE LINK</span>
+  </div>
+</div>
+
+<nav class="nav" data-always-scrolled role="navigation" aria-label="Main navigation">
+  <div class="nav__inner">
+    <a href="index.html" class="nav__logo">
+      <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0">
+        <circle cx="50" cy="50" r="50"/>
+        <text x="50" y="67" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif" font-size="52" font-weight="600" letter-spacing="-1">S</text>
+      </svg>
+      Shawn Singh
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a href="index.html#work" class="active">Work</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+    </ul>
+    <div class="nav__right">
+      <button class="nav__theme-toggle" type="button" aria-label="Switch to dark mode">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="nav__toggle" type="button" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <canvas id="c"></canvas>
+  <div class="copy">
+    <p class="eyebrow">U.S. ARMY NGC2</p>
+    <h1>Next-Gen<br>Command &amp; Control</h1>
+  </div>
+</section>
+
+<main>
+  <section class="chant" aria-label="Critical situations on the battlefield require solutions that operationalize swift decision-making">
+    <div class="chant__pin">
+      <p class="ink-words">
+        <span>Critical</span> <span>situations</span> <span>on</span> <span>the</span> <span>battlefield</span> <span>require</span> <span>solutions</span> <span>that</span> <span>operationalize</span> <span>swift</span> <span>decision-making</span>
+      </p>
+    </div>
+  </section>
+
+  <section class="problem" aria-labelledby="problem-title">
+    <div class="problem__copy">
+      <div>
+        <p class="problem__kicker">THE PROBLEM</p>
+        <h2 id="problem-title" class="ink-words"><span>Plans</span> <span>are</span> <span>readable.</span><br><span>Operations</span> <span>aren’t.</span></h2>
+      </div>
+    </div>
+    <div class="problem__flow" aria-label="Dense, format-ambiguous military data is processed by an agnostic extraction pipeline into structured mission plans">
+      <article class="problem__node">
+        <div class="problem__viz" aria-hidden="true">
+          <svg class="problem__docs" viewBox="0 0 148 118" fill="none">
+            <g class="problem__sheet">
+              <g transform="rotate(-13 44 62)">
+                <rect x="6" y="20" width="62" height="82" fill="#11120f" stroke="#fff" stroke-opacity=".32"/>
+                <g fill="#fff" fill-opacity=".22">
+                  <rect class="problem__rule" x="16" y="39" width="36" height="2" style="--i:0"/>
+                  <rect class="problem__rule" x="16" y="51" width="22" height="2" style="--i:4"/>
+                  <rect class="problem__rule" x="16" y="63" width="30" height="2" style="--i:2"/>
+                </g>
+              </g>
+            </g>
+            <g class="problem__sheet">
+              <g transform="rotate(10 108 56)">
+                <rect x="76" y="14" width="62" height="82" fill="#11120f" stroke="#fff" stroke-opacity=".45"/>
+                <g fill="#fff" fill-opacity=".3">
+                  <rect class="problem__rule" x="86" y="33" width="38" height="2" style="--i:1"/>
+                  <rect class="problem__rule" x="86" y="45" width="20" height="2" style="--i:5"/>
+                  <rect class="problem__rule" x="86" y="57" width="32" height="2" style="--i:3"/>
+                  <rect class="problem__rule" x="86" y="69" width="16" height="2" style="--i:7"/>
+                </g>
+              </g>
+            </g>
+            <g class="problem__sheet">
+              <rect x="40" y="16" width="64" height="86" fill="#161714" stroke="#e8e9e3" stroke-opacity=".7"/>
+              <g fill="#e8e9e3" fill-opacity=".45">
+                <rect class="problem__rule" x="52" y="37" width="40" height="2" style="--i:0"/>
+                <rect class="problem__rule" x="52" y="49" width="26" height="2" style="--i:6"/>
+                <rect class="problem__rule" x="52" y="61" width="34" height="2" style="--i:2"/>
+                <rect class="problem__rule" x="52" y="73" width="18" height="2" style="--i:4"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+        <strong>Dense, format-ambiguous military data</strong>
+        <span>Plans, annexes, and revisions</span>
+      </article>
+      <article class="problem__node">
+        <div class="problem__viz" aria-hidden="true">
+          <svg class="problem__extract" viewBox="0 0 168 100" fill="#e8e9e3">
+            <circle cx="56"  cy="22" r="1.8" fill-opacity=".95" style="--dx:18px;--dy:-1px;--i:0"/>
+            <circle cx="70"  cy="22" r="1.8" fill-opacity=".5"  style="--dx:21px;--dy:-7px;--i:7"/>
+            <circle cx="84"  cy="22" r="1.8" fill-opacity=".8"  style="--dx:-2px;--dy:15px;--i:3"/>
+            <circle cx="98"  cy="22" r="1.8" fill-opacity=".58" style="--dx:-30px;--dy:27px;--i:14"/>
+            <circle cx="112" cy="22" r="1.8" fill-opacity=".9"  style="--dx:-14px;--dy:21px;--i:1"/>
+            <circle cx="56"  cy="40" r="1.8" fill-opacity=".52" style="--dx:22px;--dy:23px;--i:11"/>
+            <circle cx="70"  cy="40" r="1.8" fill-opacity=".75" style="--dx:24px;--dy:31px;--i:5"/>
+            <circle cx="84"  cy="40" r="1.8" fill-opacity=".55" style="--dx:-14px;--dy:39px;--i:18"/>
+            <circle cx="98"  cy="40" r="1.8" fill-opacity="1"   style="--dx:4px;--dy:-11px;--i:2"/>
+            <circle cx="112" cy="40" r="1.8" fill-opacity=".5"  style="--dx:-26px;--dy:47px;--i:9"/>
+            <circle cx="56"  cy="58" r="1.8" fill-opacity=".7"  style="--dx:10px;--dy:-29px;--i:16"/>
+            <circle cx="70"  cy="58" r="1.8" fill-opacity=".85" style="--dx:36px;--dy:-3px;--i:4"/>
+            <circle cx="84"  cy="58" r="1.8" fill-opacity=".5"  style="--dx:-4px;--dy:-49px;--i:12"/>
+            <circle cx="98"  cy="58" r="1.8" fill-opacity=".62" style="--dx:10px;--dy:-41px;--i:8"/>
+            <circle cx="112" cy="58" r="1.8" fill-opacity=".88" style="--dx:-40px;--dy:33px;--i:19"/>
+            <circle cx="56"  cy="76" r="1.8" fill-opacity=".55" style="--dx:40px;--dy:-19px;--i:6"/>
+            <circle cx="70"  cy="76" r="1.8" fill-opacity=".92" style="--dx:18px;--dy:-27px;--i:15"/>
+            <circle cx="84"  cy="76" r="1.8" fill-opacity=".5"  style="--dx:-20px;--dy:-11px;--i:10"/>
+            <circle cx="98"  cy="76" r="1.8" fill-opacity=".72" style="--dx:2px;--dy:7px;--i:17"/>
+            <circle cx="112" cy="76" r="1.8" fill-opacity=".6"  style="--dx:-36px;--dy:-33px;--i:13"/>
+          </svg>
+        </div>
+        <strong>Agnostic Extraction Pipeline</strong>
+        <span>Extracts and validates tasks</span>
+      </article>
+      <article class="problem__node">
+        <div class="problem__viz" aria-hidden="true">
+          <div class="problem__sync">
+            <div><b style="--w:44%"></b></div>
+            <div><b style="--w:40%"></b></div>
+            <div><b style="--w:36%"></b></div>
+          </div>
+        </div>
+        <strong>Structured mission plans</strong>
+        <span>Synchronized tasks, owners, and timing</span>
+      </article>
+    </div>
+  </section>
+
+  <p class="pipe__kicker">EXTRACTION PIPELINE</p>
+  <h2 class="pipe__title">Turning documents into trusted data.</h2>
+  <p class="pipe__lead">Three safeguards keep extraction accurate across formats and revisions.</p>
+  <div class="pipe__cols" id="cols"></div>
+
+  <p class="pipe__kicker">SYNCMAT</p>
+  <h2 class="pipe__title">Operations, readable.</h2>
+  <p class="pipe__lead">Extracted tasks land on a live matrix — owners, timing, and diffs against the last order.</p>
+  <div class="gantt" id="syncmat"></div>
+
+  <h2>PARTNERS</h2>
+  <div class="players">
+    <article><img src="/images/box8/anduril.png" alt="Anduril"><span>Common data baseline lead. Lattice as the integration layer. 4th ID full-stack implementation.</span></article>
+    <article><img src="/images/box8/palantir.png" alt="Palantir"><span>Foundry as the cloud data layer. Edge-to-cloud mesh with Lattice. Ontology for the plan objects.</span></article>
+    <article><img src="/images/box8/raft.svg" alt="Raft"><span>Data and services registries, transformation, federation. How other apps discover SYNCMAT.</span></article>
+    <article><img src="/images/box8/lockheed.png" alt="Lockheed Martin"><span>25th ID full-stack lead. Partner on this engagement with C3 AI and the Army.</span></article>
+    <article><img src="/images/box8/c3.png" alt="C3 AI"><span>Platform, on-edge LLM, extraction pipeline, and the SYNCMAT application itself.</span></article>
+    <article><img class="army-logo" src="/images/box8/us-army.svg" alt="U.S. Army"><span>4th ID and 25th ID as the first formations. Scale path across all eleven divisions.</span></article>
+  </div>
+</main>
+
+<a href="project-djai.html" class="next-project">
+  <div class="container">
+    <p class="next-project__label">Next Project</p>
+    <div class="next-project__inner">
+      <h2 class="next-project__title">DJai</h2>
+      <svg class="next-project__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </div>
+    <p class="next-project__sub">Your Favorite DJ, Now in Your Pocket</p>
+  </div>
+</a>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__inner">
+      <div>
+        <p class="footer__logo">Shawn Singh</p>
+        <p class="footer__tagline">Product Designer — Los Angeles, CA</p>
+      </div>
+      <div class="footer__links">
+        <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          LinkedIn
+        </a>
+        <a href="/files/resume.pdf" class="footer__link" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Résumé
+        </a>
+        <a href="mailto:shawn@visuallyrepresented.co" class="footer__link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          shawn@visuallyrepresented.co
+        </a>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p class="footer__copy">&copy; <span id="footer-year"></span> Shawn Singh. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+<script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+
+<script>
+(function () {
+  const splash = document.getElementById('splash');
+  const status = document.getElementById('boot');
+  const terminal = document.getElementById('terminal');
+  let fromHome = false;
+  try {
+    fromHome = sessionStorage.getItem('ngc2-entry') === 'home';
+    sessionStorage.removeItem('ngc2-entry');
+  } catch {}
+  const states = fromHome
+    ? ['SECURE LINK ESTABLISHED', 'SYNCMAT ONLINE', 'COMMAND VIEW READY']
+    : ['AUTHENTICATING OPERATOR', 'LATTICE MESH CONNECTED', 'SYNCMAT ONLINE', 'COMMAND VIEW READY'];
+  const bootLog = '> NGC2 HANDSHAKE\n> TOKEN ........ VERIFIED\n> LATTICE MESH . CONNECTED\n> SYNCMAT ...... ONLINE';
+  let done = false;
+  const timers = [];
+  const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+  function dismiss() {
+    if (done) return;
+    done = true;
+    timers.forEach(clearTimeout);
+    document.body.classList.remove('boot-cover');
+    document.body.classList.add('case-ready');
+    splash.classList.add('is-exit');
+    later(() => splash.remove(), 740);
+  }
+  splash.addEventListener('click', dismiss);
+  addEventListener('keydown', dismiss, { once: true });
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) dismiss();
+  else {
+    const step = fromHome ? 180 : 280;
+    states.forEach((text, i) => later(() => { status.textContent = text; }, i * step));
+    [...bootLog].forEach((char, i) => later(() => { terminal.textContent += char; }, i * (fromHome ? 5 : 10)));
+    later(dismiss, states.length * step + (fromHome ? 180 : 320));
+  }
+})();
+
+(function () {
+  const blocks = [...document.querySelectorAll('.ink-words')].map(root => ({
+    root,
+    words: [...root.querySelectorAll('span')],
+    pin: root.closest('.chant')
+  }));
+  if (!blocks.length) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    blocks.forEach(({ words }) => words.forEach(w => w.classList.add('is-on')));
+    return;
+  }
+  let ticking = false;
+  const paint = () => {
+    ticking = false;
+    const vh = innerHeight;
+    blocks.forEach(({ root, words, pin }) => {
+      const n = words.length;
+      if (!n) return;
+      const r = (pin || root).getBoundingClientRect();
+      const t = pin
+        ? Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - vh)))
+        : Math.min(1, Math.max(0, (vh * 0.82 - r.top) / Math.max(1, vh * 0.55)));
+      words.forEach((w, i) => w.classList.toggle('is-on', t > (i + .15) / n));
+    });
+  };
+  addEventListener('scroll', () => {
+    if (!ticking) { ticking = true; requestAnimationFrame(paint); }
+  }, { passive: true });
+  paint();
+})();
+
+(function () {
+  const btn = document.querySelector('.nav__theme-toggle');
+  const moon = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  const sun = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+  const paint = () => {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    btn.innerHTML = dark ? sun : moon;
+    btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+  };
+  paint();
+  btn.addEventListener('click', () => {
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('theme', theme);
+    paint();
+    dispatchEvent(new Event('ngc2-theme'));
+  });
+  const toggle = document.querySelector('.nav__toggle');
+  const links = document.querySelector('.nav__links');
+  toggle.addEventListener('click', () => {
+    const open = links.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open);
+    const bars = toggle.querySelectorAll('span');
+    bars[0].style.transform = open ? 'translateY(7px) rotate(45deg)' : '';
+    bars[1].style.opacity = open ? '0' : '';
+    bars[2].style.transform = open ? 'translateY(-7px) rotate(-45deg)' : '';
+  });
+})();
+
+(function () {
+  const PHASES = [
+    { label: 'I Briefing',  w: 1.1 },
+    { label: 'II Approach', w: 1 },
+    { label: 'III Breach',  w: 1.2 },
+    { label: 'IV Assault',  w: 1.3 },
+    { label: 'V Extract',   w: 0.9 },
+  ];
+  const total = PHASES.reduce((s, p) => s + p.w, 0);
+  const at = (phase, t) => {
+    let x = 0;
+    for (let i = 0; i < phase; i++) x += PHASES[i].w;
+    return ((x + PHASES[phase].w * t) / total) * 100;
+  };
+
+  // start/end: [phaseIndex, 0–1 within that phase]
+  // kind: omit = baseline, 'add' = new vs last FRAGO, 'mod' = changed
+  const ROWS = [
+    { unit: 'TF Rogue', tasks: [
+      { label: 'Pre-flight check',  start: [0, .06], end: [0, .92] },
+      { label: 'Clear OBJ Scarif',  start: [1, 0],   end: [2, 1] },
+      { label: 'Secure the plans',  start: [3, .04], end: [3, .95], kind: 'mod' },
+    ]},
+    { unit: 'TF Ghost', tasks: [
+      { label: 'Sensor sweep',      start: [1, .38], end: [2, 1] },
+      { label: 'Block ISD Gate',    start: [3, 0],   end: [3, 1], kind: 'add' },
+    ]},
+    { unit: 'TF Gold', tasks: [
+      { label: 'Emplace ion cannon', start: [2, 0],  end: [2, 1] },
+      { label: 'Covering fire',     start: [3, .48], end: [4, 1], kind: 'add' },
+    ]},
+  ];
+
+  const roman = i => PHASES[i].label.split(' ')[0];
+  const span = t => {
+    const a = roman(t.start[0]), b = roman(t.end[0]);
+    return a === b ? a : a + '\u2013' + b;
+  };
+
+  const root = document.getElementById('syncmat');
+  root.innerHTML =
+    '<div class="gantt__head"><div class="gantt__tf">Unit</div><div class="gantt__phases">' +
+    PHASES.map(p => {
+      const [n, ...rest] = p.label.split(' ');
+      return '<span><b>' + n + '</b> <i>' + rest.join(' ') + '</i></span>';
+    }).join('') +
+    '</div></div>' +
+    ROWS.map(row => {
+      const bars = row.tasks.map(t => {
+        const l = at(t.start[0], t.start[1]);
+        const w = at(t.end[0], t.end[1]) - l;
+        const cls = t.kind ? ' bar--' + t.kind : '';
+        return '<div class="bar' + cls + '" style="left:' + l.toFixed(2) + '%;width:' + w.toFixed(2) + '%;">' + t.label + '</div>';
+      }).join('');
+      const items = row.tasks.map(t => {
+        const cls = t.kind ? ' gantt__item--' + t.kind : '';
+        return '<div class="gantt__item' + cls + '"><b>' + span(t) + '</b>' + t.label + '</div>';
+      }).join('');
+      return '<div class="gantt__row"><div class="gantt__tf">' + row.unit + '</div><div class="gantt__bars">' + bars + '</div><div class="gantt__list">' + items + '</div></div>';
+    }).join('');
+})();
+
+const CFG = {
+  COLS: 520, ROWS: 340,
+  NEAR: 1.6, FAR: 46,
+  FOCAL: 1.0,
+  CAM_H: 1.05,
+  HORIZON: 0.70,
+  POINT: 2.7,
+  SPEED: 0.55,
+  AMP: 1.0,
+  COLOR: [0.30, 0.30, 0.29],
+  BG:    [0.863, 0.867, 0.843],
+};
+
+const cv = document.getElementById('c');
+const gl = cv.getContext('webgl', { antialias: true, alpha: false });
+if (!gl) throw new Error('WebGL unavailable in this browser');
+
+const VS = `
+precision highp float;
+attribute vec2 aGrid;
+uniform float uTime, uNear, uFar, uFocal, uCamH, uHorizon, uPoint, uWidth, uAmp;
+uniform vec2  uRes;
+varying float vFade;
+
+float terrain(vec2 p, float t){
+  float h = 0.0;
+  h += sin(p.x * 0.55 + t * 0.25) * 0.55;
+  h += sin(p.y * 0.42 - t * 0.18) * 0.42;
+  h += sin((p.x * 0.31 + p.y * 0.27) + t * 0.31) * 0.33;
+  h += sin(p.x * 1.15 - p.y * 0.63 - t * 0.22) * 0.13;
+  h += sin(p.x * 2.30 + p.y * 1.90 + t * 0.50) * 0.05;
+  return h;
+}
+
+void main(){
+  float d = aGrid.y;
+  float z  = 1.0 / mix(1.0 / uNear, 1.0 / uFar, d);
+  float wx = aGrid.x * uWidth * z;
+  float h = terrain(vec2(wx, z), uTime) * uAmp;
+  float sx = wx + h * 0.25;
+  float y  = uCamH + h;
+  float aspect = uRes.x / uRes.y;
+  vec2 ndc = vec2((sx / z) * uFocal / aspect, (-y / z) * uFocal + uHorizon);
+  gl_Position  = vec4(ndc, 0.0, 1.0);
+  gl_PointSize = max(uPoint * (uNear / z) * (uRes.y / 900.0), 0.65);
+  vFade = (1.0 - smoothstep(0.62, 1.0, d)) * smoothstep(0.0, 0.05, d);
+}`;
+
+const FS = `
+precision mediump float;
+varying float vFade;
+uniform vec3 uColor;
+void main(){
+  float m = 1.0 - smoothstep(0.30, 0.5, length(gl_PointCoord - 0.5));
+  float a = m * vFade * 0.85;
+  if (a < 0.01) discard;
+  gl_FragColor = vec4(uColor, a);
+}`;
+
+function compile(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+    throw new Error((type === gl.VERTEX_SHADER ? 'vertex' : 'fragment')
+      + ' shader failed:\n' + gl.getShaderInfoLog(s));
+  return s;
+}
+
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
+  throw new Error('link failed:\n' + gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+const pts = new Float32Array(CFG.COLS * CFG.ROWS * 2);
+let i = 0;
+for (let r = 0; r < CFG.ROWS; r++){
+  for (let c = 0; c < CFG.COLS; c++){
+    pts[i++] = (c / (CFG.COLS - 1)) * 2 - 1;
+    pts[i++] = r / (CFG.ROWS - 1);
+  }
+}
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, pts, gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, 'aGrid');
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+const U = n => gl.getUniformLocation(prog, n);
+const u = { time:U('uTime'), res:U('uRes'), near:U('uNear'), far:U('uFar'),
+            focal:U('uFocal'), camH:U('uCamH'), horizon:U('uHorizon'),
+            point:U('uPoint'), width:U('uWidth'), amp:U('uAmp'), color:U('uColor') };
+
+gl.uniform1f(u.near, CFG.NEAR);   gl.uniform1f(u.far, CFG.FAR);
+gl.uniform1f(u.focal, CFG.FOCAL); gl.uniform1f(u.camH, CFG.CAM_H);
+gl.uniform1f(u.horizon, CFG.HORIZON); gl.uniform1f(u.point, CFG.POINT);
+gl.uniform1f(u.amp, CFG.AMP);
+
+gl.enable(gl.BLEND);
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+function paintTheme(){
+  const dark = document.documentElement.dataset.theme === 'dark';
+  gl.uniform3fv(u.color, dark ? [1, .77, .17] : CFG.COLOR);
+  gl.clearColor(...(dark ? [.035, .039, .031] : CFG.BG), 1);
+}
+paintTheme();
+addEventListener('ngc2-theme', paintTheme);
+
+function resize(){
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const w = Math.max(1, Math.round(cv.clientWidth * dpr));
+  const h = Math.max(1, Math.round(cv.clientHeight * dpr));
+  if (cv.width !== w || cv.height !== h){
+    cv.width = w; cv.height = h;
+    gl.viewport(0, 0, w, h);
+    gl.uniform2f(u.res, w, h);
+    gl.uniform1f(u.width, (w / h) / CFG.FOCAL * 1.15);
+  }
+}
+addEventListener('resize', resize);
+resize();
+
+const t0 = performance.now();
+(function frame(){
+  gl.uniform1f(u.time, (performance.now() - t0) / 1000 * CFG.SPEED);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.POINTS, 0, CFG.COLS * CFG.ROWS);
+  requestAnimationFrame(frame);
+})();
+</script>
+<script src="/assets/dotcloud.js"></script>
+<script>
+var PLACE = {
+sort: [
+'vec4 place(vec2 uv,float i,float t){',
+'  float x=(uv.x-0.5)*3.6;',
+'  float u=clamp((x+1.8)/3.6,0.0,1.0);',
+'  float cls=floor(hash1(i)*5.0);',
+'  float row=uv.y;',
+'  float ny=(row-0.5)*2.3;',
+'  if(cls<1.0) ny=(row-0.5)*2.3+sin(x*3.0+t)*0.35;',
+'  else if(cls<2.0) ny=floor((row-0.5)*7.0)/7.0*2.0;',
+'  else if(cls<3.0) ny=(hash1(i*3.1)-0.5)*2.3;',
+'  else if(cls<4.0) ny=sin(row*9.0+t*0.5)*1.0;',
+'  float gy=(floor(row*22.0)/22.0-0.48)*2.1;',
+'  float m=smoothstep(0.15,0.85,u);',
+'  float du=u-0.5;',
+'  float mid=exp(-du*du*14.0);',
+'  float y=mix(ny,gy,m);',
+'  float z=mix((hash1(i*7.7)-0.5)*1.0,0.0,m)+(cls-2.0)*0.42*mid;',
+'  return vec4(x,y,z,0.15+m*0.65+mid*0.30);',
+'}'].join('\n'),
+versions: [
+'vec4 place(vec2 uv,float i,float t){',
+'  float col=floor(uv.x*70.0);',
+'  float sx=(uv.x-0.5)*3.2;',
+'  float s=hash1(col)*10.0;',
+'  float state=s<7.0?0.0:(s<8.5?1.0:2.0);',
+'  float zo=(hash1(col+3.0)-0.5)*1.2;',
+'  float drift=sin(t*0.5+col)*0.16;',
+'  if(uv.y<0.42){',
+'    float z=(uv.y/0.42-0.5)*1.4, d=z-zo;',
+'    float on=state<1.5?1.0:0.0;',
+'    return vec4(sx,-1.35,z,on*(0.04+exp(-d*d*10.0)*0.75));',
+'  }',
+'  if(uv.y>0.58){',
+'    float z=((uv.y-0.58)/0.42-0.5)*1.4, d=z-zo-drift;',
+'    float on=(state<0.5||state>1.5)?1.0:0.0;',
+'    float hot=state>1.5?1.9:1.0;',
+'    return vec4(sx,1.35,z,on*(0.04+exp(-d*d*10.0)*0.75)*hot);',
+'  }',
+'  float u=(uv.y-0.42)/0.16;',
+'  return vec4(sx,-1.35+u*2.7,mix(zo,zo+drift,u),(state<0.5?1.0:0.0)*0.22);',
+'}'].join('\n'),
+guardrail: [
+'vec4 place(vec2 uv,float i,float t){',
+'  if(mod(i,3.0)<1.0){',
+'    return vec4(fib(i,uN)*1.5,0.05+0.26*step(0.5,fract(i*0.37)));',
+'  }',
+'  vec3 p=fib(mod(i*7.0,uN),uN);',
+'  p.xz=rot(t*0.22+hash1(i)*6.3)*p.xz;',
+'  float r=0.45+1.3*hash1(i*5.0)+sin(t*0.7+hash1(i)*6.3)*0.5;',
+'  float over=max(r-1.5,0.0);',
+'  return vec4(p*min(r,1.5),0.12+smoothstep(0.0,0.25,over)*1.8);',
+'}'].join('\n')
+};
+
+var CARDS = [
+  { place:'sort', label:'Format-agnostic AI sorting', tag:'NORMALIZE / ROUTE',
+    note:'Heterogeneous inputs are normalized before anything is extracted. Domain ' +
+         'invariants are identified up front and each sub-problem is routed to the ' +
+         'parser best suited to it — deterministic where structure is recognizable, ' +
+         'model-driven where it is not. Every branch converges on one schema, so ' +
+         'nothing downstream forks per format.',
+    opts:{cols:420,rows:280,dist:4.2,spin:0.04,tilt:0.10,wobble:0.07,point:1.9,speed:0.7} },
+  { place:'versions', label:'Version-control entity matching', tag:'DIFF / RESOLVE',
+    note:'Successive revisions are diffed at the entity level, not the text level. ' +
+         'Entities resolve across versions against stable IDs, so each record classifies ' +
+         'as an add, a change, or a delete against its parent baseline and carries its ' +
+         'lineage forward. Provenance survives the update instead of being re-derived.',
+    opts:{cols:400,rows:280,dist:4.15,spin:0.05,tilt:0.26,wobble:0.06,point:2.0,speed:0.6} },
+  { place:'guardrail', label:'Semantic-enhanced guardrails', tag:'CONSTRAIN / VALIDATE',
+    note:'Model scope is bounded by construction. Generation is constrained to the ' +
+         'schema, and every output is validated against the source span it claims to ' +
+         'come from before it is allowed to reach state. Semantic checks reject what ' +
+         'passes a type check but is not supported by the document.',
+    opts:{cols:360,rows:270,dist:4.1,spin:0.12,tilt:0.16,wobble:0.06,point:2.0,speed:0.6} }
+];
+
+var cols = document.getElementById('cols');
+CARDS.forEach(function (c) {
+  var col = document.createElement('section');
+  col.className = 'pipe__col';
+  col.innerHTML = '<div class="pipe__art"><div class="field"></div></div>' +
+                  '<div class="pipe__say"><span class="tag">' + c.tag + '</span><h3>' +
+                  c.label + '</h3><p>' + c.note + '</p></div>';
+  cols.appendChild(col);
+  var host = col.querySelector('.field');
+  try { DotCloud.mount(host, Object.assign({ place: PLACE[c.place] }, c.opts)); }
+  catch (e) { host.textContent = e.message; }
+});
+</script>
+</body>
+</html>
