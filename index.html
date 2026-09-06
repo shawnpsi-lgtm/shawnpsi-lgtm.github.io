@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');</script>
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');if(location.hash)document.documentElement.classList.add('skip-splash');</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#2c699a" />
   <title>Shawn Singh</title>
@@ -20,6 +20,9 @@
     [data-theme=dark] { --grid-line: #26262b; --grid-glow: #2e2350; }
 
     body { background-color: var(--bg-off); position: relative; }
+    html.skip-splash { scroll-behavior: auto; }
+    html.skip-splash [style*="z-index: 9999"] { display: none !important; }
+    #work { scroll-margin-top: var(--nav-height); }
 
     /* Own layer so the mask fades the grid without touching page content */
     body::before {
@@ -1203,6 +1206,9 @@
         launch.setAttribute('aria-hidden', 'true');
         launch.innerHTML = '<img src="/images/ngc2-logo.svg" alt=""><span>SECURE LINK // NGC2</span>';
         document.body.append(launch);
+        const resetLaunch = () => { launch.hidden = true; launch.classList.remove('is-launching'); };
+        addEventListener('pagehide', resetLaunch);
+        addEventListener('pageshow', resetLaunch);
         addEventListener('click', e => {
           const link = e.target.closest('a[href$="project-ngc2.html"]');
           if (!link || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -1239,11 +1245,21 @@
           card.append(el);
         }
       };
+      const skipSplash = document.documentElement.classList.contains('skip-splash');
+      const splashUp = () => !skipSplash && [...document.querySelectorAll('#root div')].some(el => el.style.zIndex === '9999');
       const revealDesk = () => {
         if (document.body.classList.contains('desk-on')) return;
-        const splash = [...document.querySelectorAll('#root div')].some(el => el.style.zIndex === '9999');
-        if (splash || !document.querySelector('.nav')) return;
+        if (splashUp() || !document.querySelector('.nav')) return;
         document.body.classList.add('desk-on');
+      };
+      let hashed = false;
+      const jumpHash = () => {
+        const id = location.hash.slice(1);
+        if (hashed || !id) return;
+        const el = document.getElementById(id);
+        if (!el || splashUp()) return;
+        hashed = true;
+        el.scrollIntoView();
       };
       addEventListener('DOMContentLoaded', () => {
         fillEmpty();
@@ -1252,7 +1268,8 @@
         fillCardCopy();
         wireNgc2Launch();
         revealDesk();
-        new MutationObserver(() => { fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); revealDesk(); }).observe(document.getElementById('root'), { childList: true, subtree: true });
+        jumpHash();
+        new MutationObserver(() => { fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); revealDesk(); jumpHash(); }).observe(document.getElementById('root'), { childList: true, subtree: true });
       });
     })();
   </script>
