@@ -9,7 +9,7 @@
   <meta name="description" content="Shawn Singh — [YOUR_TITLE] based in San Francisco." />
   <link rel="icon" type="image/svg+xml" href="/shawnlogo.svg" />
 
-  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js?v=7"></script>
+  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js?v=9"></script>
   <link rel="modulepreload" crossorigin href="/assets/styles-GID8uTDy.js">
   <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css">
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
@@ -104,7 +104,6 @@
     .desktop-icon[data-full*="Psychiatric"] { left: 22.5vw; top: 78.5svh; }
     .desktop-icon[data-full$="resume.pdf"] { left: 32.2vw; top: 78.5svh; }
     .desktop-icon[data-full$="chicago.mp4"] { left: 61vw; top: 13.5svh; }
-    .desktop-icon[data-full$="lethimgo.mp4"] { left: calc(100vw - 124px); top: 13.5svh; }
     .desktop-icon[data-full$=".mp3"] { left: 84.8vw; top: 49.7svh; }
     .desktop-icon[data-full="/videos/go.mp4"] { left: 69.2vw; top: 84.7svh; }
     /* Song name wraps at spaces, not mid-letter like the photo filenames. */
@@ -584,7 +583,6 @@
       [data-full$="5494.jpg"] { left: 10px !important; }
       [data-full$="5496.jpg"] { left: 110px !important; }
       .desktop-icon[data-full$=".mp3"] { left: calc(100vw - 102px) !important; }
-      .desktop-icon[data-full$="lethimgo.mp4"] { display: none; }
       /* Videos sit on the hero floor, under the photos / dock. */
       .desktop-icon[data-full$=".mp4"] { top: calc(100svh - 148px) !important; }
       [data-full$="chicago.mp4"] { left: 110px !important; }
@@ -708,6 +706,36 @@
       width: 100%;
       height: auto;
     }
+    .sayclip-card {
+      position: relative;
+      grid-column: span 2;
+    }
+    @media (width<=900px) {
+      .sayclip-card { grid-column: auto; }
+    }
+    .sayclip-dl {
+      position: absolute;
+      top: .85rem;
+      right: .85rem;
+      z-index: 14;
+      display: inline-flex;
+      align-items: center;
+      gap: .32rem;
+      height: 1.7rem;
+      padding: 0 .7rem 0 .55rem;
+      border: 0;
+      border-radius: 980px;
+      background: #1d1d1f;
+      color: #fff;
+      font: 600 .68rem/1 var(--sans);
+      letter-spacing: .01em;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgb(0 0 0 / .14);
+    }
+    .sayclip-dl:focus-visible { outline: 2px solid #0071e3; outline-offset: 2px; }
+    .sayclip-dl svg { display: block; flex: none; }
+    .sayclip-dl:hover { background: #000; }
 
     #ngc2-launch[hidden] { display: none; }
     #ngc2-launch {
@@ -813,10 +841,6 @@
   <figure class="desktop-icon desktop-file" data-full="/images/desk/IMG_5496.jpg">
     <img src="/images/desk/IMG_5496-thumb.jpg" alt="Two people embracing on set" draggable="false" />
     <figcaption>IMG_5496.jpg</figcaption>
-  </figure>
-  <figure class="desktop-icon desktop-file" data-full="/videos/lethimgo.mp4">
-    <img src="/images/desk/lethimgo-thumb.jpg" alt="Music production desk at night" draggable="false" />
-    <figcaption>lethimgo.mp4</figcaption>
   </figure>
   <figure class="desktop-icon desktop-file" data-full="/videos/chicago.mp4">
     <img src="/images/desk/chicago-thumb.jpg" alt="Looking up at Chicago skyscrapers through trees" draggable="false" />
@@ -1158,7 +1182,7 @@
       const fillEmpty = () => {
         const v = document.querySelector('.grid .card-wrap--tv .card--mock video');
         if (!v || v.dataset.queue) return;
-        const clips = ['/videos/chicago.mp4', '/videos/go.mp4', '/videos/lethimgo.mp4'];
+        const clips = ['/videos/chicago.mp4', '/videos/go.mp4'];
         let i = Math.max(0, clips.findIndex(c => (v.currentSrc || v.src).includes(c)));
         v.dataset.queue = '1';
         v.loop = false;
@@ -1298,6 +1322,20 @@
           '<img src="/images/sayclip-wordmark.svg" alt="Sayclip">'
         );
       };
+      const fillSayclipBadge = () => {
+        const wrap = document.querySelector('.grid > a.card-wrap[href="/sayclip/"]');
+        if (!wrap) return;
+        const holder = document.createElement('div');
+        holder.className = 'sayclip-card';
+        wrap.replaceWith(holder);
+        holder.append(wrap);
+        const a = document.createElement('a');
+        a.className = 'sayclip-dl';
+        a.href = 'https://github.com/shawnpsi-lgtm/sayclip/releases/latest/download/Sayclip-arm64.dmg';
+        a.setAttribute('aria-label', 'Download Sayclip for Mac');
+        a.innerHTML = '<svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><path fill="currentColor" d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>Download for Mac';
+        holder.append(a);
+      };
       const fillCardCopy = () => {
         const items = [
           ['[href="project-djai.html"]', 'DJai', 'AI DJ in your pocket'],
@@ -1341,10 +1379,11 @@
         fillDjai();
         fillCardCopy();
         fillSayclipLogo();
+        fillSayclipBadge();
         wireNgc2Launch();
         revealDesk();
         jumpHash();
-        new MutationObserver(() => { fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); revealDesk(); jumpHash(); }).observe(document.getElementById('root'), { childList: true, subtree: true });
+        new MutationObserver(() => { fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); fillSayclipBadge(); revealDesk(); jumpHash(); }).observe(document.getElementById('root'), { childList: true, subtree: true });
       });
     })();
   </script>

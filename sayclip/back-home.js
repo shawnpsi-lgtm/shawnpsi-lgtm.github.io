@@ -53,8 +53,62 @@
     };
     nav.insertBefore(b, nav.firstChild);
   }
-  addHome();
-  new MutationObserver(addHome).observe(document.documentElement, {
+
+  // Same Tahoe Vimeo as the homepage hero. Sayclip keeps a still on top of the
+  // iframe (z-index 1 / opacity 0); homepage paints the iframe on top and
+  // fades the poster on play.
+  function showHomeVideo(hidePoster) {
+    var s = document.getElementById("sayclip-home-bg");
+    if (!s) {
+      s = document.createElement("style");
+      s.id = "sayclip-home-bg";
+      document.head.appendChild(s);
+    }
+    s.textContent =
+      ".mac-wallpaper img{z-index:0!important" +
+      (hidePoster ? ";opacity:0!important" : "") +
+      "}" +
+      ".mac-wallpaper iframe{opacity:1!important;z-index:0!important}";
+  }
+
+  function wireHomeVideo() {
+    var iframe = document.querySelector(".mac-wallpaper iframe");
+    if (!iframe || window.__sayclipBgWired) return;
+    window.__sayclipBgWired = true;
+    showHomeVideo(false);
+
+    window.addEventListener("message", function (event) {
+      if (!String(event.origin).includes("vimeo.com")) return;
+      var data = event.data;
+      if (typeof data === "string") {
+        try {
+          data = JSON.parse(data);
+        } catch {
+          return;
+        }
+      }
+      if (!data) return;
+      if (data.event === "ready" && iframe.contentWindow) {
+        iframe.contentWindow.postMessage(
+          JSON.stringify({ method: "addEventListener", value: "play" }),
+          "*"
+        );
+        iframe.contentWindow.postMessage(JSON.stringify({ method: "play" }), "*");
+      }
+      if (data.event === "play") showHomeVideo(true);
+    });
+
+    setTimeout(function () {
+      showHomeVideo(true);
+    }, 2500);
+  }
+
+  function onDom() {
+    addHome();
+    wireHomeVideo();
+  }
+  onDom();
+  new MutationObserver(onDom).observe(document.documentElement, {
     childList: true,
     subtree: true,
   });
