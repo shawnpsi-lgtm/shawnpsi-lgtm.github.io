@@ -16,7 +16,7 @@
     }
   }
 
-  if (onStaticLocal && !window.fetch.__sayclipClip) {
+  if (!window.fetch.__sayclipClip) {
     var origFetch = window.fetch.bind(window);
     window.fetch = function (input, init) {
       if (typeof input === "string") {
@@ -25,10 +25,17 @@
         var next = rewriteClipUrl(input.url);
         if (next !== input.url) input = new Request(next, input);
       }
-      return origFetch(input, init);
+      return origFetch(input, init).catch(function (err) {
+        if (err && err.message === "Failed to fetch") {
+          throw new Error("Download the Mac app to play and cut clips.");
+        }
+        throw err;
+      });
     };
     window.fetch.__sayclipClip = true;
+  }
 
+  if (onStaticLocal) {
     document.addEventListener("dragstart", function (event) {
       var raw = event.dataTransfer.getData("DownloadURL");
       if (!raw || !raw.startsWith("audio/wav:")) return;
