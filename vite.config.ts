@@ -7,6 +7,11 @@ export default defineConfig({
   resolve: {
     alias: { '@': new URL('./src', import.meta.url).pathname },
   },
+  server: {
+    proxy: {
+      '/api': 'http://127.0.0.1:43147',
+    },
+  },
   // dev.html, not index.html: index.html is the deployed static site.
   build: {
     outDir: 'dist',

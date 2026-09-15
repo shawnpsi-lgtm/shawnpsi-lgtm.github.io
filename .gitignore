@@ -33,3 +33,24 @@ fonts/PlayfairDisplay-BoldItalic.woff2
 # Build tooling
 node_modules/
 dist/
+
+# Unused assets (kept on disk, out of the repo)
+beatfx/ir/emt_140_bright_1.wav
+beatfx/ir/emt_140_dark_1.wav
+beatfx/ir/emt_140_medium_1.wav
+fonts/Inter-Latin.woff2
+fonts/PlayfairDisplay-Bold.woff2
+fonts/PlayfairDisplay-BoldItalic.woff2
+images/76th-emmys-beveled-logo.png
+images/beatfx.png
+images/djai-card.png
+images/djai1.png
+images/finalcloudexalogo.png
+images/ngc2-logo.png
+images/ngc2/p10.jpg
+images/ngc2/p37.jpg
+images/ngc2/p38.jpg
+images/vr_images/Screenshot 2026-04-09 at 11.17.42 AM.png
+src/assets/hero.png
+src/assets/react.svg
+src/assets/vite.svg

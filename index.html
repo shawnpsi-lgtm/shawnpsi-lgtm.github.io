@@ -9,7 +9,7 @@
   <meta name="description" content="Shawn Singh — [YOUR_TITLE] based in San Francisco." />
   <link rel="icon" type="image/svg+xml" href="/shawnlogo.svg" />
 
-  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js?v=2"></script>
+  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js?v=7"></script>
   <link rel="modulepreload" crossorigin href="/assets/styles-GID8uTDy.js">
   <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css">
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
@@ -642,7 +642,72 @@
     [data-theme=dark] .card-wrap--lines .box8-track img { filter: brightness(0) invert(1); }
     [data-theme=dark] .card-wrap--lines .ngc2-field canvas { filter: none; }
 
-    .card-wrap:last-child .card__mock-video { object-fit: contain; }
+    .card-wrap--tv .card__mock-video { object-fit: contain; }
+
+    .card-wrap.card-wrap--tv .card,
+    .card-wrap[href="/sayclip/"] .card {
+      border-radius: .5rem;
+    }
+
+    .card-wrap[href="/sayclip/"] .card {
+      background: #f6f6f8;
+      border-color: rgb(0 0 0 / .08);
+      container-type: inline-size;
+      isolation: isolate;
+    }
+    .card-wrap[href="/sayclip/"] .card__img {
+      position: absolute !important;
+      inset: 0;
+    }
+    .card-wrap[href="/sayclip/"] .gradients-container {
+      filter: blur(18px) saturate(2) !important;
+    }
+    .card-wrap[href="/sayclip/"] .gradients-container > div { animation-duration: 8s; }
+    .card-wrap[href="/sayclip/"] .gradients-container > div:nth-child(1) { animation-duration: 10s; }
+    .card-wrap[href="/sayclip/"] .gradients-container > div:nth-child(3),
+    .card-wrap[href="/sayclip/"] .gradients-container > div:nth-child(4) { animation-duration: 12s; }
+    .card-wrap[href="/sayclip/"] .card__img::before {
+      content: "";
+      position: absolute;
+      inset: 10%;
+      z-index: 1;
+      border-radius: 50%;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 38% 40%, #fff 0 14%, transparent 38%),
+        radial-gradient(circle at 30% 62%, #5ad4f0 0 22%, transparent 52%),
+        radial-gradient(circle at 66% 36%, #f090dc 0 24%, transparent 54%),
+        radial-gradient(circle at 58% 70%, #ffb088 0 20%, transparent 50%);
+      filter: blur(22px);
+      animation: sayclip-orb 5s ease-in-out infinite;
+    }
+    @keyframes sayclip-orb {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.08) rotate(16deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card-wrap[href="/sayclip/"] .card__img::before { animation: none; }
+    }
+    .card-wrap[href="/sayclip/"] .card::after { display: none; }
+    .card-wrap[href="/sayclip/"] .card-copy {
+      color: #1d1d1f;
+      text-shadow: none;
+    }
+    .sayclip-mark {
+      position: absolute;
+      inset: 0;
+      z-index: 12;
+      display: flex;
+      align-items: center;
+      margin: 0;
+      padding: 0 8%;
+      pointer-events: none;
+    }
+    .sayclip-mark img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
 
     #ngc2-launch[hidden] { display: none; }
     #ngc2-launch {
@@ -1091,7 +1156,7 @@
       });
 
       const fillEmpty = () => {
-        const v = document.querySelector('.grid .card-wrap:last-child .card--mock video');
+        const v = document.querySelector('.grid .card-wrap--tv .card--mock video');
         if (!v || v.dataset.queue) return;
         const clips = ['/videos/chicago.mp4', '/videos/go.mp4', '/videos/lethimgo.mp4'];
         let i = Math.max(0, clips.findIndex(c => (v.currentSrc || v.src).includes(c)));
@@ -1225,6 +1290,14 @@
           setTimeout(() => location.assign(link.href), 850);
         }, true);
       };
+      const fillSayclipLogo = () => {
+        const mark = document.querySelector('.sayclip-mark');
+        if (!mark || mark.querySelector('img')) return;
+        mark.replaceChildren();
+        mark.insertAdjacentHTML('beforeend',
+          '<img src="/images/sayclip-wordmark.svg" alt="Sayclip">'
+        );
+      };
       const fillCardCopy = () => {
         const items = [
           ['[href="project-djai.html"]', 'DJai', 'AI DJ in your pocket'],
@@ -1233,15 +1306,16 @@
           ['[href="/beatfx/"]', 'BEAT FX', 'a powerful notepad for on the go DJs'],
           [':has([src$="igstory.mp4"])', 'MARTINIQUE, FRANCE', 'Hennessy'],
           [':has([src$="trailer.mp4"])', 'LONDON, UK', 'LAB 54'],
-          ['[href="project-visuallyrepresented.html"]', 'Visually Represented', 'A Visual System for brands'],
-          [':last-child', 'SHAWN TV', ''],
+          ['[href="project-visuallyrepresented.html"]', '', 'A Visual System for brands'],
+          ['.card-wrap--tv', 'SHAWN TV', ''],
+          ['[href="/sayclip/"]', '', 'Crate-dig for Audio Samples by Query'],
         ];
         for (const [sel, kicker, line] of items) {
           const card = document.querySelector('.grid .card-wrap' + sel + ' .card');
           if (!card || card.querySelector('.card-copy')) continue;
           const el = document.createElement('div');
           el.className = 'card-copy';
-          el.innerHTML = '<span>' + kicker + '</span><b>' + line + '</b>';
+          el.innerHTML = (kicker ? '<span>' + kicker + '</span>' : '') + '<b>' + line + '</b>';
           card.append(el);
         }
       };
@@ -1266,10 +1340,11 @@
         fillNgc2();
         fillDjai();
         fillCardCopy();
+        fillSayclipLogo();
         wireNgc2Launch();
         revealDesk();
         jumpHash();
-        new MutationObserver(() => { fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); revealDesk(); jumpHash(); }).observe(document.getElementById('root'), { childList: true, subtree: true });
+        new MutationObserver(() => { fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); revealDesk(); jumpHash(); }).observe(document.getElementById('root'), { childList: true, subtree: true });
       });
     })();
   </script>
