@@ -1,0 +1,28 @@
+/* Page-to-page motion for Home ⇄ Work ⇄ the case studies. Both the page you
+   leave and the page you land on have to link this file, or the browser skips
+   the transition — which is how project-ngc2.html keeps its own launch
+   sequence: it deliberately doesn't load this.
+
+   The nav is the one thing that doesn't move. It holds position and re-tints
+   (transparent over the home hero → .scrolled glass everywhere else) while the
+   page underneath crossfades with a little depth. Content that animates itself
+   in on arrival — the work grid's staggered card reveal — is left alone. */
+@view-transition { navigation: auto }
+
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: .45s;
+  animation-timing-function: cubic-bezier(.32, .72, 0, 1);   /* Apple's curve */
+  animation-fill-mode: both;
+}
+.nav { view-transition-name: nav; }
+
+::view-transition-old(root) { animation-name: vt-sink; }
+::view-transition-new(root) { animation-name: vt-settle; }
+@keyframes vt-sink   { to   { opacity: 0; scale: .98 } }
+@keyframes vt-settle { from { opacity: 0; scale: 1.012 } }
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none }
+}

@@ -11,22 +11,25 @@
   :root{
     --bg:#dcddd7;--ink:#1a1a1a;--muted:#5f6058;--line:#0002;
     --hud-bg:#dcddd7;--hud-accent:#735600;--hud-grid:rgb(115 86 0/.11);--hud-glow:rgb(115 86 0/.2);
+    --bg-off:#fff;--panel-shadow:0 1px 2px #00000008,0 4px 14px #0000000a,inset 0 1px 0 #ffffff59;
     --nav-height:48px;--max-w:1200px
   }
   [data-theme=dark]{
     --bg:#090a08;--ink:#f0f1eb;--muted:#a2a49b;--line:#fff2;
-    --hud-bg:#090a08;--hud-accent:#ffc52b;--hud-grid:rgb(255 197 43/.09);--hud-glow:rgb(255 197 43/.28)
+    --hud-bg:#090a08;--hud-accent:#ffc52b;--hud-grid:rgb(255 197 43/.09);--hud-glow:rgb(255 197 43/.28);
+    --bg-off:#1c1c1e;--panel-shadow:0 1px 2px #00000066,0 10px 28px #00000059,inset 0 1px 0 #ffffff14
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
        font:16px/1.6 "Helvetica Neue",Helvetica,Arial,sans-serif;transition:background .3s,color .3s}
   .nav{
-    position:fixed;top:0;left:0;right:0;z-index:100;
+    position:fixed;top:clamp(8px,1.5vw,14px);left:clamp(12px,2vw,24px);right:clamp(12px,2vw,24px);z-index:100;
     height:var(--nav-height);display:flex;align-items:center;
-    background:color-mix(in srgb,var(--bg) 82%,transparent);
-    -webkit-backdrop-filter:saturate(180%) blur(20px);
-    backdrop-filter:saturate(180%) blur(20px);
-    box-shadow:0 1px var(--line);
+    border:1px solid var(--line);border-radius:22px;
+    background:color-mix(in srgb,var(--bg-off) 55%,transparent);
+    -webkit-backdrop-filter:blur(16px) saturate(180%);
+    backdrop-filter:blur(16px) saturate(180%);
+    box-shadow:var(--panel-shadow);
     font:400 .8rem/1 -apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",sans-serif
   }
   .nav__inner{width:100%;max-width:var(--max-w);margin:0 auto;display:flex;align-items:center;gap:32px;padding:0 40px}
@@ -162,12 +165,13 @@
   .next-project:hover .next-project__arrow{transform:translateX(10px)}
   .next-project__sub{margin:12px 0 0;color:var(--muted);font-size:.88rem}
 
-  .footer{border-top:1px solid var(--line);padding:48px 0 32px}
+  .footer{border:1px solid var(--line);border-radius:22px;margin:0 clamp(12px,2vw,24px) clamp(12px,2vw,24px);background:color-mix(in srgb,var(--bg-off) 55%,transparent);-webkit-backdrop-filter:blur(16px) saturate(180%);backdrop-filter:blur(16px) saturate(180%);box-shadow:var(--panel-shadow);padding:6px 0}
+  .footer,.footer p{line-height:1.3}
   .footer .container,.next-project .container{width:100%;max-width:var(--max-w);margin:0 auto;padding:0 40px}
-  .footer__inner{display:grid;grid-template-columns:1fr 1fr;align-items:end;gap:48px;margin-bottom:24px;padding-bottom:32px;border-bottom:1px solid var(--line)}
-  .footer__logo{margin:0 0 6px;font-size:1.1rem;font-weight:600}
+  .footer__inner{display:grid;grid-template-columns:1fr 1fr;align-items:start;gap:32px}
+  .footer__logo{margin:0 0 2px;font-size:.95rem;font-weight:600}
   .footer__tagline{margin:0;color:var(--muted);font-size:.85rem}
-  .footer__links{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+  .footer__links{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
   .footer__link{color:var(--muted);display:inline-flex;align-items:center;gap:8px;font-size:.82rem;text-decoration:none;transition:color .2s}
   .footer__link:hover{color:var(--hud-accent)}
   .footer__link svg{width:14px;height:14px}
@@ -218,15 +222,15 @@
     .nav__toggle{display:flex}
     .nav__right{margin-left:auto}
     .nav__links{
-      display:none;position:fixed;top:var(--nav-height);left:0;right:0;
-      flex-direction:column;gap:0;padding:12px 0;margin:0;
-      background:color-mix(in srgb,var(--bg) 95%,transparent);
+      display:none;position:absolute;top:calc(100% + 7px);left:-1px;right:-1px;
+      flex-direction:column;gap:0;padding:6px;margin:0;
+      background:color-mix(in srgb,var(--bg) 92%,transparent);
       -webkit-backdrop-filter:saturate(180%) blur(20px);
       backdrop-filter:saturate(180%) blur(20px);
-      border-bottom:1px solid var(--line);box-shadow:0 8px 24px #0001
+      border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px #00000024
     }
     .nav__links.open{display:flex}
-    .nav__links a{padding:14px 24px;font-size:.9rem;display:block}
+    .nav__links a{padding:14px 16px;border-radius:12px;font-size:.95rem;display:block}
     .gantt__phases span{align-items:center;padding:10px 2px}
     .gantt__phases span i{display:none}
   }
@@ -331,7 +335,7 @@
       Shawn Singh
     </a>
     <ul class="nav__links" role="list">
-      <li><a href="index.html#work" class="active">Work</a></li>
+      <li><a href="work.html" class="active">Work</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
     </ul>
@@ -490,7 +494,7 @@
     <div class="footer__inner">
       <div>
         <p class="footer__logo">Shawn Singh</p>
-        <p class="footer__tagline">Product Designer — San Francisco, CA</p>
+        <p class="footer__tagline">data + design — San Francisco, CA</p>
       </div>
       <div class="footer__links">
         <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
@@ -507,12 +511,8 @@
         </a>
       </div>
     </div>
-    <div class="footer__bottom">
-      <p class="footer__copy">&copy; <span id="footer-year"></span> Shawn Singh. All rights reserved.</p>
-    </div>
   </div>
 </footer>
-<script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
 
 <script>
 (function () {

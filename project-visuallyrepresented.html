@@ -358,8 +358,7 @@
 
     /* ── Footer (dark) ─────────────────────────────────────── */
     .vr-footer {
-      background: #111 !important;
-      border-top: 1px solid rgba(255,255,255,0.07) !important;
+      background: rgba(28,28,30,0.55) !important;
     }
 
     .vr-footer .footer__logo,
@@ -512,8 +511,7 @@
     }
 
     :root:not([data-theme="dark"]) .vr-footer {
-      background: #ffffff !important;
-      border-top: 1px solid var(--border) !important;
+      background: rgba(255,255,255,0.55) !important;
     }
 
     :root:not([data-theme="dark"]) .vr-footer .footer__logo,
@@ -537,7 +535,8 @@
   </style>
   <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
   <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css">
+  <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
+  <link rel="stylesheet" href="/assets/view-transition.css?v=1">
 </head>
 <body>
 
@@ -561,7 +560,7 @@
         Shawn Singh
       </a>
       <ul class="nav__links" role="list">
-        <li><a href="index.html#work" class="active">Work</a></li>
+        <li><a href="work.html" class="active">Work</a></li>
         <li><a href="about.html">About</a></li>
         <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
       </ul>
@@ -597,7 +596,7 @@
     <div class="vr-hero__overlay"></div>
     <div class="vr-hero__noise"></div>
 
-    <a href="index.html#work" class="back-link back-link--dark"
+    <a href="work.html" class="back-link back-link--dark"
        style="position: absolute; top: calc(var(--nav-height) + 24px); left: 40px; z-index: 2;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -866,7 +865,7 @@
       <div class="footer__inner">
         <div>
           <p class="footer__logo">Shawn Singh</p>
-          <p class="footer__tagline">Product Designer — San Francisco, CA</p>
+          <p class="footer__tagline">data + design — San Francisco, CA</p>
         </div>
         <div class="footer__links">
           <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link"
@@ -877,7 +876,7 @@
             </svg>
             LinkedIn
           </a>
-          <a href="https://drive.google.com/file/d/1cqEcpCcJ0mvZbAYtkgjS76e6LGajXqPt/view?usp=sharing"
+          <a href="/files/resume.pdf"
              class="footer__link" download>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -896,14 +895,10 @@
           </a>
         </div>
       </div>
-      <div class="footer__bottom">
-        <p class="footer__copy">&copy; <span id="footer-year"></span> Shawn Singh. All rights reserved.</p>
-      </div>
     </div>
   </footer>
 
   <script>
-    document.getElementById('footer-year').textContent = new Date().getFullYear();
 
     // Reel — force play
     const reelVideo = document.getElementById('vr-reel');
