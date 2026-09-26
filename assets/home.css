@@ -274,6 +274,24 @@
         inset 0 0 0 .5px rgb(255 255 255 / .11),
         inset 0 1px 0 rgb(255 255 255 / .2);
     }
+    /* The credit rides at the foot of the photo itself — no bottom bar — on a
+       gradient so it stays legible over a bright frame. */
+    #ql-credit {
+      position: absolute;
+      z-index: 6;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 32px 14px 11px;
+      font: 500 12px/1.3 var(--sans);
+      letter-spacing: -.01em;
+      color: rgb(255 255 255 / .88);
+      text-shadow: 0 1px 2px rgb(0 0 0 / .45);
+      background: linear-gradient(transparent, rgb(0 0 0 / .52));
+      border-radius: 0 0 8px 8px;
+      pointer-events: none;
+    }
+    #ql-credit[hidden] { display: none; }
     #ql-pdf {
       position: relative;
       overflow: auto;
@@ -770,6 +788,148 @@
        so it runs to the bottom of the page. The inline styles React sets
        are absolute, hence !important. */
     body:has(.desktop-icon) .min-h-screen > img,
-    body:has(.desktop-icon) .min-h-screen > iframe {
+    body:has(.desktop-icon) .min-h-screen > iframe,
+    body:has(.desktop-icon) .min-h-screen > div:first-of-type {
       position: fixed !important;
     }
+    /* first-of-type is the hero's 15% black scrim. Left absolute it ends with
+       the hero, and its bottom edge reads as a seam across the pinned
+       wallpaper once the page scrolls. */
+
+    /* Second screen below the hero. Its wallpaper is pinned like the hero's and
+       sits at the same depth, so it paints over the first one (later in the DOM)
+       while the desktop icons at z-index 50 still scroll away above it. */
+    #scene2 { position: relative; height: 100svh; }
+    #scene2 > iframe {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 100vw;
+      height: 56.25vw;
+      min-height: 100%;
+      min-width: 177.78vh;
+      transform: translate(-50%, -50%);
+      border: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity .6s ease;
+    }
+    body.scene2-on #scene2 > iframe { opacity: 1; }
+
+    /* Chat box on the second screen. Grid-centres the form; the wallpaper iframe
+       is fixed, so it's out of flow and unaffected. */
+    #scene2 { display: grid; place-items: center; align-content: center; gap: 18px; }
+    #chat-title {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      font: 600 clamp(2rem, 6vw, 3.25rem)/1.1 var(--sans);
+      letter-spacing: -.02em;
+      color: #fff;
+      text-shadow: 0 2px 18px rgb(0 0 0 / .45);
+    }
+    /* Scrubbed against the heading's own entry, not body.scene2-on — that class
+       flips a whole viewport early, so the fade used to finish off-screen.
+       Unsupported browsers skip the block and just get the plain heading. */
+    @supports (animation-timeline: view()) {
+      #chat-title {
+        animation: chat-rise linear both;
+        animation-timeline: view();
+        animation-range: entry 5% entry 65%;
+      }
+      @keyframes chat-rise {
+        from { opacity: 0; transform: translateY(28px); }
+        to { opacity: 1; transform: none; }
+      }
+    }
+    #chat-title::after {
+      content: "";
+      display: inline-block;
+      width: .06em;
+      height: .9em;
+      margin-left: .1em;
+      vertical-align: -.09em;
+      background: currentColor;
+      animation: caret 1.1s step-end infinite;
+    }
+    @keyframes caret { 50% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      #chat-title { animation: none; opacity: 1; transform: none; }
+      #chat-title::after { animation: none; }
+    }
+    #chat {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      width: min(620px, calc(100vw - 32px));
+      padding: 12px;
+      font: var(--text-base)/1.5 var(--sans);
+      color: var(--black);
+      border: 1px solid color-mix(in srgb, var(--black) 12%, transparent);
+      border-radius: 26px;
+      background: color-mix(in srgb, var(--bg-off) 55%, transparent);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      backdrop-filter: blur(16px) saturate(180%);
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / .05),
+        0 10px 28px rgb(0 0 0 / .07),
+        inset 0 1px 0 rgb(255 255 255 / .75);
+    }
+    [data-theme=dark] #chat {
+      border-color: rgb(255 255 255 / .12);
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / .4),
+        0 10px 28px rgb(0 0 0 / .35),
+        inset 0 1px 0 rgb(255 255 255 / .08);
+    }
+    #chat-log {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 42svh;
+      overflow-y: auto;
+      padding: 4px 4px 0;
+      overscroll-behavior: contain;
+    }
+    #chat-log:empty { display: none; }   /* no empty well before the first message */
+    #chat-log p {
+      max-width: 82%;
+      margin: 0;
+      padding: 8px 13px;
+      border-radius: 18px;
+      white-space: pre-wrap;
+      background: color-mix(in srgb, var(--black) 7%, transparent);
+    }
+    #chat-log .me {
+      align-self: flex-end;
+      color: #fff;
+      background: var(--accent);
+    }
+    #chat-log .err { color: #b3261e; background: color-mix(in srgb, #b3261e 12%, transparent); }
+    [data-theme=dark] #chat-log .err { color: #ffb4ab; }
+    #chat-input {
+      min-width: 0;
+      padding: 10px 14px;
+      font: inherit;
+      color: inherit;
+      border: 1px solid color-mix(in srgb, var(--black) 12%, transparent);
+      border-radius: 980px;
+      background: color-mix(in srgb, var(--bg-off) 70%, transparent);
+    }
+    #chat-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    #chat button {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      color: #fff;
+      border: 0;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+    #chat button:hover { background: var(--accent-hover); }

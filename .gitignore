@@ -54,3 +54,6 @@ images/vr_images/Screenshot 2026-04-09 at 11.17.42 AM.png
 src/assets/hero.png
 src/assets/react.svg
 src/assets/vite.svg
+
+# wrangler local secrets
+worker/.dev.vars

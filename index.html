@@ -15,7 +15,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=12">
+  <link rel="stylesheet" href="/assets/home.css?v=16">
   <script src="/assets/page-transition.js?v=1"></script>
 </head>
 <body>
@@ -37,11 +37,11 @@
     <img src="/images/desk/all-by-myself.jpg" alt="All By Myself album art" draggable="false" />
     <figcaption>All By Myself - Maccabi House.mp3</figcaption>
   </figure>
-  <figure class="desktop-icon desktop-file" data-full="/images/desk/IMG_5494.jpg">
+  <figure class="desktop-icon desktop-file" data-full="/images/desk/IMG_5494.jpg" data-caption="03 Greedo / Complex Magazine / Los Angeles">
     <img src="/images/desk/IMG_5494-thumb.jpg" alt="Artist seated on a director's chair in a white cyc studio" draggable="false" />
     <figcaption>IMG_5494.jpg</figcaption>
   </figure>
-  <figure class="desktop-icon desktop-file" data-full="/images/desk/IMG_5496.jpg">
+  <figure class="desktop-icon desktop-file" data-full="/images/desk/IMG_5496.jpg" data-caption="03 Greedo / Complex Magazine / Los Angeles">
     <img src="/images/desk/IMG_5496-thumb.jpg" alt="Two people embracing on set" draggable="false" />
     <figcaption>IMG_5496.jpg</figcaption>
   </figure>
@@ -58,6 +58,7 @@
     <figure>
       <figcaption><button id="ql-close" aria-label="Close"></button><span id="ql-name"></span><span id="ql-page" hidden></span><a id="ql-download" hidden href="/files/resume.pdf" download="resume.pdf">Download</a><span id="ql-open-music" hidden>Open with Music</span></figcaption>
       <img id="ql-img" alt="" />
+      <span id="ql-credit" hidden></span>
       <video id="ql-video" hidden controls playsinline preload="none"></video>
       <div id="ql-pdf" hidden></div>
       <div id="ql-folder" hidden>
@@ -200,6 +201,7 @@
       const qlPdf = document.getElementById('ql-pdf');
       const qlName = document.getElementById('ql-name');
       const qlPage = document.getElementById('ql-page');
+      const qlCredit = document.getElementById('ql-credit');
       const qlFolder = document.getElementById('ql-folder');
       const qlAudio = document.getElementById('ql-audio');
       const qlMusic = document.getElementById('ql-open-music');
@@ -238,6 +240,7 @@
         qlVid.load();
         qlPdf.scrollTop = 0;
         qlPage.hidden = true;
+        qlCredit.hidden = true;
         qlDl.hidden = true;
       };
       tracks.forEach(f => {
@@ -333,6 +336,8 @@
           qlImg.src = src;
           qlImg.alt = el.querySelector('img').alt;
         }
+        qlCredit.textContent = el.dataset.caption || '';
+        qlCredit.hidden = !el.dataset.caption;
         qlName.textContent = el.querySelector('figcaption').childNodes[0].textContent.trim();
         ql.hidden = false;
       }
@@ -406,5 +411,86 @@
   </script>
   <div id="root"></div>
 
+  <!-- A second screen below the hero, there to carry a second wallpaper. -->
+  <section id="scene2">
+    <iframe aria-hidden="true" data-src="https://player.vimeo.com/video/1230574544?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;background=1&amp;autoplay=1&amp;loop=1&amp;muted=1"
+            allow="autoplay; fullscreen; picture-in-picture" title="" tabindex="-1"></iframe>
+
+    <h2 id="chat-title">Shawn AI</h2>
+
+    <form id="chat" autocomplete="off">
+      <div id="chat-log" aria-live="polite"></div>
+      <input id="chat-input" placeholder="Ask me anything about Shawn…" aria-label="Message" />
+      <button type="submit" aria-label="Send">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 19V5"/><path d="M5.5 11.5 12 5l6.5 6.5"/>
+        </svg>
+      </button>
+    </form>
+  </section>
+  <script>
+    // Load the second wallpaper the moment scrolling starts, fade it in a third
+    // of the way down: arriving and staying put still costs one video, not two.
+    const scene2 = () => {
+      const f = document.querySelector('#scene2 iframe');
+      if (f.dataset.src && scrollY > 0) { f.src = f.dataset.src; delete f.dataset.src; }
+      document.body.classList.toggle('scene2-on', scrollY > innerHeight * .35);
+    };
+    addEventListener('scroll', scene2, { passive: true });
+    scene2();  // a reload mid-page restores scrollY without firing scroll
+  </script>
+
+  <script>
+    // Groq chat. The key lives in the Cloudflare Worker (worker/groq-proxy.js),
+    // never here — this page is public, so a baked-in key would be a public key.
+    (() => {
+      const PROXY = 'https://groq-chat.shawnpsi.workers.dev';
+      const form = document.getElementById('chat');
+      const log = document.getElementById('chat-log');
+      const input = document.getElementById('chat-input');
+      const msgs = [];   // system prompt and model are the worker's business
+
+      const say = (who, text) => {
+        const p = document.createElement('p');
+        p.className = who;
+        p.textContent = text;
+        log.append(p);
+        log.scrollTop = log.scrollHeight;
+        return p;
+      };
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        say('me', text);
+        msgs.push({ role: 'user', content: text });
+        const out = say('bot', '\u2026');
+        try {
+          const r = await fetch(PROXY, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: msgs }),
+          });
+          const raw = await r.text();
+          if (!r.ok) {
+            let msg = raw.slice(0, 300);
+            try { msg = JSON.parse(raw).error?.message || JSON.parse(raw).error || msg; } catch {}
+            throw new Error(msg);
+          }
+          const reply = JSON.parse(raw).choices[0].message.content;
+          msgs.push({ role: 'assistant', content: reply });
+          out.textContent = reply;
+        } catch (err) {
+          msgs.pop();   // drop the unanswered turn so a retry isn't sent twice
+          out.textContent = err.message || String(err);
+          out.classList.add('err');
+        }
+        log.scrollTop = log.scrollHeight;
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -1,0 +1,11 @@
+name = "groq-chat"
+main = "groq-proxy.js"
+compatibility_date = "2026-09-01"
+
+# 20 messages per minute per IP. Cloudflare counts this at the edge, so it costs
+# nothing and needs no KV.
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 20, period = 60 }
