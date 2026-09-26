@@ -767,32 +767,9 @@
 
 
     /* The wallpaper is pinned to the viewport instead of ending with the hero,
-       so it runs under the footer to the bottom of the page. The inline
-       styles React sets are absolute, hence !important. */
+       so it runs to the bottom of the page. The inline styles React sets
+       are absolute, hence !important. */
     body:has(.desktop-icon) .min-h-screen > img,
     body:has(.desktop-icon) .min-h-screen > iframe {
       position: fixed !important;
     }
-    /* The pinned wallpaper is a positioned element at z-index 0, so the footer
-       has to be positioned too or it paints underneath it. */
-    body:has(.desktop-icon) .footer { position: relative; z-index: 1; }
-
-
-    /* The footer is no longer a glass pill (that made it read as a second nav
-       bar). On this page it sits over the pinned wallpaper, so it borrows the
-       unscrolled nav's treatment: light text over its own scrim.
-
-       The scrim is not optional. The hero lays rgba(0,0,0,.15) over the
-       wallpaper and stops at its own bottom edge, so a transparent footer
-       below it showed a hard brightness seam AND put white text straight onto
-       lit water. Starting the gradient at .15 continues the hero's scrim
-       (no seam) and deepening it to .5 buys the text real contrast. */
-    body:has(.desktop-icon) .footer {
-      color: rgb(255 255 255 / .92);
-      text-shadow: 0 1px 2px rgb(0 0 0 / .45);
-      background: linear-gradient(to bottom, rgb(0 0 0 / .15), rgb(0 0 0 / .5));
-    }
-    body:has(.desktop-icon) .footer .footer__logo,
-    body:has(.desktop-icon) .footer .footer__link,
-    body:has(.desktop-icon) .footer .footer__tagline { color: inherit; }
-    body:has(.desktop-icon) .footer .footer__link:hover { color: #fff; }
