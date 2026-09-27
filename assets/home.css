@@ -902,7 +902,8 @@
       padding: 8px 13px;
       border-radius: 18px;
       white-space: pre-wrap;
-      background: color-mix(in srgb, var(--black) 7%, transparent);
+      color: var(--black);
+      background: color-mix(in srgb, var(--bg-off) 70%, transparent);
     }
     #chat-log .me {
       align-self: flex-end;
