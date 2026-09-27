@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shawn AI API — Shawn Singh</title>
-  <meta name="description" content="A free public API for asking questions about Shawn Singh and his work." />
+  <title>Status — Shawn Singh</title>
+  <meta name="description" content="Live status of shawnsingh.me and the Shawn AI chat, API and MCP server." />
 
 
 
@@ -68,44 +68,18 @@
         gap: 24px;
       }
     }
-    .api-code {
-      margin: 12px 0 0;
-      padding: 16px 18px;
-      overflow-x: auto;
-      font: 0.85rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
-      color: var(--black);
-      background: var(--bg-off);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      white-space: pre;
-    }
-    /* let the code blocks scroll instead of widening the grid past the screen */
-    .about-col-grid > div { min-width: 0; }
-    .api-endpoint { margin-bottom: 40px; }
-    .api-endpoint h3 { margin: 0 0 6px; font-size: 1.05rem; }
-    .api-endpoint p, .api-note { font-size: 1rem; color: var(--mid); line-height: 1.8; max-width: 65ch; margin: 0; }
-    .api-method {
-      display: inline-block;
-      margin-right: 8px;
-      padding: 2px 8px;
-      font: 600 0.72rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
-      color: #fff;
-      background: var(--accent);
-      border-radius: 6px;
-      vertical-align: 2px;
-    }
-    #try { display: flex; gap: 10px; flex-wrap: wrap; }
-    #try input {
-      flex: 1 1 260px;
-      padding: 12px 16px;
-      font: inherit;
-      color: var(--black);
-      background: var(--bg-off);
-      border: 1px solid var(--border);
-      border-radius: 980px;
-    }
-    #try input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    #try-out { white-space: pre-wrap; min-height: 3.2em; }
+    .status-banner { font-family: var(--serif); font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 700; color: var(--black); margin: 0 0 8px; }
+    .status-meta { font-size: 0.9rem; color: var(--mid); margin: 0 0 32px; }
+    .status-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+    .status-list li { display: flex; align-items: baseline; gap: 12px; padding: 18px 0; border-bottom: 1px solid var(--border); }
+    .status-list b { font-weight: 600; color: var(--black); }
+    .status-list small { display: block; color: var(--mid); font-size: 0.85rem; }
+    .status-list .st { margin-left: auto; white-space: nowrap; font-size: 0.9rem; color: var(--mid); }
+    .dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--light); transform: translateY(-1px); }
+    .up .dot { background: #1f9d55; }
+    .slow .dot { background: #d99a16; }
+    .down .dot { background: #d6453d; }
+    .down .st { color: #d6453d; }
   </style>
   <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
   <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
@@ -156,79 +130,23 @@
   <header class="about-hero" style="padding-top: var(--nav-height); background: var(--bg-off); border-bottom: 1px solid var(--border);">
     <div class="about-hero__inner">
       <div data-reveal>
-        <p class="about-eyebrow">API</p>
-        <h1 class="about-title">Shawn AI</h1>
+        <p class="about-eyebrow">Status</p>
+        <h1 class="about-title">Is it up?</h1>
       </div>
       <div data-reveal data-reveal-delay="80">
-        <p class="hero__sub" style="font-size: 1.05rem;">Ask about Shawn from your own code.<br />Free, no key, any origin.</p>
+        <p class="hero__sub" style="font-size: 1.05rem;">Live checks of the site and Shawn AI,<br />run from your browser every minute.</p>
       </div>
     </div>
   </header>
   <main>
-    <section class="about-section" style="border-bottom: 1px solid var(--border);">
-      <div class="container">
-        <div class="about-col-grid" data-reveal>
-          <p class="about-col-label">Try it</p>
-          <div>
-            <form id="try">
-              <input name="q" type="text" maxlength="800" required placeholder="Where does Shawn work?" aria-label="Question" />
-              <button class="btn btn--accent" type="submit">Ask</button>
-            </form>
-            <pre class="api-code" id="try-out" aria-live="polite">The answer shows up here.</pre>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="about-section" style="border-bottom: 1px solid var(--border);">
-      <div class="container">
-        <div class="about-col-grid" data-reveal>
-          <p class="about-col-label">Endpoints</p>
-          <div>
-            <div class="api-endpoint">
-              <h3><span class="api-method">GET</span>/api?q=your question</h3>
-              <p>Answers a question about Shawn, grounded only in what's on this site.</p>
-              <pre class="api-code">curl "https://groq-chat.shawnpsi.workers.dev/api?q=where+does+shawn+work"
-
-{ "answer": "Shawn is a Data Scientist at C3 AI..." }</pre>
-            </div>
-            <div class="api-endpoint">
-              <h3><span class="api-method">GET</span>/api</h3>
-              <p>Everything on the site as one block of text, for your own model to read. No limit.</p>
-              <pre class="api-code">{ "name": "Shawn Singh", "content": "SHAWN SINGH — data + design...", "usage": "..." }</pre>
-            </div>
-            <div class="api-endpoint" style="margin-bottom: 0;">
-              <h3><span class="api-method">MCP</span>/mcp</h3>
-              <p>An MCP server with one tool, <code>about_shawn</code>. Add the URL as a connector in Claude, Cursor or any MCP client.</p>
-              <pre class="api-code">https://groq-chat.shawnpsi.workers.dev/mcp</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="about-section" id="cli" style="border-bottom: 1px solid var(--border);">
-      <div class="container">
-        <div class="about-col-grid" data-reveal>
-          <p class="about-col-label">CLI</p>
-          <div>
-            <p class="api-note">A one-file shell script around the API. Needs only <code>curl</code>. Install:</p>
-            <pre class="api-code">sudo curl -fsSL https://shawnsingh.me/shawn-ai -o /usr/local/bin/shawn-ai && sudo chmod +x /usr/local/bin/shawn-ai</pre>
-            <p class="api-note" style="margin-top: 24px;">Then ask away:</p>
-            <pre class="api-code">shawn-ai "where does shawn work?"</pre>
-            <p class="api-note" style="margin-top: 24px;">Rather not install anything? Add <code>&amp;plain</code> to any API call to get bare text back:</p>
-            <pre class="api-code">curl "https://groq-chat.shawnpsi.workers.dev/api?q=where+does+shawn+work&amp;plain"</pre>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section class="about-section">
       <div class="container">
         <div class="about-col-grid" data-reveal>
-          <p class="about-col-label">Limits</p>
-          <div>
-            <p class="api-note">3 questions per minute per IP, 800 characters per question, one question at a time (no chat history). Over the limit you get a <code>429</code> with <code>{ "error": "..." }</code>. It runs on a free tier, so on busy days it may be rate-limited for everyone. Is it up right now? See the <a href="status.html">status page</a>.</p>
+          <p class="about-col-label">Services</p>
+          <div aria-live="polite">
+            <p class="status-banner" id="banner">Checking…</p>
+            <p class="status-meta" id="meta">&nbsp;</p>
+            <ul class="status-list" id="list"></ul>
           </div>
         </div>
       </div>
@@ -236,17 +154,66 @@
   </main>
 
   <script>
-    const tryForm = document.getElementById('try');
-    const tryOut = document.getElementById('try-out');
-    tryForm.addEventListener('submit', async e => {
-      e.preventDefault();
-      tryOut.textContent = 'Thinking…';
-      try {
-        const r = await fetch('https://groq-chat.shawnpsi.workers.dev/api?q=' + encodeURIComponent(tryForm.q.value.trim()));
-        const d = await r.json();
-        tryOut.textContent = d.answer ?? d.error;
-      } catch { tryOut.textContent = "Couldn't reach the API. Try again in a moment."; }
+    const W = 'https://groq-chat.shawnpsi.workers.dev';
+    // Each check resolves to true (up) or throws. Everything runs from the
+    // visitor's browser, so a bad connection on their end reads as down.
+    const ok = r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r; };
+    const page = path => () => fetch(path, { method: 'HEAD', cache: 'no-store' }).then(ok);
+    const health = fetch.bind(null, W + '/health', { cache: 'no-store' });
+    let healthRun;   // one /health call feeds both model rows
+    const model = key => async () => {
+      const d = await healthRun;
+      if (!d[key]) throw new Error(d.groq === 200 ? 'model no longer served' : 'Groq ' + (d.groq || 'unreachable'));
+    };
+    const CHECKS = [
+      ['Website', 'shawnsingh.me', page('/index.html')],
+      ['SayClip', '/sayclip', page('/sayclip/')],
+      ['BeatFX', '/beatfx', page('/beatfx/')],
+      ['Shawn AI chat', 'The chat on the homepage (Groq)', model('chat')],
+      ['Shawn AI API answers', 'GET /api?q= (Groq)', model('api')],
+      ['Public API', 'GET /api', () => fetch(W + '/api', { cache: 'no-store' }).then(ok)],
+      ['MCP server', 'POST /mcp', () => fetch(W + '/mcp', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: '{"jsonrpc":"2.0","id":1,"method":"ping"}',
+      }).then(ok).then(r => r.json()).then(d => { if (!d.result) throw new Error('bad reply'); })],
+    ];
+    const list = document.getElementById('list');
+    const rows = CHECKS.map(([name, sub]) => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="dot"></span><span><b></b><small></small></span><span class="st">Checking…</span>';
+      li.querySelector('b').textContent = name;
+      li.querySelector('small').textContent = sub;
+      list.append(li);
+      return li;
     });
+    const withTimeout = p => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('timed out')), 10000))]);
+
+    async function run() {
+      healthRun = withTimeout(health().then(r => r.json()));
+      healthRun.catch(() => {});
+      const results = await Promise.all(CHECKS.map(async ([, , check], i) => {
+        const t = performance.now();
+        let state, text;
+        try {
+          await withTimeout(check());
+          const ms = Math.round(performance.now() - t);
+          state = ms > 3000 ? 'slow' : 'up';
+          text = (state === 'up' ? 'Operational' : 'Slow') + ' · ' + ms + ' ms';
+        } catch (e) {
+          state = 'down';
+          text = 'Down · ' + e.message;
+        }
+        rows[i].className = state;
+        rows[i].querySelector('.st').textContent = text;
+        return state;
+      }));
+      const down = results.filter(s => s === 'down').length;
+      document.getElementById('banner').textContent =
+        !down ? 'All systems operational' : down === results.length ? 'Everything is down' : down + ' of ' + results.length + ' services down';
+      document.getElementById('meta').textContent = 'Last checked ' + new Date().toLocaleTimeString() + ' · refreshes every minute';
+    }
+    run();
+    setInterval(run, 60000);
   </script>
 
   <!-- ============================================================

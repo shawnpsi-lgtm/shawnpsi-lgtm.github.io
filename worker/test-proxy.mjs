@@ -78,3 +78,14 @@ apiOk = false;
 assert.equal((await get('?q=who')).status, 429);
 assert.match(await (await get('?q=who&plain')).text(), /give it a minute/);
 console.log('api ok');
+
+// /health: 200 only when Groq lists both models; any origin
+globalThis.fetch = async () => new Response(JSON.stringify({ data: [{ id: 'openai/gpt-oss-120b' }, { id: 'openai/gpt-oss-20b' }] }));
+const hl = await worker.fetch(new Request('https://w/health'), env);
+assert.equal(hl.status, 200);
+assert.equal(hl.headers.get('Access-Control-Allow-Origin'), '*');
+globalThis.fetch = async () => new Response(JSON.stringify({ data: [{ id: 'openai/gpt-oss-20b' }] }));
+assert.deepEqual(await (await worker.fetch(new Request('https://w/health'), env)).json(), { groq: 200, chat: false, api: true });
+globalThis.fetch = async () => { throw new Error('down'); };
+assert.equal((await worker.fetch(new Request('https://w/health'), env)).status, 503);
+console.log('health ok');

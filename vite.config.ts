@@ -9,7 +9,8 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://127.0.0.1:43147',
+      // '/api/', not '/api': the bare prefix also swallowed /api.html.
+      '/api/': 'http://127.0.0.1:43147',
     },
   },
   // dev.html, not index.html: index.html is the deployed static site.

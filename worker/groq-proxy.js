@@ -103,9 +103,22 @@ async function api(req, env) {
   return out({ answer: (await r.json()).choices?.[0]?.message?.content ?? '' });
 }
 
+// /health: for status.html. Listing Groq's models costs no tokens, yet proves the
+// key works and that both models we call are still served.
+async function health(env) {
+  const r = await fetch('https://api.groq.com/openai/v1/models', { headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` } }).catch(() => null);
+  const ids = r?.ok ? ((await r.json().catch(() => null))?.data || []).map(m => m.id) : [];
+  const body = { groq: r?.status ?? 0, chat: ids.includes(MODEL), api: ids.includes(API_MODEL) };
+  return new Response(JSON.stringify(body), {
+    status: body.chat && body.api ? 200 : 503,
+    headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  });
+}
+
 export default {
   async fetch(req, env) {
     const path = new URL(req.url).pathname;
+    if (path === '/health') return health(env);
     if (path === '/mcp') return mcp(req);
     if (path === '/api') return api(req, env);
     // Spoofable with curl, so it isn't the real defence — the rate limit and the
