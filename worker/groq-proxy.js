@@ -32,8 +32,43 @@ const cors = origin => ({
 const fail = (msg, status, origin) =>
   new Response(JSON.stringify({ error: msg }), { status, headers: cors(origin) });
 
+// /mcp: a stateless MCP server (Streamable HTTP, plain JSON replies) so a
+// visitor's own AI can read the site. It hands back the digest and nothing else
+// -- their model does the answering, so it costs no Groq tokens.
+const TOOL = {
+  name: 'about_shawn',
+  description: "Everything on Shawn Singh's portfolio site: bio, projects, experience and contact.",
+  inputSchema: { type: 'object', properties: {} },
+};
+async function mcp(req) {
+  // MCP clients are servers or desktop apps, not this site, so any origin goes.
+  const h = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Content-Type': 'application/json' };
+  if (req.method === 'OPTIONS') return new Response(null, { headers: h });
+  if (req.method !== 'POST') return new Response(null, { status: 405, headers: { ...h, Allow: 'POST' } });
+  let m;
+  try { m = await req.json(); } catch { m = null; }
+  if (m?.id === undefined) return new Response(null, { status: 202, headers: h });   // notification
+  const result = {
+    initialize: () => ({
+      protocolVersion: m.params?.protocolVersion || '2025-06-18',
+      capabilities: { tools: {} },
+      serverInfo: { name: 'shawn-ai', version: '1.0.0' },
+    }),
+    ping: () => ({}),
+    'tools/list': () => ({ tools: [TOOL] }),
+    'tools/call': () => m.params?.name === TOOL.name
+      ? { content: [{ type: 'text', text: SITE }] }
+      : null,
+  }[m.method]?.();
+  const reply = result
+    ? { jsonrpc: '2.0', id: m.id, result }
+    : { jsonrpc: '2.0', id: m.id, error: { code: -32601, message: `unknown: ${m.method} ${m.params?.name || ''}`.trim() } };
+  return new Response(JSON.stringify(reply), { headers: h });
+}
+
 export default {
   async fetch(req, env) {
+    if (new URL(req.url).pathname === '/mcp') return mcp(req);
     // Spoofable with curl, so it isn't the real defence — the rate limit and the
     // caps below are. It does stop other sites from spending the quota.
     const origin = req.headers.get('Origin') || '';

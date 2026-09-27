@@ -15,7 +15,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=17">
+  <link rel="stylesheet" href="/assets/home.css?v=18">
   <script src="/assets/page-transition.js?v=1"></script>
 </head>
 <body>
@@ -428,6 +428,10 @@
         </svg>
       </button>
     </form>
+
+    <!-- Copies the worker's MCP URL so a visitor can plug Shawn AI into their own client. -->
+    <button id="mcp" type="button" data-url="https://groq-chat.shawnpsi.workers.dev/mcp"
+            title="Copy the MCP server URL, then add it as a connector in Claude, Cursor, etc.">Connect MCP</button>
   </section>
   <script>
     // Load the second wallpaper the moment scrolling starts, fade it in a third
@@ -459,6 +463,12 @@
         log.scrollTop = log.scrollHeight;
         return p;
       };
+
+      const mcp = document.getElementById('mcp');
+      mcp.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(mcp.dataset.url); mcp.textContent = 'Copied MCP URL'; }
+        catch { mcp.textContent = mcp.dataset.url; }   // no clipboard: show it to copy by hand
+      });
 
       form.addEventListener('submit', async e => {
         e.preventDefault();

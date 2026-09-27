@@ -45,3 +45,14 @@ limitOk = false;
 assert.equal((await post({ messages: [{ role: 'user', content: 'yo' }] })).status, 429);
 
 console.log('worker guards OK');
+
+// /mcp answers any origin, and never touches Groq
+const rpc = async body => (await worker.fetch(new Request('https://w/mcp', {
+  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+}), env)).json();
+assert.equal((await rpc({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-03-26' } })).result.protocolVersion, '2025-03-26');
+assert.equal((await rpc({ jsonrpc: '2.0', id: 2, method: 'tools/list' })).result.tools[0].name, 'about_shawn');
+assert.match((await rpc({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'about_shawn' } })).result.content[0].text, /SHAWN SINGH/);
+assert.equal((await rpc({ jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'nope' } })).error.code, -32601);
+assert.equal((await worker.fetch(new Request('https://w/mcp', { method: 'POST', body: '{"jsonrpc":"2.0","method":"notifications/initialized"}' }), env)).status, 202);
+console.log('mcp ok');
