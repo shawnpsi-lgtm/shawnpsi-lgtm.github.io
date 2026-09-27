@@ -207,6 +207,22 @@
       </div>
     </section>
 
+    <section class="about-section" id="cli" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">CLI</p>
+          <div>
+            <p class="api-note">A one-file shell script around the API. Needs only <code>curl</code>. Install:</p>
+            <pre class="api-code">sudo curl -fsSL https://shawnsingh.me/shawn-ai -o /usr/local/bin/shawn-ai && sudo chmod +x /usr/local/bin/shawn-ai</pre>
+            <p class="api-note" style="margin-top: 24px;">Then ask away:</p>
+            <pre class="api-code">shawn-ai "where does shawn work?"</pre>
+            <p class="api-note" style="margin-top: 24px;">Rather not install anything? Add <code>&amp;plain</code> to any API call to get bare text back:</p>
+            <pre class="api-code">curl "https://groq-chat.shawnpsi.workers.dev/api?q=where+does+shawn+work&amp;plain"</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="about-section">
       <div class="container">
         <div class="about-col-grid" data-reveal>

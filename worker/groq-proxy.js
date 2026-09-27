@@ -84,11 +84,14 @@ const groq = (env, opts, msgs) => fetch('https://api.groq.com/openai/v1/chat/com
 // and its traffic can only exhaust its own quota, never the site chat's.
 const API_MODEL = 'openai/gpt-oss-20b';
 async function api(req, env) {
-  const h = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
-  const out = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: h });
+  const params = new URL(req.url).searchParams;
+  // &plain gives bare text instead of JSON, so the shell CLI needs no JSON parser.
+  const plain = params.has('plain');
+  const h = { 'Access-Control-Allow-Origin': '*', 'Content-Type': plain ? 'text/plain; charset=utf-8' : 'application/json' };
+  const out = (body, status = 200) => new Response(plain ? (body.answer ?? body.error ?? body.content) + '\n' : JSON.stringify(body), { status, headers: h });
   if (req.method === 'OPTIONS') return new Response(null, { headers: h });
   if (req.method !== 'GET') return out({ error: 'use GET /api?q=your+question' }, 405);
-  const q = new URL(req.url).searchParams.get('q')?.trim();
+  const q = params.get('q')?.trim();
   if (!q) return out({ name: 'Shawn Singh', content: SITE, usage: 'GET /api?q=your+question for an answer' });
 
   const { success } = await env.API_LIMITER.limit({ key: req.headers.get('CF-Connecting-IP') || 'anon' });

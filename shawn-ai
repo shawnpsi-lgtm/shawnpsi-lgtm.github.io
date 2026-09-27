@@ -1,0 +1,4 @@
+#!/bin/sh
+# shawn-ai: ask Shawn AI from your terminal.   shawn-ai "where does shawn work?"
+[ $# -gt 0 ] || { echo 'usage: shawn-ai "your question"' >&2; exit 1; }
+curl -sS --fail-with-body -G --data-urlencode "q=$*" --data plain https://groq-chat.shawnpsi.workers.dev/api

@@ -73,6 +73,8 @@ assert.equal((await (await get('?q=who')).json()).answer, 'hi');
 assert.equal(sent.model, 'openai/gpt-oss-20b');     // its own Groq quota, not the chat's
 assert.equal(sent.messages[0].role, 'system');
 assert.equal(sent.messages[1].content, 'who');
+assert.equal(await (await get('?q=who&plain')).text(), 'hi\n');   // the CLI's format
 apiOk = false;
 assert.equal((await get('?q=who')).status, 429);
+assert.match(await (await get('?q=who&plain')).text(), /give it a minute/);
 console.log('api ok');
