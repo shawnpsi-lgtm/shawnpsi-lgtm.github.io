@@ -16,7 +16,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=20">
+  <link rel="stylesheet" href="/assets/home.css?v=21">
   <script src="/assets/page-transition.js?v=1"></script>
 </head>
 <body>
@@ -430,12 +430,11 @@
       </button>
     </form>
 
-    <!-- Copy the worker's URLs so a visitor can plug Shawn AI into their own client or code. -->
+    <!-- Plug Shawn AI into your own client (copies the MCP URL) or code (opens the API docs). -->
     <div id="connect">
       <button type="button" data-url="https://groq-chat.shawnpsi.workers.dev/mcp" data-done="Copied MCP URL"
               title="Copy the MCP server URL, then add it as a connector in Claude, Cursor, etc.">Connect MCP</button>
-      <button type="button" data-url="https://groq-chat.shawnpsi.workers.dev/api" data-done="Copied API URL"
-              title="Copy the API URL: add ?q=your+question to ask Shawn AI (3 per minute)">Get API</button>
+      <a href="/api.html" title="Docs and a live demo for the Shawn AI API">Get API</a>
     </div>
   </section>
   <script>

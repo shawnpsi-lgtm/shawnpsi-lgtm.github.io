@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shawn AI API — Shawn Singh</title>
+  <meta name="description" content="A free public API for asking questions about Shawn Singh and his work." />
+
+
+
+  <style>
+    .about-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 56px 0;
+    }
+
+    .about-section {
+      padding: 72px 0;
+    }
+
+    .about-col-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 64px;
+    }
+
+    .about-col-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--light);
+      padding-top: 6px;
+    }
+
+    .about-bio-large {
+      font-family: var(--serif);
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+      font-weight: 700;
+      line-height: 1.5;
+      color: var(--black);
+      max-width: 28ch;
+      margin-bottom: 32px;
+    }
+
+    .resume-cta {
+      margin-top: 40px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .resume-cta p {
+      font-size: 0.9rem;
+      color: var(--mid);
+      margin: 0;
+      max-width: none;
+    }
+
+    @media (max-width: 900px) {
+      .about-col-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    }
+    .api-code {
+      margin: 12px 0 0;
+      padding: 16px 18px;
+      overflow-x: auto;
+      font: 0.85rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--black);
+      background: var(--bg-off);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      white-space: pre;
+    }
+    /* let the code blocks scroll instead of widening the grid past the screen */
+    .about-col-grid > div { min-width: 0; }
+    .api-endpoint { margin-bottom: 40px; }
+    .api-endpoint h3 { margin: 0 0 6px; font-size: 1.05rem; }
+    .api-endpoint p, .api-note { font-size: 1rem; color: var(--mid); line-height: 1.8; max-width: 65ch; margin: 0; }
+    .api-method {
+      display: inline-block;
+      margin-right: 8px;
+      padding: 2px 8px;
+      font: 600 0.72rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: #fff;
+      background: var(--accent);
+      border-radius: 6px;
+      vertical-align: 2px;
+    }
+    #try { display: flex; gap: 10px; flex-wrap: wrap; }
+    #try input {
+      flex: 1 1 260px;
+      padding: 12px 16px;
+      font: inherit;
+      color: var(--black);
+      background: var(--bg-off);
+      border: 1px solid var(--border);
+      border-radius: 980px;
+    }
+    #try input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    #try-out { white-space: pre-wrap; min-height: 3.2em; }
+  </style>
+  <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
+  <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" data-always-scrolled role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo" style="display:flex;align-items:center;gap:10px;">
+        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+          <defs>
+            <radialGradient id="sg" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#d9a8f5"/>
+              <stop offset="55%" stop-color="#b36fd9"/>
+              <stop offset="100%" stop-color="#9a4fc4"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="50" fill="url(#sg)"/>
+          <text x="50" y="67" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif" font-size="52" font-weight="600" fill="white" letter-spacing="-1">S</text>
+        </svg>
+        Shawn Singh
+      </a>
+
+      <ul class="nav__links" role="list">
+        <li><a href="work.html">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+      </ul>
+
+      <div class="nav__right" style="display:flex;align-items:center;gap:8px;">
+      <button class="nav__theme-toggle" aria-label="Switch to dark mode">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="about-hero" style="padding-top: var(--nav-height); background: var(--bg-off); border-bottom: 1px solid var(--border);">
+    <div class="about-hero__inner">
+      <div data-reveal>
+        <p class="about-eyebrow">API</p>
+        <h1 class="about-title">Shawn AI</h1>
+      </div>
+      <div data-reveal data-reveal-delay="80">
+        <p class="hero__sub" style="font-size: 1.05rem;">Ask about Shawn from your own code.<br />Free, no key, any origin.</p>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Try it</p>
+          <div>
+            <form id="try">
+              <input name="q" type="text" maxlength="800" required placeholder="Where does Shawn work?" aria-label="Question" />
+              <button class="btn btn--accent" type="submit">Ask</button>
+            </form>
+            <pre class="api-code" id="try-out" aria-live="polite">The answer shows up here.</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Endpoints</p>
+          <div>
+            <div class="api-endpoint">
+              <h3><span class="api-method">GET</span>/api?q=your question</h3>
+              <p>Answers a question about Shawn, grounded only in what's on this site.</p>
+              <pre class="api-code">curl "https://groq-chat.shawnpsi.workers.dev/api?q=where+does+shawn+work"
+
+{ "answer": "Shawn is a Data Scientist at C3 AI..." }</pre>
+            </div>
+            <div class="api-endpoint">
+              <h3><span class="api-method">GET</span>/api</h3>
+              <p>Everything on the site as one block of text, for your own model to read. No limit.</p>
+              <pre class="api-code">{ "name": "Shawn Singh", "content": "SHAWN SINGH — data + design...", "usage": "..." }</pre>
+            </div>
+            <div class="api-endpoint" style="margin-bottom: 0;">
+              <h3><span class="api-method">MCP</span>/mcp</h3>
+              <p>An MCP server with one tool, <code>about_shawn</code>. Add the URL as a connector in Claude, Cursor or any MCP client.</p>
+              <pre class="api-code">https://groq-chat.shawnpsi.workers.dev/mcp</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Limits</p>
+          <div>
+            <p class="api-note">3 questions per minute per IP, 800 characters per question, one question at a time (no chat history). Over the limit you get a <code>429</code> with <code>{ "error": "..." }</code>. It runs on a free tier, so on busy days it may be rate-limited for everyone.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const tryForm = document.getElementById('try');
+    const tryOut = document.getElementById('try-out');
+    tryForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      tryOut.textContent = 'Thinking…';
+      try {
+        const r = await fetch('https://groq-chat.shawnpsi.workers.dev/api?q=' + encodeURIComponent(tryForm.q.value.trim()));
+        const d = await r.json();
+        tryOut.textContent = d.answer ?? d.error;
+      } catch { tryOut.textContent = "Couldn't reach the API. Try again in a moment."; }
+    });
+  </script>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <p class="footer__logo">Shawn Singh</p>
+          <p class="footer__tagline">data + design — San Francisco, CA</p>
+        </div>
+        <div class="footer__links">
+          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            LinkedIn
+          </a>
+          <a href="/files/resume.pdf" class="footer__link" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Résumé
+          </a>
+          <a href="mailto:shawn@visuallyrepresented.co" class="footer__link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            shawn@visuallyrepresented.co
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
