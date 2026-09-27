@@ -3,19 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');if(location.hash)document.documentElement.classList.add('skip-splash');</script>
+  <script>/* Hero and Shawn AI wallpapers: shuffle the three, hero takes [0], scene2 takes [1], so they never match. */window.vids=[1177562440,1230574544,1230573930].sort(()=>Math.random()-.5);</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#2c699a" />
   <title>Shawn Singh</title>
   <meta name="description" content="Shawn Singh — [YOUR_TITLE] based in San Francisco." />
   <link rel="icon" type="image/svg+xml" href="/shawnlogo.svg" />
 
-  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js?v=15"></script>
+  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js?v=16"></script>
   <link rel="modulepreload" crossorigin href="/assets/styles-GID8uTDy.js">
   <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=18">
+  <link rel="stylesheet" href="/assets/home.css?v=19">
   <script src="/assets/page-transition.js?v=1"></script>
 </head>
 <body>
@@ -413,7 +414,7 @@
 
   <!-- A second screen below the hero, there to carry a second wallpaper. -->
   <section id="scene2">
-    <iframe aria-hidden="true" data-src="https://player.vimeo.com/video/1230574544?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;background=1&amp;autoplay=1&amp;loop=1&amp;muted=1"
+    <iframe aria-hidden="true" data-src="https://player.vimeo.com/video/VID?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;background=1&amp;autoplay=1&amp;loop=1&amp;muted=1"
             allow="autoplay; fullscreen; picture-in-picture" title="" tabindex="-1"></iframe>
 
     <h2 id="chat-title">Shawn AI</h2>
@@ -436,11 +437,25 @@
   <script>
     // Load the second wallpaper the moment scrolling starts, fade it in a third
     // of the way down: arriving and staying put still costs one video, not two.
+    // Hold the fade until frames are actually playing, or the first one fades an
+    // empty iframe and the video pops in afterwards.
+    const f = document.querySelector('#scene2 iframe'), VIMEO = 'https://player.vimeo.com';
+    let playing = false;
     const scene2 = () => {
-      const f = document.querySelector('#scene2 iframe');
-      if (f.dataset.src && scrollY > 0) { f.src = f.dataset.src; delete f.dataset.src; }
-      document.body.classList.toggle('scene2-on', scrollY > innerHeight * .35);
+      if (f.dataset.src && scrollY > 0) { f.src = f.dataset.src.replace('VID', vids[1]); delete f.dataset.src; }
+      document.body.classList.toggle('scene2-on', playing && scrollY > innerHeight * .35);
     };
+    addEventListener('message', e => {
+      if (e.origin !== VIMEO || e.source !== f.contentWindow) return;
+      let d = e.data;
+      try { if (typeof d === 'string') d = JSON.parse(d); } catch { return; }
+      if (d.event === 'ready') f.contentWindow.postMessage({ method: 'addEventListener', value: 'timeupdate' }, VIMEO);
+      else if (d.event === 'timeupdate' && !playing) {
+        playing = true;
+        f.contentWindow.postMessage({ method: 'removeEventListener', value: 'timeupdate' }, VIMEO);
+        scene2();
+      }
+    });
     addEventListener('scroll', scene2, { passive: true });
     scene2();  // a reload mid-page restores scrollY without firing scroll
   </script>
@@ -462,6 +477,33 @@
         log.append(p);
         log.scrollTop = log.scrollHeight;
         return p;
+      };
+
+      // Replies are plain text, but the model likes to cite pages and URLs,
+      // sometimes as [text](url) or wrapped in **bold**. Turn those into links,
+      // built as DOM nodes (never innerHTML) and only for http(s) or site paths.
+      const LINK = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s)*<>]*[^\s)*<>.,;:!?'"]|\/[\w./-]+\.html\b)/g;
+      const TITLES = {
+        '/about.html': 'About', '/work.html': 'Work', '/project-cloudexa.html': 'Cloudexa',
+        '/project-emmy.html': 'Emmy Award', '/project-djai.html': 'DJai', '/project-ngc2.html': 'NGC2',
+        '/project-visuallyrepresented.html': 'Visually Represented',
+      };
+      const linkify = (el, text) => {
+        text = text.replace(/\*\*/g, '');
+        el.textContent = '';
+        let i = 0;
+        for (const m of text.matchAll(LINK)) {
+          const href = m[2] || m[3];
+          if (!/^(https?:\/\/|\/)/.test(href)) continue;
+          el.append(text.slice(i, m.index));
+          const a = document.createElement('a');
+          a.href = href;
+          a.textContent = TITLES[href] || m[1] || (href[0] === '/' ? href : new URL(href).hostname);
+          if (href[0] !== '/') { a.target = '_blank'; a.rel = 'noopener'; }
+          el.append(a);
+          i = m.index + m[0].length;
+        }
+        el.append(text.slice(i));
       };
 
       const mcp = document.getElementById('mcp');
@@ -492,7 +534,7 @@
           }
           const reply = JSON.parse(raw).choices[0].message.content;
           msgs.push({ role: 'assistant', content: reply });
-          out.textContent = reply;
+          linkify(out, reply);
         } catch (err) {
           msgs.pop();   // drop the unanswered turn so a retry isn't sent twice
           out.textContent = err.message || String(err);

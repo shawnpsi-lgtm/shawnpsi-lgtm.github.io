@@ -910,6 +910,7 @@
       color: #fff;
       background: var(--accent);
     }
+    #chat-log a { color: var(--accent); text-decoration: none; }
     #chat-log .err { color: #b3261e; background: color-mix(in srgb, #b3261e 12%, transparent); }
     [data-theme=dark] #chat-log .err { color: #ffb4ab; }
     #chat-input {
