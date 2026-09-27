@@ -66,9 +66,45 @@ async function mcp(req) {
   return new Response(JSON.stringify(reply), { headers: h });
 }
 
+const groq = (env, opts, msgs) => fetch('https://api.groq.com/openai/v1/chat/completions', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
+  body: JSON.stringify({
+    max_tokens: 600,
+    // Grounded Q&A over a fixed digest — there's nothing to be creative
+    // about, and greedy decoding keeps it from embroidering on the facts.
+    temperature: 0,
+    ...opts,
+    messages: [{ role: 'system', content: SYSTEM }, ...msgs],
+  }),
+});
+
+// /api: open to any origin. Bare GET returns the digest (free, like /mcp);
+// ?q= gets an answer. Groq limits per model, so the API runs on its own model
+// and its traffic can only exhaust its own quota, never the site chat's.
+const API_MODEL = 'openai/gpt-oss-20b';
+async function api(req, env) {
+  const h = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+  const out = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: h });
+  if (req.method === 'OPTIONS') return new Response(null, { headers: h });
+  if (req.method !== 'GET') return out({ error: 'use GET /api?q=your+question' }, 405);
+  const q = new URL(req.url).searchParams.get('q')?.trim();
+  if (!q) return out({ name: 'Shawn Singh', content: SITE, usage: 'GET /api?q=your+question for an answer' });
+
+  const { success } = await env.API_LIMITER.limit({ key: req.headers.get('CF-Connecting-IP') || 'anon' });
+  if (!success) return out({ error: 'Too many requests — give it a minute.' }, 429);
+  const r = await groq(env, { model: API_MODEL, max_tokens: 400, reasoning_effort: 'low' }, [{ role: 'user', content: q.slice(0, 800) }]);
+  if (r.status === 429) return out({ error: 'Too many requests — give it a minute.' }, 429);
+  // Groq's message holds no key and is the only useful signal when something breaks.
+  if (!r.ok) return out({ error: (await r.json().catch(() => null))?.error?.message || 'upstream error' }, 502);
+  return out({ answer: (await r.json()).choices?.[0]?.message?.content ?? '' });
+}
+
 export default {
   async fetch(req, env) {
-    if (new URL(req.url).pathname === '/mcp') return mcp(req);
+    const path = new URL(req.url).pathname;
+    if (path === '/mcp') return mcp(req);
+    if (path === '/api') return api(req, env);
     // Spoofable with curl, so it isn't the real defence — the rate limit and the
     // caps below are. It does stop other sites from spending the quota.
     const origin = req.headers.get('Origin') || '';
@@ -90,21 +126,12 @@ export default {
       .map(m => ({ role: m.role, content: m.content.slice(0, 800) }));
     if (!msgs.length) return fail('bad request', 400, origin);
 
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 600,
-        // Grounded Q&A over a fixed digest — there's nothing to be creative
-        // about, and greedy decoding keeps it from embroidering on the facts.
-        temperature: 0,
-        // gpt-oss thinks before it answers and bills for it. On a portfolio Q&A
-        // that reasoning buys nothing, and tokens are the scarce thing here.
-        reasoning_effort: 'low',
-        messages: [{ role: 'system', content: SYSTEM }, ...msgs],
-      }),
-    });
+    const r = await groq(env, {
+      model: MODEL,
+      // gpt-oss thinks before it answers and bills for it. On a portfolio Q&A
+      // that reasoning buys nothing, and tokens are the scarce thing here.
+      reasoning_effort: 'low',
+    }, msgs);
     // Groq's free tier is 8k tokens/min and the site context is ~3k of every
     // request, so its 429 is the one error a visitor will actually hit. Show them
     // the same wording as our own limiter rather than a wall of Groq internals.

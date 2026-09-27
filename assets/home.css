@@ -935,9 +935,8 @@
       cursor: pointer;
     }
     #chat button:hover { background: var(--accent-hover); }
-    #mcp {
-      position: relative;
-      z-index: 1;
+    #connect { position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    #connect button {
       padding: 8px 16px;
       font: 500 var(--text-sm, .875rem)/1 var(--sans);
       color: #fff;
@@ -949,5 +948,5 @@
       cursor: pointer;
       user-select: all;   /* the no-clipboard fallback shows the URL; make it easy to grab */
     }
-    #mcp:hover { background: rgb(0 0 0 / .4); }
-    #mcp:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    #connect button:hover { background: rgb(0 0 0 / .4); }
+    #connect button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

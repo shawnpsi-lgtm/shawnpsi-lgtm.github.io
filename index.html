@@ -16,7 +16,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=19">
+  <link rel="stylesheet" href="/assets/home.css?v=20">
   <script src="/assets/page-transition.js?v=1"></script>
 </head>
 <body>
@@ -430,9 +430,13 @@
       </button>
     </form>
 
-    <!-- Copies the worker's MCP URL so a visitor can plug Shawn AI into their own client. -->
-    <button id="mcp" type="button" data-url="https://groq-chat.shawnpsi.workers.dev/mcp"
-            title="Copy the MCP server URL, then add it as a connector in Claude, Cursor, etc.">Connect MCP</button>
+    <!-- Copy the worker's URLs so a visitor can plug Shawn AI into their own client or code. -->
+    <div id="connect">
+      <button type="button" data-url="https://groq-chat.shawnpsi.workers.dev/mcp" data-done="Copied MCP URL"
+              title="Copy the MCP server URL, then add it as a connector in Claude, Cursor, etc.">Connect MCP</button>
+      <button type="button" data-url="https://groq-chat.shawnpsi.workers.dev/api" data-done="Copied API URL"
+              title="Copy the API URL: add ?q=your+question to ask Shawn AI (3 per minute)">Get API</button>
+    </div>
   </section>
   <script>
     // Load the second wallpaper the moment scrolling starts, fade it in a third
@@ -506,10 +510,9 @@
         el.append(text.slice(i));
       };
 
-      const mcp = document.getElementById('mcp');
-      mcp.addEventListener('click', async () => {
-        try { await navigator.clipboard.writeText(mcp.dataset.url); mcp.textContent = 'Copied MCP URL'; }
-        catch { mcp.textContent = mcp.dataset.url; }   // no clipboard: show it to copy by hand
+      for (const b of document.querySelectorAll('#connect button')) b.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(b.dataset.url); b.textContent = b.dataset.done; }
+        catch { b.textContent = b.dataset.url; }   // no clipboard: show it to copy by hand
       });
 
       form.addEventListener('submit', async e => {

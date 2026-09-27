@@ -56,3 +56,23 @@ assert.match((await rpc({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: {
 assert.equal((await rpc({ jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'nope' } })).error.code, -32601);
 assert.equal((await worker.fetch(new Request('https://w/mcp', { method: 'POST', body: '{"jsonrpc":"2.0","method":"notifications/initialized"}' }), env)).status, 202);
 console.log('mcp ok');
+
+
+// /api: any origin; bare GET is the digest, ?q= asks the API model under its own limiter
+let apiOk = true;
+env.API_LIMITER = { limit: async () => ({ success: apiOk }) };
+const get = q => worker.fetch(new Request('https://w/api' + q, { headers: { Origin: 'https://evil.test' } }), env);
+const bare = await get('');
+assert.equal(bare.headers.get('Access-Control-Allow-Origin'), '*');
+assert.match((await bare.json()).content, /SHAWN SINGH/);
+globalThis.fetch = async (_url, opt) => {
+  sent = JSON.parse(opt.body);
+  return new Response('{"choices":[{"message":{"content":"hi"}}]}', { status: 200 });
+};
+assert.equal((await (await get('?q=who')).json()).answer, 'hi');
+assert.equal(sent.model, 'openai/gpt-oss-20b');     // its own Groq quota, not the chat's
+assert.equal(sent.messages[0].role, 'system');
+assert.equal(sent.messages[1].content, 'who');
+apiOk = false;
+assert.equal((await get('?q=who')).status, 429);
+console.log('api ok');

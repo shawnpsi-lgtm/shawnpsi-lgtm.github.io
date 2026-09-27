@@ -9,3 +9,10 @@ name = "RATE_LIMITER"
 type = "ratelimit"
 namespace_id = "1001"
 simple = { limit = 20, period = 60 }
+
+# The public /api: 3 questions per minute per IP. Separate from the chat's budget.
+[[unsafe.bindings]]
+name = "API_LIMITER"
+type = "ratelimit"
+namespace_id = "1002"
+simple = { limit = 3, period = 60 }
