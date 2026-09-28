@@ -217,6 +217,9 @@
             <pre class="api-code">sudo curl -fsSL https://shawnsingh.me/shawn-ai -o /usr/local/bin/shawn-ai && sudo chmod +x /usr/local/bin/shawn-ai</pre>
             <p class="api-note" style="margin-top: 24px;">Then ask away:</p>
             <pre class="api-code">shawn-ai "where does shawn work?"</pre>
+            <p class="api-note" style="margin-top: 24px;">On a Mac with Raycast? Grab the script command:</p>
+            <pre class="api-code">mkdir -p ~/raycast && curl -fsSL https://shawnsingh.me/ask-shawn.sh -o ~/raycast/ask-shawn.sh && chmod +x ~/raycast/ask-shawn.sh</pre>
+            <p class="api-note" style="margin-top: 24px;">Add <code>~/raycast</code> under Raycast Settings → Extensions → Script Commands, then type <code>ask shawn</code>, press Tab and ask.</p>
             <p class="api-note" style="margin-top: 24px;">Rather not install anything? Add <code>&amp;plain</code> to any API call to get bare text back:</p>
             <pre class="api-code">curl "https://groq-chat.shawnpsi.workers.dev/api?q=where+does+shawn+work&amp;plain"</pre>
           </div>
