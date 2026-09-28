@@ -1,21 +1,38 @@
 {
-  "_metadata": { "major_version": 2 },
+  "_metadata": {
+    "major_version": 2
+  },
   "display_information": {
     "name": "Shawn AI",
     "description": "Ask about Shawn Singh's work with /shawn"
   },
   "features": {
-    "bot_user": { "display_name": "Shawn AI", "always_online": false },
-    "slash_commands": [{
-      "command": "/shawn",
-      "url": "https://groq-chat.shawnpsi.workers.dev/slack/command",
-      "description": "Ask Shawn AI a question",
-      "usage_hint": "what does Shawn build?"
-    }]
+    "bot_user": {
+      "display_name": "Shawn AI",
+      "always_online": false
+    },
+    "slash_commands": [
+      {
+        "command": "/shawn",
+        "url": "https://groq-chat.shawnpsi.workers.dev/slack/command",
+        "description": "Ask Shawn AI a question",
+        "usage_hint": "what does Shawn build?"
+      }
+    ]
   },
   "oauth_config": {
-    "redirect_urls": ["https://groq-chat.shawnpsi.workers.dev/slack/oauth"],
-    "scopes": { "bot": ["commands"] }
+    "redirect_urls": [
+      "https://groq-chat.shawnpsi.workers.dev/slack/oauth"
+    ],
+    "scopes": {
+      "bot": [
+        "commands"
+      ]
+    }
   },
-  "settings": { "org_deploy_enabled": false, "socket_mode_enabled": false }
+  "settings": {
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false
+  },
+  "icon": "icon.png"
 }
