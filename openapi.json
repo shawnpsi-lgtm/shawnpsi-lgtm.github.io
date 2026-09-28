@@ -1,0 +1,58 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Shawn AI",
+    "version": "1.0.0",
+    "description": "Ask questions about Shawn Singh, answered only from what's on shawnsingh.me. Rate limited to 3 questions per minute per IP."
+  },
+  "servers": [{ "url": "https://groq-chat.shawnpsi.workers.dev" }],
+  "paths": {
+    "/api": {
+      "get": {
+        "operationId": "askShawn",
+        "summary": "Answer a question about Shawn, or return the whole site as text when q is omitted",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "The question, e.g. \"where does shawn work\". Omit it to get the full site content.",
+            "schema": { "type": "string", "maxLength": 800 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An answer (with q) or the site content (without q)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "answer": { "type": "string" },
+                    "name": { "type": "string" },
+                    "content": { "type": "string" },
+                    "usage": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "429": { "$ref": "#/components/responses/Error" },
+          "502": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "Error": {
+        "description": "Rate limited or upstream failure",
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "error": { "type": "string" } } }
+          }
+        }
+      }
+    }
+  }
+}

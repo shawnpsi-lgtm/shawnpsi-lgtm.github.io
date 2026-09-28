@@ -1,0 +1,26 @@
+# Shawn Singh
+
+> Data + design. Data Scientist at C3 AI and founder of Visually Represented Studios, San Francisco. USC BS Data Science & Cognitive Science, 2026.
+
+## Full content
+
+- [Everything on the site, as plain text](https://groq-chat.shawnpsi.workers.dev/api?plain): bio, projects, experience, skills and contact in one file
+
+## Pages
+
+- [About](https://shawnsingh.me/about.html): bio, experience and education
+- [Work](https://shawnsingh.me/work.html): all projects
+- [Résumé](https://shawnsingh.me/files/resume.pdf)
+- [Cloudexa](https://shawnsingh.me/project-cloudexa.html): ATM network dashboard for BBVA México
+- [NGC2](https://shawnsingh.me/project-ngc2.html): U.S. Army Next-Gen Command & Control, with C3 AI
+- [DJai](https://shawnsingh.me/project-djai.html): concept app for DJing on a phone
+- [Emmy Award](https://shawnsingh.me/project-emmy.html): 2022 NSPA Emmy, animation and graphics
+- [Visually Represented](https://shawnsingh.me/project-visuallyrepresented.html): media company founded 2019
+- [BEAT FX](https://shawnsingh.me/beatfx/): Pioneer DJM-A9 Beat FX in the browser
+- [Sayclip](https://shawnsingh.me/sayclip/): search video captions and cut audio samples
+
+## For agents
+
+- [API docs](https://shawnsingh.me/api.html): ask questions over HTTP, MCP, CLI or Slack
+- [OpenAPI spec](https://shawnsingh.me/openapi.json)
+- MCP server: https://groq-chat.shawnpsi.workers.dev/mcp (one tool, `about_shawn`)
