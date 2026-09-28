@@ -16,7 +16,8 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=21">
+  <link rel="stylesheet" href="/assets/home.css?v=27">
+  <link rel="stylesheet" href="/assets/ask.css?v=5">
   <script src="/assets/page-transition.js?v=1"></script>
 </head>
 <body>
@@ -438,7 +439,7 @@
               title="Copy the API URL, then add your question after ?q=">Get API</button>
       <a href="/api.html" title="Endpoints, limits and a live demo">View documentation</a>
       <a href="/api.html#cli" title="Ask Shawn AI from your terminal">Get CLI</a>
-      <a href="/status.html" title="Live checks of the chat, API and MCP server">Status</a>
+      <a href="https://status.shawnsingh.me" title="Live checks of the chat, API and MCP server">Status</a>
     </div>
   </section>
   <script>
@@ -467,88 +468,6 @@
     scene2();  // a reload mid-page restores scrollY without firing scroll
   </script>
 
-  <script>
-    // Groq chat. The key lives in the Cloudflare Worker (worker/groq-proxy.js),
-    // never here — this page is public, so a baked-in key would be a public key.
-    (() => {
-      const PROXY = 'https://groq-chat.shawnpsi.workers.dev';
-      const form = document.getElementById('chat');
-      const log = document.getElementById('chat-log');
-      const input = document.getElementById('chat-input');
-      const msgs = [];   // system prompt and model are the worker's business
-
-      const say = (who, text) => {
-        const p = document.createElement('p');
-        p.className = who;
-        p.textContent = text;
-        log.append(p);
-        log.scrollTop = log.scrollHeight;
-        return p;
-      };
-
-      // Replies are plain text, but the model likes to cite pages and URLs,
-      // sometimes as [text](url) or wrapped in **bold**. Turn those into links,
-      // built as DOM nodes (never innerHTML) and only for http(s) or site paths.
-      const LINK = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s)*<>]*[^\s)*<>.,;:!?'"]|\/[\w./-]+\.html\b)/g;
-      const TITLES = {
-        '/about.html': 'About', '/work.html': 'Work', '/project-cloudexa.html': 'Cloudexa',
-        '/project-emmy.html': 'Emmy Award', '/project-djai.html': 'DJai', '/project-ngc2.html': 'NGC2',
-        '/project-visuallyrepresented.html': 'Visually Represented',
-      };
-      const linkify = (el, text) => {
-        text = text.replace(/\*\*/g, '');
-        el.textContent = '';
-        let i = 0;
-        for (const m of text.matchAll(LINK)) {
-          const href = m[2] || m[3];
-          if (!/^(https?:\/\/|\/)/.test(href)) continue;
-          el.append(text.slice(i, m.index));
-          const a = document.createElement('a');
-          a.href = href;
-          a.textContent = TITLES[href] || m[1] || (href[0] === '/' ? href : new URL(href).hostname);
-          if (href[0] !== '/') { a.target = '_blank'; a.rel = 'noopener'; }
-          el.append(a);
-          i = m.index + m[0].length;
-        }
-        el.append(text.slice(i));
-      };
-
-      for (const b of document.querySelectorAll('#connect button')) b.addEventListener('click', async () => {
-        try { await navigator.clipboard.writeText(b.dataset.url); b.textContent = b.dataset.done; }
-        catch { b.textContent = b.dataset.url; }   // no clipboard: show it to copy by hand
-      });
-
-      form.addEventListener('submit', async e => {
-        e.preventDefault();
-        const text = input.value.trim();
-        if (!text) return;
-        input.value = '';
-        say('me', text);
-        msgs.push({ role: 'user', content: text });
-        const out = say('bot', '\u2026');
-        try {
-          const r = await fetch(PROXY, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: msgs }),
-          });
-          const raw = await r.text();
-          if (!r.ok) {
-            let msg = raw.slice(0, 300);
-            try { msg = JSON.parse(raw).error?.message || JSON.parse(raw).error || msg; } catch {}
-            throw new Error(msg);
-          }
-          const reply = JSON.parse(raw).choices[0].message.content;
-          msgs.push({ role: 'assistant', content: reply });
-          linkify(out, reply);
-        } catch (err) {
-          msgs.pop();   // drop the unanswered turn so a retry isn't sent twice
-          out.textContent = err.message || String(err);
-          out.classList.add('err');
-        }
-        log.scrollTop = log.scrollHeight;
-      });
-    })();
-  </script>
+  <script src="/assets/chat.js?v=4"></script>
 </body>
 </html>

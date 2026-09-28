@@ -5,13 +5,20 @@ import { SITE } from './site-context.js';
 const ALLOWED = [
   'https://shawnsingh.me',
   'https://www.shawnsingh.me',
+  'https://ai.shawnsingh.me',
   'https://shawnpsi-lgtm.github.io',
-  'http://localhost:5173',
 ];
+// Local dev, including a phone on the LAN (http://192.168.x.x:port).
+const DEV = /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/;
 const MODEL = 'openai/gpt-oss-120b';
 // A hand-written digest of the site rides on every request — see site-context.js
-// for why it's kept short. No retrieval, no embeddings.
-const SYSTEM = `You're the assistant on Shawn Singh's portfolio site. Be brief and friendly.
+// for why it's kept short. No retrieval, no embeddings. The whole prompt must stay
+// over 1024 tokens (~1,200 now): that's Groq's cacheable minimum, and cached
+// tokens don't count against the free tier's limits.
+export const SYSTEM = `You're the assistant on Shawn Singh's portfolio site. Be brief and friendly.
+Keep answers under about 120 words, in plain text: no tables or headings, short
+lists are fine. Even when asked for everything or full detail, give a one-line
+overview per item and point to the relevant pages instead of covering it all.
 
 Answer only from the SITE CONTENT below. If the answer isn't in it, say you don't
 have that on the site and point them at the Contact link — never guess, and never
@@ -70,7 +77,8 @@ const groq = (env, opts, msgs) => fetch('https://api.groq.com/openai/v1/chat/com
   method: 'POST',
   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
   body: JSON.stringify({
-    max_tokens: 600,
+    // Real answers run 30-190 tokens; the cap only bounds a runaway reply.
+    max_tokens: 400,
     // Grounded Q&A over a fixed digest — there's nothing to be creative
     // about, and greedy decoding keeps it from embroidering on the facts.
     temperature: 0,
@@ -78,6 +86,13 @@ const groq = (env, opts, msgs) => fetch('https://api.groq.com/openai/v1/chat/com
     messages: [{ role: 'system', content: SYSTEM }, ...msgs],
   }),
 });
+
+// One line per Groq answer for Workers Logs (wrangler tail, or the dashboard):
+// the numbers the free-tier budget is audited from.
+const logUsage = (path, j) => console.log(JSON.stringify({
+  path, model: j.model, prompt: j.usage?.prompt_tokens, cached: j.usage?.prompt_tokens_details?.cached_tokens ?? 0,
+  out: j.usage?.completion_tokens, reason: j.usage?.completion_tokens_details?.reasoning_tokens, finish: j.choices?.[0]?.finish_reason,
+}));
 
 // /api: open to any origin. Bare GET returns the digest (free, like /mcp);
 // ?q= gets an answer. Groq limits per model, so the API runs on its own model
@@ -100,7 +115,9 @@ async function api(req, env) {
   if (r.status === 429) return out({ error: 'Too many requests — give it a minute.' }, 429);
   // Groq's message holds no key and is the only useful signal when something breaks.
   if (!r.ok) return out({ error: (await r.json().catch(() => null))?.error?.message || 'upstream error' }, 502);
-  return out({ answer: (await r.json()).choices?.[0]?.message?.content ?? '' });
+  const j = await r.json();
+  logUsage('api', j);
+  return out({ answer: j.choices?.[0]?.message?.content ?? '' });
 }
 
 // /health: for status.html. Listing Groq's models costs no tokens, yet proves the
@@ -124,7 +141,7 @@ export default {
     // Spoofable with curl, so it isn't the real defence — the rate limit and the
     // caps below are. It does stop other sites from spending the quota.
     const origin = req.headers.get('Origin') || '';
-    if (!ALLOWED.includes(origin)) return new Response('forbidden', { status: 403 });
+    if (!ALLOWED.includes(origin) && !DEV.test(origin)) return new Response('forbidden', { status: 403 });
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors(origin) });
     if (req.method !== 'POST') return fail('method not allowed', 405, origin);
 
@@ -142,18 +159,21 @@ export default {
       .map(m => ({ role: m.role, content: m.content.slice(0, 800) }));
     if (!msgs.length) return fail('bad request', 400, origin);
 
-    const r = await groq(env, {
-      model: MODEL,
-      // gpt-oss thinks before it answers and bills for it. On a portfolio Q&A
-      // that reasoning buys nothing, and tokens are the scarce thing here.
-      reasoning_effort: 'low',
-    }, msgs);
-    // Groq's free tier is 8k tokens/min and the site context is ~3k of every
-    // request, so its 429 is the one error a visitor will actually hit. Show them
-    // the same wording as our own limiter rather than a wall of Groq internals.
+    // gpt-oss thinks before it answers and bills for it. On a portfolio Q&A
+    // that reasoning buys nothing, and tokens are the scarce thing here.
+    const ask = model => groq(env, { model, reasoning_effort: 'low' }, msgs);
+    let r = await ask(MODEL);
+    // Groq's free tier is 8k tokens/min per model and the prompt is ~1.2k of every
+    // request, so its 429 is the one error a visitor will actually hit. Each model
+    // has its own quota, so borrow the API model's before giving up.
+    if (r.status === 429) r = await ask(API_MODEL);
+    // Show the same wording as our own limiter rather than a wall of Groq internals.
     if (r.status === 429) return fail('Too many messages — give it a minute.', 429, origin);
-    // Everything else passes straight through; it holds no key and it's the only
+    // Other errors pass straight through; they hold no key and they're the only
     // useful signal when something breaks.
-    return new Response(r.body, { status: r.status, headers: cors(origin) });
+    if (!r.ok) return new Response(r.body, { status: r.status, headers: cors(origin) });
+    const j = await r.json();
+    logUsage('chat', j);
+    return new Response(JSON.stringify(j), { headers: cors(origin) });
   },
 };

@@ -2,13 +2,18 @@ name = "groq-chat"
 main = "groq-proxy.js"
 compatibility_date = "2026-09-01"
 
-# 20 messages per minute per IP. Cloudflare counts this at the edge, so it costs
-# nothing and needs no KV.
+# Workers Logs: keeps the per-request token lines from logUsage().
+[observability]
+enabled = true
+
+# 6 messages per minute per IP: plenty for someone typing, and Groq's 8k
+# tokens/min only covers ~6 uncached messages for the whole site. Cloudflare
+# counts this at the edge, so it costs nothing and needs no KV.
 [[unsafe.bindings]]
 name = "RATE_LIMITER"
 type = "ratelimit"
 namespace_id = "1001"
-simple = { limit = 20, period = 60 }
+simple = { limit = 6, period = 60 }
 
 # The public /api: 3 questions per minute per IP. Separate from the chat's budget.
 [[unsafe.bindings]]

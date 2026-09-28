@@ -1,0 +1,149 @@
+/* The Shawn AI chat box (homepage #scene2) and the nav pill that wraps it on
+   every other page (chat.js injects #ask there). */
+#chat {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  width: min(620px, calc(100vw - 32px));
+  padding: 12px;
+  font: var(--text-base)/1.5 var(--sans);
+  color: var(--black);
+  border: 1px solid color-mix(in srgb, var(--black) 12%, transparent);
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--bg-off) 55%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / .05),
+    0 10px 28px rgb(0 0 0 / .07),
+    inset 0 1px 0 rgb(255 255 255 / .75);
+}
+[data-theme=dark] #chat {
+  border-color: rgb(255 255 255 / .12);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / .4),
+    0 10px 28px rgb(0 0 0 / .35),
+    inset 0 1px 0 rgb(255 255 255 / .08);
+}
+#chat-log {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 42svh;
+  overflow-y: auto;
+  padding: 4px 4px 0;
+  overscroll-behavior: contain;
+}
+#chat-log:empty { display: none; }   /* no empty well before the first message */
+#chat-log p {
+  max-width: 82%;
+  margin: 0;
+  padding: 8px 13px;
+  border-radius: 18px;
+  white-space: pre-wrap;
+  color: var(--black);
+  background: color-mix(in srgb, var(--bg-off) 70%, transparent);
+}
+#chat-log .me {
+  align-self: flex-end;
+  color: #fff;
+  background: var(--accent);
+}
+#chat-log ul { margin: 6px 0; padding-left: 18px; white-space: normal; }
+#chat-log li + li { margin-top: 6px; }
+#chat-log li::marker { color: var(--accent); }
+#chat-log a {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 980px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+#chat-log a:hover { background: color-mix(in srgb, var(--accent) 24%, transparent); }
+#chat-log a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#chat-log .err { color: #b3261e; background: color-mix(in srgb, #b3261e 12%, transparent); }
+[data-theme=dark] #chat-log .err { color: #ffb4ab; }
+#chat-input {
+  min-width: 0;
+  padding: 10px 14px;
+  font: inherit;
+  color: inherit;
+  border: 1px solid color-mix(in srgb, var(--black) 12%, transparent);
+  border-radius: 980px;
+  background: color-mix(in srgb, var(--bg-off) 70%, transparent);
+}
+#chat-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+#chat button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: #fff;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+#chat button:hover { background: var(--accent-hover); }
+
+/* Every page but the homepage: the chat as a pill centered in the fixed nav, opening
+   downward. Phones have no room in the nav, so there it's a corner pill. */
+/* Centered on the nav's midline (nav top + half its 48px height), whatever the pill's size. */
+#ask { position: fixed; top: calc(clamp(8px, 1.5vw, 14px) + var(--nav-height, 48px) / 2); left: 50%; translate: -50% -50%; z-index: 101; }
+/* Its own view-transition layer, like .nav: otherwise it crossfades with the
+   page underneath the nav's glass, then pops back on top when the fade ends.
+   Named on the children, not #ask: a view-transition-name makes a backdrop root,
+   which would leave #chat's backdrop-filter blurring nothing. */
+#ask summary { view-transition-name: ask; }
+#ask #chat { view-transition-name: ask-chat; }
+/* Solid accent so it reads as the page's call to action, not chrome. */
+#ask summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 18px;
+  font: 600 var(--text-sm, .875rem)/1 var(--sans);
+  color: #fff;
+  border: 1px solid rgb(255 255 255 / .18);
+  border-radius: 980px;
+  background: var(--accent);
+  /* Centered, tight glow: it hugs the pill and stays inside the nav. */
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--accent) 45%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / .25);
+  cursor: pointer;
+  transition: transform .2s cubic-bezier(.32,1.4,.52,1), box-shadow .2s;
+}
+#ask summary::before { content: "\2726"; margin-right: 8px; }
+#ask summary:hover { box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 65%, transparent), inset 0 1px 0 rgb(255 255 255 / .25); }
+#ask summary::-webkit-details-marker { display: none; }
+#ask summary:hover { transform: scale(1.04); }
+#ask summary:active { transform: scale(.96); }
+#ask summary:focus-visible { outline: 2px solid var(--black); outline-offset: 2px; }
+/* Pops out of the pill with a little overshoot. */
+#ask #chat { transform-origin: top center; animation: ask-shut .2s ease-in both; }
+#ask[open] #chat { animation: ask-pop .38s cubic-bezier(.32,1.4,.52,1) both; }
+@keyframes ask-pop { from { opacity: 0; transform: translateY(var(--ask-dy, -12px)) scale(.6); } }
+@keyframes ask-shut { to { opacity: 0; transform: translateY(var(--ask-dy, -12px)) scale(.6); } }
+/* Closing hides the content at once; this holds it rendered while ask-shut
+   plays. Browsers without ::details-content just close instantly. */
+#ask::details-content { transition: content-visibility .2s allow-discrete; }
+@media (prefers-reduced-motion: reduce) {
+  #ask summary { transition: none; }
+  #ask #chat, #ask[open] #chat { animation: none; }
+  #ask::details-content { transition: none; }
+}
+#ask #chat { position: absolute; top: calc(100% + 10px); left: 50%; width: min(380px, calc(100vw - 32px)); margin-left: calc(min(380px, calc(100vw - 32px)) / -2); }
+#ask #chat-log { max-height: 50svh; }
+@media (width <= 640px) {
+  #ask { top: auto; left: auto; right: 16px; bottom: 16px; translate: none; }
+  #ask #chat { top: auto; bottom: calc(100% + 10px); left: auto; right: 0; margin-left: 0; transform-origin: bottom right; --ask-dy: 12px; }
+  body:has(#ask) .footer { padding-bottom: 72px; }   /* keep the pill off the footer links */
+}

@@ -48,6 +48,18 @@ Averages 1.1M+ monthly organic views, $40k+ yearly revenue. Selected clients and
 shoots: JELEEL!, Midwxst, SSGKobe, 03 Greedo, DC The Don, Jaden Smith,
 Yonge-Dundas Square billboard design in Toronto.
 
+BEAT FX — /beatfx/ · a powerful notepad for on-the-go DJs. Mobile-first web app
+that clones the Beat FX section of a Pioneer DJM-A9 mixer: load a track on your
+phone and play it through live Web Audio effects — Reverb, Echo, Dub (tape-style
+echo) and Drum (beat-synced TR-909 rolls) — with Level/Depth and Time knobs,
+beat-division arrows, BPM sync and an X-Pad.
+
+Sayclip — /sayclip/ · crate-dig for audio samples by query. Search real web
+video captions by what people say, cut the matching timestamp to a WAV, preview
+the waveform and drag the file straight into a folder or DAW like Ableton.
+Free Mac app (Apple Silicon), downloadable from its card on the site, plus a
+web version. Inspired by Yoink.
+
 OTHER EXPERIENCE
 Avenues Consulting Group — founding executive board member, Aug 2023–present.
   Founded this 501(c)(3) with 9 students as USC's first pro-bono project-based
