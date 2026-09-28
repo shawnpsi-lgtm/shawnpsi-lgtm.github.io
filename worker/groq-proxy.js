@@ -216,15 +216,24 @@ const siteOrigin = url => { try { const o = new URL(url).origin; return ALLOWED.
 
 // /auth/<provider>?return=<page>: off to the provider, then back to <page> with
 // the session in the URL fragment (fragments never reach a server or a log).
+// Providers return to a static page on shawnsingh.me (auth/callback.html), which
+// forwards to /auth/callback here: that keeps shawnsingh.me the only domain the
+// sign-in apps need verified, since workers.dev isn't ours to verify.
+const REDIRECT = 'https://shawnsingh.me/auth/callback.html';
 async function auth(req, env, path) {
   const url = new URL(req.url);
-  const [, , name, step] = path.split('/');
+  const callback = path === '/auth/callback';
+  // On the way back, the provider comes from the signed state, not the URL.
+  const st = callback ? await unseal(env, url.searchParams.get('state') || '', 'state') : null;
+  const name = callback ? st?.p : path.split('/')[2];
+  if (callback && !st) return new Response('sign-in expired, try again', { status: 400 });
   const p = PROVIDERS[name];
   if (!p || !configured(env).includes(name)) return new Response('sign-in not available', { status: 404 });
-  const redirect = `${url.origin}/auth/${name}/callback`;
+  const redirect = REDIRECT;
   const id = env[p.env + '_CLIENT_ID'];
 
-  if (!step) {
+  if (!callback) {
+    if (path !== `/auth/${name}`) return new Response('not found', { status: 404 });
     // Only this site's pages may receive a session, or the fragment would hand it to anyone.
     const ret = url.searchParams.get('return') || '';
     if (!siteOrigin(ret)) return new Response('bad return url', { status: 400 });
@@ -239,10 +248,8 @@ async function auth(req, env, path) {
     } });
   }
 
-  if (step !== 'callback') return new Response('not found', { status: 404 });
-  const st = await unseal(env, url.searchParams.get('state') || '', 'state');
   const cookie = (req.headers.get('Cookie') || '').match(/__Host-nonce=([\w-]+)/)?.[1];
-  if (!st || st.p !== name || st.nonce !== cookie) return new Response('sign-in expired, try again', { status: 400 });
+  if (st.nonce !== cookie) return new Response('sign-in expired, try again', { status: 400 });
   const back = new URL(st.ret);
   const code = url.searchParams.get('code');
   if (!code) return Response.redirect(back.href, 302);   // they hit Cancel

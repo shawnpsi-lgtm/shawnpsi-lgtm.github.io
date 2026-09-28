@@ -152,9 +152,9 @@ console.log('health ok');
   assert.equal(start.status, 302);
   const loc = new URL(start.headers.get('Location'));
   assert.equal(loc.origin, 'https://accounts.google.com');
-  assert.equal(loc.searchParams.get('redirect_uri'), 'https://w/auth/google/callback');
+  assert.equal(loc.searchParams.get('redirect_uri'), 'https://shawnsingh.me/auth/callback.html');
   const nonce = start.headers.get('Set-Cookie').match(/__Host-nonce=([\w-]+)/)[1];
-  const cb = '/auth/google/callback?code=c&state=' + loc.searchParams.get('state');
+  const cb = '/auth/callback?code=c&state=' + loc.searchParams.get('state');
   assert.equal((await go(cb, { Cookie: '__Host-nonce=someone-else' })).status, 400);        // login CSRF
 
   // Full callback: the provider's ID token becomes a session on the page we left.

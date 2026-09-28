@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="robots" content="noindex" />
+  <title>Signing in — Shawn AI</title>
+  <!-- Google and LinkedIn return here, on shawnsingh.me, so this is the only
+       domain the sign-in apps have to verify. The worker does the real work:
+       pass the one-time code and state straight on to it. -->
+  <script>location.replace('https://groq-chat.shawnpsi.workers.dev/auth/callback' + location.search);</script>
+  <style>body { font: 16px/1.5 system-ui, sans-serif; background: #111; color: #ccc; display: grid; place-items: center; min-height: 100svh; margin: 0; }</style>
+</head>
+<body>
+  <p>Signing you in…</p>
+</body>
+</html>
