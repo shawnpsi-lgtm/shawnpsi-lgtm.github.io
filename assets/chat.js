@@ -93,6 +93,7 @@
     return t ? { ...opts, headers: { ...opts.headers, Authorization: 'Bearer ' + t } } : opts;
   };
   const NAMES = { google: 'Google', linkedin: 'LinkedIn' };
+  const GOOGLE_G = '<svg viewBox="0 0 48 48" width="14" height="14" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
   const acct = document.createElement('div');
   acct.id = 'chat-acct';
   form.prepend(acct);
@@ -108,20 +109,35 @@
       if (!me.providers?.length) return;
       acct.append('Sign in to save chats:');
       const ret = encodeURIComponent(location.href.split('#')[0]);
-      for (const p of me.providers) acct.append(el('a', { href: `${PROXY}/auth/${p}?return=${ret}`, textContent: NAMES[p] || p }));
+      for (const p of me.providers) {
+        const a = el('a', { href: `${PROXY}/auth/${p}?return=${ret}`, textContent: NAMES[p] || p });
+        if (p === 'google') a.insertAdjacentHTML('afterbegin', GOOGLE_G);
+        acct.append(a);
+      }
       return;
     }
-    const pick = el('select', { ariaLabel: 'Saved chats' });
-    pick.append(el('option', { value: '', textContent: 'New chat' }));
-    for (const c of me.chats) pick.append(el('option', { value: c.id, textContent: c.title, selected: c.id === chatId }));
-    pick.addEventListener('change', async () => {
-      reset();
-      if (!pick.value) return;
-      const r = await fetch(PROXY + '/chats/' + pick.value, authed()).then(r => r.json()).catch(() => null);
-      chatId = +pick.value;
-      msgs = r?.messages || [];
-      for (const m of msgs) m.role === 'user' ? say('me', m.content) : render(say('bot', ''), m.content);
-    });
+    // Saved-chats menu: <details> gives open/close and keyboard toggling for free.
+    const pick = el('details', { className: 'chat-pick' });
+    const cur = el('summary', { ariaLabel: 'Saved chats', textContent: me.chats.find(c => c.id === chatId)?.title || 'New chat' });
+    const list = el('div', { role: 'menu' });
+    for (const c of [null, ...me.chats]) {
+      const b = el('button', { type: 'button', role: 'menuitem', textContent: c ? c.title : 'New chat' });
+      if ((c?.id ?? null) === chatId) b.ariaCurrent = 'true';
+      b.addEventListener('click', async () => {
+        pick.open = false;
+        cur.textContent = b.textContent;
+        list.querySelector('[aria-current]')?.removeAttribute('aria-current');
+        b.ariaCurrent = 'true';
+        reset();
+        if (!c) return;
+        const r = await fetch(PROXY + '/chats/' + c.id, authed()).then(r => r.json()).catch(() => null);
+        chatId = c.id;
+        msgs = r?.messages || [];
+        for (const m of msgs) m.role === 'user' ? say('me', m.content) : render(say('bot', ''), m.content);
+      });
+      list.append(b);
+    }
+    pick.append(cur, list);
     const out = el('button', { type: 'button', textContent: 'Sign out' });
     out.addEventListener('click', () => { store.set(null); reset(); account(); });
     const del = el('button', { type: 'button', textContent: 'Delete my data' });
@@ -134,6 +150,10 @@
     acct.append(el('span', { textContent: me.user.name || me.user.email || 'Signed in' }), pick, out, del);
   }
   account();
+  // Close the saved-chats menu on an outside click or Escape.
+  const shut = () => acct.querySelector('details[open]')?.removeAttribute('open');
+  document.addEventListener('click', e => { if (!e.target.closest?.('.chat-pick')) shut(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') shut(); });
 
   // Model picker, in the home page's #connect bar only. The worker allowlists
   // these two and ignores anything else.
