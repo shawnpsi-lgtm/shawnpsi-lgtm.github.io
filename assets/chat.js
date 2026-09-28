@@ -76,8 +76,13 @@
   };
 
   for (const b of document.querySelectorAll('#connect button')) b.addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(b.dataset.url); b.textContent = b.dataset.done; }
-    catch { b.textContent = b.dataset.url; }   // no clipboard: show it to copy by hand
+    try { await navigator.clipboard.writeText(b.dataset.url); }
+    catch { prompt('Copy this URL:', b.dataset.url); return; }   // no clipboard: copy by hand
+    b.dataset.label ??= b.textContent;
+    b.textContent = '\u2713 ' + b.dataset.done;
+    b.classList.add('done');
+    clearTimeout(b.reset);
+    b.reset = setTimeout(() => { b.textContent = b.dataset.label; b.classList.remove('done'); }, 2000);
   });
 
   form.addEventListener('submit', async e => {
