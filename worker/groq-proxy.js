@@ -364,8 +364,8 @@ export default {
     const { success } = await env.RATE_LIMITER.limit({ key: uid ? 'user:' + uid : ip });
     if (!success) return fail('Too many messages — give it a minute.', 429, origin);
 
-    // Model, system prompt and token cap are ours; only the turns come from the
-    // client, trimmed and truncated so one visitor can't send a novel.
+    // System prompt and token cap are ours; the client sends the turns, trimmed and
+    // truncated so one visitor can't send a novel, and may pick one of our models.
     let body;
     try { body = await req.json(); } catch { return fail('bad request', 400, origin); }
     const msgs = (Array.isArray(body?.messages) ? body.messages : [])
@@ -378,11 +378,12 @@ export default {
     // that reasoning buys nothing, and tokens are the scarce thing here.
     const ask = model => groq(env, { model, reasoning_effort: 'low' }, msgs);
     const t = Date.now();
-    let r = await ask(MODEL);
+    const first = body.model === API_MODEL ? API_MODEL : MODEL;
+    let r = await ask(first);
     // Groq's free tier is 8k tokens/min per model and the prompt is ~1.2k of every
     // request, so its 429 is the one error a visitor will actually hit. Each model
-    // has its own quota, so borrow the API model's before giving up.
-    if (r.status === 429) r = await ask(API_MODEL);
+    // has its own quota, so borrow the other one's before giving up.
+    if (r.status === 429) r = await ask(first === MODEL ? API_MODEL : MODEL);
     // Show the same wording as our own limiter rather than a wall of Groq internals.
     if (r.status === 429) return fail('Too many messages — give it a minute.', 429, origin);
     // Other errors pass straight through; they hold no key and they're the only

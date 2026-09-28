@@ -53,6 +53,17 @@ assert.equal(fellBack.status, 200);
 assert.equal(sent.model, 'openai/gpt-oss-20b');
 assert.equal((await fellBack.json()).choices[0].message.content, 'hi');
 
+// the client may pick an allowed model, and it falls back to the other one
+calls = 0;
+await post({ messages: [{ role: 'user', content: 'yo' }], model: 'openai/gpt-oss-20b' });
+assert.equal(sent.model, 'openai/gpt-oss-120b');
+// anything off the allowlist is ignored
+globalThis.fetch = async (_url, opt) => (sent = JSON.parse(opt.body), new Response('{"choices":[{"message":{"content":"hi"}}]}'));
+await post({ messages: [{ role: 'user', content: 'yo' }], model: 'some/expensive-model' });
+assert.equal(sent.model, 'openai/gpt-oss-120b');
+await post({ messages: [{ role: 'user', content: 'yo' }], model: 'openai/gpt-oss-20b' });
+assert.equal(sent.model, 'openai/gpt-oss-20b');
+
 limitOk = false;
 assert.equal((await post({ messages: [{ role: 'user', content: 'yo' }] })).status, 429);
 

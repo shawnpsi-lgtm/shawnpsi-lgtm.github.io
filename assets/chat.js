@@ -135,6 +135,13 @@
   }
   account();
 
+  // Model picker, in the home page's #connect bar only. The worker allowlists
+  // these two and ignores anything else.
+  const model = el('select', { ariaLabel: 'Model', title: 'Which Groq model answers' });
+  model.append(el('option', { value: 'openai/gpt-oss-120b', textContent: 'GPT-OSS 120B' }),
+               el('option', { value: 'openai/gpt-oss-20b', textContent: 'GPT-OSS 20B (faster)' }));
+  document.getElementById('connect')?.prepend(model);
+
   for (const b of document.querySelectorAll('#connect button')) b.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(b.dataset.url); }
     catch { prompt('Copy this URL:', b.dataset.url); return; }   // no clipboard: copy by hand
@@ -157,7 +164,7 @@
       const r = await fetch(PROXY, authed({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: msgs, chat_id: chatId }),
+        body: JSON.stringify({ messages: msgs, chat_id: chatId, model: model.value }),
       }));
       const raw = await r.text();
       if (!r.ok) {
