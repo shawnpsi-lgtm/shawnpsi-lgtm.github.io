@@ -90,7 +90,7 @@ const groq = (env, opts, msgs) => fetch('https://api.groq.com/openai/v1/chat/com
 
 // One line per Groq answer for Workers Logs (wrangler tail, or the dashboard):
 // the numbers the free-tier budget is audited from. The same numbers go to D1
-// for the signed-in dashboard on status.html; the returned promise is for waitUntil.
+// for the signed-in dashboard on usage.html; the returned promise is for waitUntil.
 const logUsage = (env, path, j, ms, uid = null) => {
   const u = {
     path, model: j.model, prompt: j.usage?.prompt_tokens, cached: j.usage?.prompt_tokens_details?.cached_tokens ?? 0,
@@ -316,7 +316,7 @@ async function saveTurn(env, uid, chatId, q, a) {
 async function usage(req, env, origin) {
   const uid = await userId(req, env);
   if (!uid) return fail('sign in first', 401, origin);
-  const since = Date.now() - 14 * 864e5, day = Date.now() - 864e5;
+  const since = Date.now() - 182 * 864e5, day = Date.now() - 864e5;
   const [days, median] = await env.DB.batch([
     env.DB.prepare(`SELECT date(ts / 1000, 'unixepoch') AS day, count(*) AS answers, sum(prompt) AS prompt, sum(cached) AS cached, sum(out) AS out
       FROM usage WHERE user_id = ? AND ts > ? GROUP BY day ORDER BY day`).bind(uid, since),

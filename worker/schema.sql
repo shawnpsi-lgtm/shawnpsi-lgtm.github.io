@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS messages (
   ts INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS messages_chat ON messages(chat_id);
--- One row per Groq answer. status.html shows signed-in visitors their own rows.
+-- One row per Groq answer. usage.html shows signed-in visitors their own rows.
 -- Existing databases: ALTER TABLE usage ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
 CREATE TABLE IF NOT EXISTS usage (
   ts INTEGER NOT NULL,

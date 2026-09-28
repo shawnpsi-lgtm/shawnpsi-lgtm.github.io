@@ -16,8 +16,8 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=29">
-  <link rel="stylesheet" href="/assets/ask.css?v=6">
+  <link rel="stylesheet" href="/assets/home.css?v=30">
+  <link rel="stylesheet" href="/assets/ask.css?v=7">
   <script src="/assets/page-transition.js?v=1"></script>
 </head>
 <body>
@@ -433,13 +433,11 @@
 
     <!-- Plug Shawn AI into your own client (copies the MCP URL), code or terminal (open the API docs). -->
     <div id="connect">
-      <button type="button" data-url="https://groq-chat.shawnpsi.workers.dev/mcp" data-done="Copied MCP URL"
-              title="Copy the MCP server URL, then add it as a connector in Claude, Cursor, etc.">Connect MCP</button>
-      <button type="button" data-url="https://groq-chat.shawnpsi.workers.dev/api?q=" data-done="Copied API URL"
-              title="Copy the API URL, then add your question after ?q=">Get API</button>
-      <a href="/api.html" title="Endpoints, limits and a live demo">View documentation</a>
-      <a href="/api.html#cli" title="Ask Shawn AI from your terminal">Get CLI</a>
-      <a href="https://groq-chat.shawnpsi.workers.dev/slack/install" title="Adds a /shawn command to your Slack workspace">Add to Slack</a>
+      <button type="button" data-url="https://groq-chat.shawnpsi.workers.dev/mcp" data-done="Copied"
+              title="Copy the MCP server URL, then add it as a connector in Claude, Cursor, etc.">MCP</button>
+      <a href="/api.html" title="API endpoints, the CLI, limits and a live demo">API &amp; CLI</a>
+      <a href="https://groq-chat.shawnpsi.workers.dev/slack/install" title="Adds a /shawn command to your Slack workspace">Slack</a>
+      <a href="/usage.html" id="usage-link" title="Your own chat usage over the last 14 days">Usage</a>
       <a href="https://status.shawnsingh.me" title="Live checks of the chat, API and MCP server">Status</a>
       <a href="/privacy.html" title="What Shawn AI stores when you sign in">Privacy</a>
     </div>
@@ -470,6 +468,6 @@
     scene2();  // a reload mid-page restores scrollY without firing scroll
   </script>
 
-  <script src="/assets/chat.js?v=6"></script>
+  <script src="/assets/chat.js?v=7"></script>
 </body>
 </html>

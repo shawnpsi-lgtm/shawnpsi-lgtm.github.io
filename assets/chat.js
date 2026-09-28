@@ -97,47 +97,62 @@
   const acct = document.createElement('div');
   acct.id = 'chat-acct';
   form.prepend(acct);
+  // Signed out, the sign-in buttons sit in the message field beside the model picker.
+  const signin = document.createElement('span');
+  signin.id = 'chat-signin';
   const el = (tag, props) => Object.assign(document.createElement(tag), props);
   const reset = () => { msgs = []; chatId = null; log.textContent = ''; };
-
-  async function account() {
-    const me = await fetch(PROXY + '/me', authed()).then(r => r.json()).catch(() => null);
-    acct.textContent = '';
-    if (!me) return;
-    if (!me.user) {
-      if (store.get()) store.set(null);   // expired, or the account was deleted
-      if (!me.providers?.length) return;
-      acct.append('Sign in to save chats:');
-      const ret = encodeURIComponent(location.href.split('#')[0]);
-      for (const p of me.providers) {
-        const a = el('a', { href: `${PROXY}/auth/${p}?return=${ret}`, textContent: NAMES[p] || p });
-        if (p === 'google') a.insertAdjacentHTML('afterbegin', GOOGLE_G);
-        acct.append(a);
-      }
-      return;
-    }
-    // Saved-chats menu: <details> gives open/close and keyboard toggling for free.
+  // The in-house dropdown (saved chats, model): <details> gives open/close and
+  // keyboard toggling for free. items are { label, ... }; onPick gets the chosen one.
+  const menu = (label, items, current, onPick) => {
     const pick = el('details', { className: 'chat-pick' });
-    const cur = el('summary', { ariaLabel: 'Saved chats', textContent: me.chats.find(c => c.id === chatId)?.title || 'New chat' });
+    const cur = el('summary', { ariaLabel: label, textContent: current.label });
     const list = el('div', { role: 'menu' });
-    for (const c of [null, ...me.chats]) {
-      const b = el('button', { type: 'button', role: 'menuitem', textContent: c ? c.title : 'New chat' });
-      if ((c?.id ?? null) === chatId) b.ariaCurrent = 'true';
-      b.addEventListener('click', async () => {
+    for (const it of items) {
+      const b = el('button', { type: 'button', role: 'menuitem', textContent: it.label });
+      if (it === current) b.ariaCurrent = 'true';
+      b.addEventListener('click', () => {
         pick.open = false;
-        cur.textContent = b.textContent;
+        cur.textContent = it.label;
         list.querySelector('[aria-current]')?.removeAttribute('aria-current');
         b.ariaCurrent = 'true';
-        reset();
-        if (!c) return;
-        const r = await fetch(PROXY + '/chats/' + c.id, authed()).then(r => r.json()).catch(() => null);
-        chatId = c.id;
-        msgs = r?.messages || [];
-        for (const m of msgs) m.role === 'user' ? say('me', m.content) : render(say('bot', ''), m.content);
+        onPick(it);
       });
       list.append(b);
     }
     pick.append(cur, list);
+    return pick;
+  };
+
+  // The homepage's Usage link: signed out, it signs in first and lands on the usage page.
+  const usageLink = document.getElementById('usage-link');
+  async function account() {
+    const me = await fetch(PROXY + '/me', authed()).then(r => r.json()).catch(() => null);
+    acct.textContent = signin.textContent = '';
+    if (usageLink) usageLink.href = '/usage.html';
+    if (!me) return;
+    if (!me.user) {
+      if (store.get()) store.set(null);   // expired, or the account was deleted
+      if (!me.providers?.length) return;
+      if (usageLink) usageLink.href = `${PROXY}/auth/${me.providers.includes('google') ? 'google' : me.providers[0]}?return=${encodeURIComponent(location.origin + '/usage.html')}`;
+      const ret = encodeURIComponent(location.href.split('#')[0]);
+      for (const p of me.providers) {
+        const a = el('a', { href: `${PROXY}/auth/${p}?return=${ret}`, textContent: NAMES[p] || p });
+        a.title = `Sign in with ${NAMES[p] || p} to save chats`;
+        if (p === 'google') { a.ariaLabel = a.title; a.innerHTML = GOOGLE_G; }
+        signin.append(a);
+      }
+      return;
+    }
+    const chats = [{ label: 'New chat', id: null }, ...me.chats.map(c => ({ label: c.title, id: c.id }))];
+    const pick = menu('Saved chats', chats, chats.find(c => c.id === chatId) || chats[0], async c => {
+      reset();
+      if (!c.id) return;
+      const r = await fetch(PROXY + '/chats/' + c.id, authed()).then(r => r.json()).catch(() => null);
+      chatId = c.id;
+      msgs = r?.messages || [];
+      for (const m of msgs) m.role === 'user' ? say('me', m.content) : render(say('bot', ''), m.content);
+    });
     const out = el('button', { type: 'button', textContent: 'Sign out' });
     out.addEventListener('click', () => { store.set(null); reset(); account(); });
     const del = el('button', { type: 'button', textContent: 'Delete my data' });
@@ -147,20 +162,32 @@
       if (!r?.ok) return alert('Couldn’t delete right now — try again in a minute.');
       store.set(null); reset(); account();
     });
-    acct.append(el('span', { textContent: me.user.name || me.user.email || 'Signed in' }), pick, out, del);
+    // Rarely used, so they live behind a ⋯ menu and the row stays one line.
+    const more = el('details', { className: 'chat-pick chat-more' });
+    const list = el('div', { role: 'menu' });
+    list.append(out, del);
+    for (const b of [out, del]) b.role = 'menuitem';
+    more.append(el('summary', { ariaLabel: 'Account', textContent: '\u22ef' }), list);
+    acct.append(el('span', { textContent: me.user.name || me.user.email || 'Signed in' }), pick, more);
   }
   account();
-  // Close the saved-chats menu on an outside click or Escape.
-  const shut = () => acct.querySelector('details[open]')?.removeAttribute('open');
-  document.addEventListener('click', e => { if (!e.target.closest?.('.chat-pick')) shut(); });
+  // Close open menus on an outside click or Escape.
+  const shut = keep => { for (const d of form.querySelectorAll('.chat-pick[open]')) if (!d.contains(keep)) d.open = false; };
+  document.addEventListener('click', e => shut(e.target));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') shut(); });
 
-  // Model picker, in the home page's #connect bar only. The worker allowlists
-  // these two and ignores anything else.
-  const model = el('select', { ariaLabel: 'Model', title: 'Which Groq model answers' });
-  model.append(el('option', { value: 'openai/gpt-oss-120b', textContent: 'GPT-OSS 120B' }),
-               el('option', { value: 'openai/gpt-oss-20b', textContent: 'GPT-OSS 20B (faster)' }));
-  document.getElementById('connect')?.prepend(model);
+  // Model picker, tucked into the right end of the message field. The worker
+  // allowlists the two real ids; the joke names are labels on 120B.
+  const MODELS = [['OSS 120B', 'openai/gpt-oss-120b'], ['OSS 20B', 'openai/gpt-oss-20b'],
+    ['Fable 5.1', 'openai/gpt-oss-120b'], ['GPT-6 Astra', 'openai/gpt-oss-120b'], ['Shawn2.5', 'openai/gpt-oss-120b']]
+    .map(([label, id]) => ({ label, id }));
+  let modelId = MODELS[0].id;
+  const model = menu('Model', MODELS, MODELS[0], m => { modelId = m.id; });
+  model.id = 'chat-model';
+  const field = el('div', { id: 'chat-field' });
+  input.replaceWith(field);
+  field.append(input, signin, model);
+  if (form.closest('#ask') || matchMedia('(width <= 480px)').matches) input.placeholder = 'Ask about Shawn…';
 
   for (const b of document.querySelectorAll('#connect button')) b.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(b.dataset.url); }
@@ -184,7 +211,7 @@
       const r = await fetch(PROXY, authed({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: msgs, chat_id: chatId, model: model.value }),
+        body: JSON.stringify({ messages: msgs, chat_id: chatId, model: modelId }),
       }));
       const raw = await r.text();
       if (!r.ok) {

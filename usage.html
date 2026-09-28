@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your usage — Shawn Singh</title>
+  <meta name="description" content="Your own Shawn AI chat usage: answers, tokens and reply times." />
+
+
+
+  <style>
+    .about-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 56px 0;
+    }
+
+    .about-section {
+      padding: 72px 0;
+    }
+
+    .about-col-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 64px;
+    }
+
+    .about-col-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--light);
+      padding-top: 6px;
+    }
+
+    .about-bio-large {
+      font-family: var(--serif);
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+      font-weight: 700;
+      line-height: 1.5;
+      color: var(--black);
+      max-width: 28ch;
+      margin-bottom: 32px;
+    }
+
+    .resume-cta {
+      margin-top: 40px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .resume-cta p {
+      font-size: 0.9rem;
+      color: var(--mid);
+      margin: 0;
+      max-width: none;
+    }
+
+    @media (max-width: 900px) {
+      .about-col-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    }
+    .status-banner { font-family: var(--serif); font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 700; color: var(--black); margin: 0 0 8px; }
+    .status-meta { font-size: 0.9rem; color: var(--mid); margin: 0 0 32px; }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 24px; margin: 0 0 40px; }
+    .tiles div { border-top: 1px solid var(--border); padding-top: 12px; }
+    .tiles dt { font-size: 0.85rem; color: var(--mid); white-space: nowrap; }
+    .tiles dd { margin: 4px 0 0; font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; color: var(--black); font-variant-numeric: tabular-nums; }
+    .usage { position: relative; margin: 0 0 16px; --l1: color-mix(in srgb, var(--accent) 35%, var(--border)); --l2: color-mix(in srgb, var(--accent) 60%, var(--border)); --l3: color-mix(in srgb, var(--accent) 80%, var(--border)); --l4: var(--accent); }
+    .usage figcaption { font-size: 0.85rem; color: var(--mid); margin-bottom: 12px; }
+    /* Contribution graph: one column per week, one row per weekday (Sun at top), shaded by answers. */
+    .grid-wrap { display: flex; gap: 8px; overflow-x: auto; padding: 2px; }
+    .days, .bars { display: grid; grid-template-rows: repeat(7, 13px); gap: 3px; }
+    .days { font-size: 0.7rem; color: var(--mid); line-height: 13px; }
+    .bars { grid-auto-flow: column; grid-auto-columns: 13px; }
+    .bars > div { border-radius: 3px; background: var(--border); cursor: default; }
+    .bars > div[data-l="1"] { background: var(--l1); }
+    .bars > div[data-l="2"] { background: var(--l2); }
+    .bars > div[data-l="3"] { background: var(--l3); }
+    .bars > div[data-l="4"] { background: var(--l4); }
+    .bars > .pad { visibility: hidden; }
+    .bars > div:hover, .bars > div:focus { outline: 1px solid var(--mid); }
+    .bars > div:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .axis { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; color: var(--mid); margin-top: 10px; }
+    .axis i { width: 12px; height: 12px; border-radius: 3px; background: var(--border); }
+    .tip { position: absolute; margin: 0; padding: 6px 10px; font-size: 0.85rem; white-space: nowrap; color: var(--black); background: var(--bg-off); border: 1px solid var(--border); border-radius: 8px; pointer-events: none; transform: translateX(-50%); }
+  </style>
+  <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
+  <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
+  <link rel="stylesheet" href="/assets/ask.css?v=7">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" data-always-scrolled role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo" style="display:flex;align-items:center;gap:10px;">
+        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+          <defs>
+            <radialGradient id="sg" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#d9a8f5"/>
+              <stop offset="55%" stop-color="#b36fd9"/>
+              <stop offset="100%" stop-color="#9a4fc4"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="50" fill="url(#sg)"/>
+          <text x="50" y="67" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif" font-size="52" font-weight="600" fill="white" letter-spacing="-1">S</text>
+        </svg>
+        Shawn Singh
+      </a>
+
+      <ul class="nav__links" role="list">
+        <li><a href="work.html">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+      </ul>
+
+      <div class="nav__right" style="display:flex;align-items:center;gap:8px;">
+      <button class="nav__theme-toggle" aria-label="Switch to dark mode">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="about-hero" style="padding-top: var(--nav-height); background: var(--bg-off); border-bottom: 1px solid var(--border);">
+    <div class="about-hero__inner">
+      <div data-reveal>
+        <p class="about-eyebrow">Usage</p>
+        <h1 class="about-title">Your usage</h1>
+      </div>
+      <div data-reveal data-reveal-delay="80">
+        <p class="hero__sub" style="font-size: 1.05rem;">What your signed-in chats have used,<br />over the last 26 weeks.</p>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section class="about-section">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Last 26 weeks</p>
+          <div>
+            <dl class="tiles" id="tiles"></dl>
+            <figure class="usage">
+              <figcaption>Answers per day · last 26 weeks (UTC)</figcaption>
+              <div class="grid-wrap">
+                <div class="days" aria-hidden="true"><span></span><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span></div>
+                <div class="bars" id="bars"></div>
+              </div>
+              <div class="axis" id="axis"></div>
+              <p class="tip" id="tip" hidden></p>
+            </figure>
+            <p class="status-meta" id="usage-meta">Loading…</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const W = 'https://groq-chat.shawnpsi.workers.dev';
+    // Each request resolves or throws; ten seconds without an answer counts as a failure.
+    const ok = r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r; };
+    const withTimeout = p => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('timed out')), 10000))]);
+
+    // Usage: the worker logs every chat answer to D1 against the signed-in account;
+    // /usage returns that account's daily aggregates, never message content.
+    // The session is the one chat.js keeps after sign-in.
+    const fmt = n => n.toLocaleString();
+    async function usage() {
+      const meta = document.getElementById('usage-meta');
+      let token = null;
+      // Straight back from sign-in, the session is still in the URL (chat.js stores it after this runs).
+      token = location.hash.match(/^#session=([\w.-]+)$/)?.[1] || null;
+      try { token ??= localStorage.getItem('shawn-ai-session'); } catch {}
+      if (!token) {
+        document.getElementById('tiles').replaceChildren();
+        document.getElementById('bars').closest('figure').hidden = true;
+        meta.textContent = 'Sign in from the chat to see your own usage.';
+        return;
+      }
+      let d;
+      try { d = await withTimeout(fetch(W + '/usage', { headers: { Authorization: 'Bearer ' + token } }).then(ok).then(r => r.json())); }
+      catch (e) { meta.textContent = e.message === 'HTTP 401' ? 'Your sign-in expired. Sign in from the chat again.' : 'Usage unavailable · ' + e.message; return; }
+      document.getElementById('bars').closest('figure').hidden = false;
+      const byDay = Object.fromEntries(d.days.map(x => [x.day, x]));
+      const days = Array.from({ length: 182 }, (_, i) => new Date(Date.now() - (181 - i) * 864e5).toISOString().slice(0, 10))
+        .map(day => byDay[day] || { day, answers: 0, prompt: 0, cached: 0, out: 0 });
+      const today = days.at(-1);
+      const sum = (k, d = days) => d.reduce((s, x) => s + (x[k] || 0), 0);
+      const tiles = [
+        ['Answers today', fmt(today.answers)],
+        ['Tokens today', fmt((today.prompt || 0) + (today.out || 0))],
+        ['Cache hit, 14 d', sum('prompt', days.slice(-14)) ? Math.round(100 * sum('cached', days.slice(-14)) / sum('prompt', days.slice(-14))) + '%' : '—'],
+        ['Median reply, 24 h', d.median_ms == null ? '—' : (d.median_ms / 1000).toFixed(1) + ' s'],
+      ];
+      document.getElementById('tiles').replaceChildren(...tiles.map(([k, v]) => {
+        const div = document.createElement('div');
+        div.append(Object.assign(document.createElement('dt'), { textContent: k }), Object.assign(document.createElement('dd'), { textContent: v }));
+        return div;
+      }));
+
+      const max = Math.max(1, ...days.map(x => x.answers));
+      const label = x => new Date(x.day + 'T12:00Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+      const tip = document.getElementById('tip'), fig = tip.parentElement;
+      // Pad the first week so each day lands on its weekday row.
+      const pad = Array.from({ length: new Date(days[0].day + 'T12:00Z').getUTCDay() }, () => Object.assign(document.createElement('div'), { className: 'pad' }));
+      document.getElementById('bars').replaceChildren(...pad, ...days.map(x => {
+        const col = document.createElement('div');
+        col.tabIndex = 0;
+        col.setAttribute('aria-label', `${label(x)}: ${x.answers} answers`);
+        col.dataset.l = x.answers ? Math.ceil(4 * x.answers / max) : 0;
+        const show = () => {
+          tip.textContent = `${label(x)} · ${fmt(x.answers)} answers · ${fmt((x.prompt || 0) + (x.out || 0))} tokens`;
+          tip.hidden = false;
+          const c = col.getBoundingClientRect(), f = fig.getBoundingClientRect();
+          // Keep the tip inside the figure, just below the hovered cell.
+          tip.style.left = Math.min(Math.max(c.left - f.left + c.width / 2, tip.offsetWidth / 2), f.width - tip.offsetWidth / 2) + 'px';
+          tip.style.top = c.bottom - f.top + 6 + 'px';
+        };
+        const hide = () => { tip.hidden = true; };
+        col.addEventListener('mouseenter', show); col.addEventListener('focus', show);
+        col.addEventListener('mouseleave', hide); col.addEventListener('blur', hide);
+        return col;
+      }));
+      document.getElementById('axis').replaceChildren('Less', ...[0, 1, 2, 3, 4].map(l => {
+        const i = document.createElement('i');
+        if (l) i.style.background = `var(--l${l})`;
+        return i;
+      }), 'More');
+      document.getElementById('usage-meta').textContent = `${fmt(sum('answers'))} answer${sum('answers') === 1 ? '' : 's'} in 26 weeks · peak ${fmt(Math.max(...days.map(x => x.answers)))} in a day · counts your signed-in chat answers`;
+    }
+    usage();
+    setInterval(usage, 60000);
+  </script>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <p class="footer__logo">Shawn Singh</p>
+          <p class="footer__tagline">data + design — San Francisco, CA</p>
+        </div>
+        <div class="footer__links">
+          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            LinkedIn
+          </a>
+          <a href="/files/resume.pdf" class="footer__link" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Résumé
+          </a>
+          <a href="mailto:shawn@visuallyrepresented.co" class="footer__link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            shawn@visuallyrepresented.co
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/chat.js?v=7"></script>
+</body>
+</html>

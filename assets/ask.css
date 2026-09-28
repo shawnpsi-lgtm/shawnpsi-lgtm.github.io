@@ -2,7 +2,7 @@
    every other page (chat.js injects #ask there). */
 #chat {
   position: relative;
-  z-index: 1;
+  z-index: 2;   /* above #connect, so the saved-chats menu opens over it */
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
@@ -69,16 +69,43 @@
 #chat-log a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 #chat-log .err { color: #b3261e; background: color-mix(in srgb, #b3261e 12%, transparent); }
 [data-theme=dark] #chat-log .err { color: #ffb4ab; }
-#chat-input {
+/* The field is the pill; the input and model picker (chat.js wraps both) sit
+   side by side in it, so the picker never covers the text however long its label. */
+#chat-field {
+  display: flex;
+  align-items: center;
   min-width: 0;
-  padding: 10px 14px;
-  font: inherit;
-  color: inherit;
   border: 1px solid color-mix(in srgb, var(--black) 12%, transparent);
   border-radius: 980px;
   background: color-mix(in srgb, var(--bg-off) 70%, transparent);
 }
-#chat-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+#chat-field:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+#chat-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  outline: none;
+}
+#chat-model { flex: none; margin-right: 6px; font-size: var(--text-sm, .875rem); }
+#chat-model summary { padding: 5px 10px; font-weight: 500; color: var(--mid); border-color: transparent; background: none; }
+#chat-model summary:hover { color: var(--black); background: color-mix(in srgb, var(--black) 6%, transparent); }
+#chat-model summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+#chat-signin { flex: none; display: flex; gap: 2px; font-size: var(--text-sm, .875rem); }
+#chat-signin a { display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 6px; border-radius: 980px; color: var(--mid); font-weight: 500; text-decoration: none; }
+#chat-signin a:hover { color: var(--black); background: color-mix(in srgb, var(--black) 6%, transparent); }
+#chat-signin a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Opens upward, inside the card, instead of down behind what follows it. */
+#chat-model [role=menu] { top: auto; bottom: calc(100% + 6px); left: auto; width: max-content; min-width: 150px; }
+/* Phones: a shorter placeholder (chat.js) and a tighter picker leave the input room to read. */
+@media (width <= 480px) {
+  #chat-model summary { padding: 5px 8px; }
+  #chat-acct { gap: 6px; }
+  #chat-acct a, #chat #chat-acct button { padding: 3px 8px; font-size: .8125rem; }
+}
 #chat button {
   display: grid;
   place-items: center;
@@ -131,29 +158,38 @@
   left: 0;
   right: 0;
   display: grid;
-  gap: 2px;
+  gap: 4px;
   max-height: 240px;
-  padding: 4px;
+  padding: 6px;
   overflow-y: auto;
   border: 1px solid color-mix(in srgb, var(--black) 12%, transparent);
   border-radius: 14px;
   background: color-mix(in srgb, var(--bg-off) 94%, transparent);
   box-shadow: 0 8px 24px rgb(0 0 0 / .25);
 }
-#chat #chat-acct .chat-pick [role=menu] button {
+#chat :is(#chat-acct, #chat-field) .chat-pick [role=menu] :is(button, a) {
   display: block;
   width: 100%;
+  height: auto;
+  font: inherit;
   padding: 6px 10px;
   text-align: left;
   color: var(--black);
   border-radius: 10px;
-  background: none;
+  border: 1px solid color-mix(in srgb, var(--black) 10%, transparent);
+  background: color-mix(in srgb, var(--black) 4%, transparent);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  text-decoration: none;
 }
-#chat #chat-acct .chat-pick [role=menu] button:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
-#chat #chat-acct .chat-pick [role=menu] button[aria-current] { color: var(--accent); font-weight: 600; }
+#chat :is(#chat-acct, #chat-field) .chat-pick [role=menu] :is(button, a):hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+#chat :is(#chat-acct, #chat-field) .chat-pick [role=menu] button[aria-current] { color: var(--accent); font-weight: 600; border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+/* The ⋯ account menu: a round icon button whose menu hangs off its right edge. */
+.chat-more { flex: none; }
+.chat-more summary { padding: 2px 10px; }
+.chat-more summary::after, .chat-more[open] summary::after { content: none; }
+.chat-more [role=menu] { left: auto; width: max-content; }
 #chat-acct a, #chat #chat-acct button {
   display: inline-block;
   width: auto;
@@ -166,7 +202,7 @@
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   text-decoration: none;
 }
-#chat-acct a svg { vertical-align: -2px; margin-right: 6px; }
+#chat-acct a svg { display: inline-block; vertical-align: -2px; }
 #chat-acct a:hover, #chat #chat-acct button:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
 #chat-acct :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -178,10 +214,10 @@
    page underneath the nav's glass, then pops back on top when the fade ends.
    Named on the children, not #ask: a view-transition-name makes a backdrop root,
    which would leave #chat's backdrop-filter blurring nothing. */
-#ask summary { view-transition-name: ask; }
+#ask > summary { view-transition-name: ask; }
 #ask #chat { view-transition-name: ask-chat; }
 /* Solid accent so it reads as the page's call to action, not chrome. */
-#ask summary {
+#ask > summary {
   list-style: none;
   display: flex;
   align-items: center;
@@ -199,12 +235,12 @@
   cursor: pointer;
   transition: transform .2s cubic-bezier(.32,1.4,.52,1), box-shadow .2s;
 }
-#ask summary::before { content: "\2726"; margin-right: 8px; }
-#ask summary:hover { box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 65%, transparent), inset 0 1px 0 rgb(255 255 255 / .25); }
-#ask summary::-webkit-details-marker { display: none; }
-#ask summary:hover { transform: scale(1.04); }
-#ask summary:active { transform: scale(.96); }
-#ask summary:focus-visible { outline: 2px solid var(--black); outline-offset: 2px; }
+#ask > summary::before { content: "\2726"; margin-right: 8px; }
+#ask > summary:hover { box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 65%, transparent), inset 0 1px 0 rgb(255 255 255 / .25); }
+#ask > summary::-webkit-details-marker { display: none; }
+#ask > summary:hover { transform: scale(1.04); }
+#ask > summary:active { transform: scale(.96); }
+#ask > summary:focus-visible { outline: 2px solid var(--black); outline-offset: 2px; }
 /* Pops out of the pill with a little overshoot. */
 #ask #chat { transform-origin: top center; animation: ask-shut .2s ease-in both; }
 #ask[open] #chat { animation: ask-pop .38s cubic-bezier(.32,1.4,.52,1) both; }
@@ -214,14 +250,17 @@
    plays. Browsers without ::details-content just close instantly. */
 #ask::details-content { transition: content-visibility .2s allow-discrete; }
 @media (prefers-reduced-motion: reduce) {
-  #ask summary { transition: none; }
+  #ask > summary { transition: none; }
   #ask #chat, #ask[open] #chat { animation: none; }
   #ask::details-content { transition: none; }
 }
 #ask #chat { position: absolute; top: calc(100% + 10px); left: 50%; width: min(380px, calc(100vw - 32px)); margin-left: calc(min(380px, calc(100vw - 32px)) / -2); }
 #ask #chat-log { max-height: 50svh; }
+/* The nav popup hangs below the pill, so its model menu opens downward. */
+#ask #chat-model [role=menu] { top: calc(100% + 6px); bottom: auto; }
 @media (width <= 640px) {
   #ask { top: auto; left: auto; right: 16px; bottom: 16px; translate: none; }
+  #ask #chat-model [role=menu] { top: auto; bottom: calc(100% + 6px); }   /* corner pill opens upward again */
   #ask #chat { top: auto; bottom: calc(100% + 10px); left: auto; right: 0; margin-left: 0; transform-origin: bottom right; --ask-dy: 12px; }
   body:has(#ask) .footer { padding-bottom: 72px; }   /* keep the pill off the footer links */
 }
