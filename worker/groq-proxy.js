@@ -120,6 +120,57 @@ async function api(req, env) {
   return out({ answer: j.choices?.[0]?.message?.content ?? '' });
 }
 
+// /slack/*: "Add to Slack" installs a /shawn slash command. It only needs the
+// `commands` scope and answers through the per-command response_url, so the
+// OAuth token is thrown away — no KV, nothing to store or leak.
+const SLACK_REDIRECT = 'https://groq-chat.shawnpsi.workers.dev/slack/oauth';
+async function slack(req, env, ctx, path) {
+  if (path === '/slack/install') return Response.redirect('https://slack.com/oauth/v2/authorize?' +
+    new URLSearchParams({ client_id: env.SLACK_CLIENT_ID, scope: 'commands', redirect_uri: SLACK_REDIRECT }), 302);
+
+  if (path === '/slack/oauth') {
+    // ponytail: no OAuth `state` — a forged install stores nothing, so there's nothing to hijack.
+    const code = new URL(req.url).searchParams.get('code');
+    if (!code) return Response.redirect('https://shawnsingh.me/', 302);   // they hit Cancel
+    const j = await fetch('https://slack.com/api/oauth.v2.access', {
+      method: 'POST',
+      body: new URLSearchParams({ code, client_id: env.SLACK_CLIENT_ID, client_secret: env.SLACK_CLIENT_SECRET, redirect_uri: SLACK_REDIRECT }),
+    }).then(r => r.json()).catch(() => ({}));
+    if (!j.ok) return new Response(`Slack install failed: ${j.error || 'unknown'}`, { status: 502 });
+    return Response.redirect(`https://slack.com/app_redirect?app=${j.app_id}&team=${j.team.id}`, 302);
+  }
+
+  if (path !== '/slack/command' || req.method !== 'POST') return new Response('not found', { status: 404 });
+  // Anyone can POST here, so check Slack's signature over the raw body, and
+  // reject stale timestamps so a captured request can't be replayed.
+  const body = await req.text(), ts = req.headers.get('X-Slack-Request-Timestamp') || '0';
+  if (Math.abs(Date.now() / 1000 - ts) > 300) return new Response('stale', { status: 401 });
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(env.SLACK_SIGNING_SECRET || ''), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+  const sig = (req.headers.get('X-Slack-Signature') || '').replace(/^v0=/, '');
+  const bytes = new Uint8Array((sig.match(/../g) || []).map(b => parseInt(b, 16)));
+  if (!await crypto.subtle.verify('HMAC', key, bytes, new TextEncoder().encode(`v0:${ts}:${body}`)))
+    return new Response('bad signature', { status: 401 });
+
+  const f = new URLSearchParams(body), q = f.get('text')?.trim();
+  const reply = (text, visible) => new Response(JSON.stringify({ response_type: visible ? 'in_channel' : 'ephemeral', text }), { headers: { 'Content-Type': 'application/json' } });
+  if (!q) return reply('Ask me about Shawn, e.g. `/shawn what does he build?`');
+  // Shares the /api budget and model, keyed per workspace instead of per IP.
+  if (!(await env.API_LIMITER.limit({ key: 'slack:' + f.get('team_id') })).success) return reply('Too many questions — give it a minute.');
+
+  // Slack gives up after 3s, so ack now and post the answer to response_url.
+  ctx.waitUntil((async () => {
+    const r = await groq(env, { model: API_MODEL, reasoning_effort: 'low' }, [{ role: 'user', content: q.slice(0, 800) }]);
+    const j = r.ok ? await r.json() : null;
+    if (j) logUsage('slack', j);
+    const text = j?.choices?.[0]?.message?.content || (r.status === 429 ? 'Too many questions — give it a minute.' : 'Something broke — try again shortly.');
+    await fetch(f.get('response_url'), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ response_type: j ? 'in_channel' : 'ephemeral', text: `> ${q}\n${text}` }),
+    });
+  })());
+  return new Response(null, { status: 200 });
+}
+
 // /health: for status.html. Listing Groq's models costs no tokens, yet proves the
 // key works and that both models we call are still served.
 async function health(env) {
@@ -133,9 +184,10 @@ async function health(env) {
 }
 
 export default {
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
     const path = new URL(req.url).pathname;
     if (path === '/health') return health(env);
+    if (path.startsWith('/slack/')) return slack(req, env, ctx, path);
     if (path === '/mcp') return mcp(req);
     if (path === '/api') return api(req, env);
     // Spoofable with curl, so it isn't the real defence — the rate limit and the

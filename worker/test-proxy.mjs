@@ -101,3 +101,35 @@ assert.deepEqual(await (await worker.fetch(new Request('https://w/health'), env)
 globalThis.fetch = async () => { throw new Error('down'); };
 assert.equal((await worker.fetch(new Request('https://w/health'), env)).status, 503);
 console.log('health ok');
+
+// /slack/command: only Slack-signed, fresh requests get through; the answer goes to response_url.
+{
+  const secret = 'shh', senv = { ...env, SLACK_SIGNING_SECRET: secret, API_LIMITER: { limit: async () => ({ success: true }) } };
+  const body = 'text=who+is+shawn&team_id=T1&response_url=https%3A%2F%2Fhooks.slack.test%2Fr';
+  const sign = async (ts, b) => {
+    const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    return 'v0=' + Buffer.from(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(`v0:${ts}:${b}`))).toString('hex');
+  };
+  const cmd = async (ts, sig, b = body) => {
+    const waits = [];
+    const r = await worker.fetch(new Request('https://w/slack/command', {
+      method: 'POST', body: b, headers: { 'X-Slack-Request-Timestamp': String(ts), 'X-Slack-Signature': sig },
+    }), senv, { waitUntil: p => waits.push(p) });
+    await Promise.all(waits);
+    return r;
+  };
+  const now = Math.floor(Date.now() / 1000);
+  let posted;
+  globalThis.fetch = async (url, opt) => {
+    if (url.includes('groq')) return new Response('{"choices":[{"message":{"content":"a designer"}}]}');
+    posted = { url, body: JSON.parse(opt.body) };
+    return new Response('ok');
+  };
+  assert.equal((await cmd(now, 'v0=deadbeef')).status, 401);                        // forged
+  assert.equal((await cmd(now - 600, await sign(now - 600, body))).status, 401);      // replayed
+  assert.equal((await cmd(now, await sign(now, body))).status, 200);
+  assert.equal(posted.url, 'https://hooks.slack.test/r');
+  assert.equal(posted.body.response_type, 'in_channel');
+  assert.match(posted.body.text, /who is shawn[\s\S]*a designer/);
+  console.log('slack ok');
+}

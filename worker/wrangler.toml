@@ -2,6 +2,11 @@ name = "groq-chat"
 main = "groq-proxy.js"
 compatibility_date = "2026-09-01"
 
+# Public half of the Slack app (/slack/*). SLACK_CLIENT_SECRET and
+# SLACK_SIGNING_SECRET are secrets: npx wrangler secret put <NAME> --config worker/wrangler.toml
+[vars]
+SLACK_CLIENT_ID = "4161243200950.12168948591796"
+
 # Workers Logs: keeps the per-request token lines from logUsage().
 [observability]
 enabled = true
