@@ -169,7 +169,7 @@
     <section class="about-section" style="border-top: 1px solid var(--border);">
       <div class="container">
         <div class="about-col-grid" data-reveal>
-          <p class="about-col-label">Usage</p>
+          <p class="about-col-label">Your usage</p>
           <div>
             <dl class="tiles" id="tiles"></dl>
             <figure class="usage">
@@ -247,13 +247,24 @@
     run();
     setInterval(run, 60000);
 
-    // Usage: every Groq answer (chat, API, Slack) is logged to D1 by the worker;
-    // /usage returns daily aggregates, never message content.
+    // Usage: the worker logs every chat answer to D1 against the signed-in account;
+    // /usage returns that account's daily aggregates, never message content.
+    // The session is the one chat.js keeps after sign-in.
     const fmt = n => n.toLocaleString();
     async function usage() {
+      const meta = document.getElementById('usage-meta');
+      let token = null;
+      try { token = localStorage.getItem('shawn-ai-session'); } catch {}
+      if (!token) {
+        document.getElementById('tiles').replaceChildren();
+        document.getElementById('bars').parentElement.hidden = true;
+        meta.textContent = 'Sign in from the chat to see your own usage.';
+        return;
+      }
       let d;
-      try { d = await withTimeout(fetch(W + '/usage').then(ok).then(r => r.json())); }
-      catch (e) { document.getElementById('usage-meta').textContent = 'Usage unavailable · ' + e.message; return; }
+      try { d = await withTimeout(fetch(W + '/usage', { headers: { Authorization: 'Bearer ' + token } }).then(ok).then(r => r.json())); }
+      catch (e) { meta.textContent = e.message === 'HTTP 401' ? 'Your sign-in expired. Sign in from the chat again.' : 'Usage unavailable · ' + e.message; return; }
+      document.getElementById('bars').parentElement.hidden = false;
       const byDay = Object.fromEntries(d.days.map(x => [x.day, x]));
       const days = Array.from({ length: 14 }, (_, i) => new Date(Date.now() - (13 - i) * 864e5).toISOString().slice(0, 10))
         .map(day => byDay[day] || { day, answers: 0, prompt: 0, cached: 0, out: 0 });
@@ -264,7 +275,6 @@
         ['Tokens today', fmt((today.prompt || 0) + (today.out || 0))],
         ['Cache hit, 14 d', sum('prompt') ? Math.round(100 * sum('cached') / sum('prompt')) + '%' : '—'],
         ['Median reply, 24 h', d.median_ms == null ? '—' : (d.median_ms / 1000).toFixed(1) + ' s'],
-        ['Signed-in visitors', fmt(d.users)],
       ];
       document.getElementById('tiles').replaceChildren(...tiles.map(([k, v]) => {
         const div = document.createElement('div');
@@ -295,7 +305,7 @@
         return col;
       }));
       document.getElementById('axis').replaceChildren(...[days[0], days[7], today].map(x => Object.assign(document.createElement('span'), { textContent: label(x) })));
-      document.getElementById('usage-meta').textContent = `${fmt(sum('answers'))} answer${sum('answers') === 1 ? '' : 's'} in 14 days · peak ${fmt(Math.max(...days.map(x => x.answers)))} in a day · counts every chat, API and Slack answer`;
+      document.getElementById('usage-meta').textContent = `${fmt(sum('answers'))} answer${sum('answers') === 1 ? '' : 's'} in 14 days · peak ${fmt(Math.max(...days.map(x => x.answers)))} in a day · counts your signed-in chat answers`;
     }
     usage();
     setInterval(usage, 60000);

@@ -90,15 +90,15 @@ const groq = (env, opts, msgs) => fetch('https://api.groq.com/openai/v1/chat/com
 
 // One line per Groq answer for Workers Logs (wrangler tail, or the dashboard):
 // the numbers the free-tier budget is audited from. The same numbers go to D1
-// for the public dashboard on status.html; the returned promise is for waitUntil.
-const logUsage = (env, path, j, ms) => {
+// for the signed-in dashboard on status.html; the returned promise is for waitUntil.
+const logUsage = (env, path, j, ms, uid = null) => {
   const u = {
     path, model: j.model, prompt: j.usage?.prompt_tokens, cached: j.usage?.prompt_tokens_details?.cached_tokens ?? 0,
     out: j.usage?.completion_tokens, reason: j.usage?.completion_tokens_details?.reasoning_tokens, finish: j.choices?.[0]?.finish_reason, ms,
   };
   console.log(JSON.stringify(u));
-  return env.DB?.prepare('INSERT INTO usage (ts, path, model, prompt, cached, out, ms) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    .bind(Date.now(), path, u.model ?? null, u.prompt ?? null, u.cached, u.out ?? null, ms ?? null).run().catch(e => console.error('usage log', e));
+  return env.DB?.prepare('INSERT INTO usage (ts, path, model, prompt, cached, out, ms, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(Date.now(), path, u.model ?? null, u.prompt ?? null, u.cached, u.out ?? null, ms ?? null, uid).run().catch(e => console.error('usage log', e));
 };
 
 // /api: open to any origin. Bare GET returns the digest (free, like /mcp);
@@ -312,18 +312,18 @@ async function saveTurn(env, uid, chatId, q, a) {
   return id;
 }
 
-// /usage: the public dashboard's numbers. Aggregates only, never content.
-async function usage(env) {
+// /usage: the signed-in visitor's own numbers. Aggregates only, never content.
+async function usage(req, env, origin) {
+  const uid = await userId(req, env);
+  if (!uid) return fail('sign in first', 401, origin);
   const since = Date.now() - 14 * 864e5, day = Date.now() - 864e5;
-  const [days, median, users] = await env.DB.batch([
+  const [days, median] = await env.DB.batch([
     env.DB.prepare(`SELECT date(ts / 1000, 'unixepoch') AS day, count(*) AS answers, sum(prompt) AS prompt, sum(cached) AS cached, sum(out) AS out
-      FROM usage WHERE ts > ? GROUP BY day ORDER BY day`).bind(since),
-    env.DB.prepare('SELECT ms FROM usage WHERE ts > ?1 AND ms IS NOT NULL ORDER BY ms LIMIT 1 OFFSET (SELECT count(*) / 2 FROM usage WHERE ts > ?1 AND ms IS NOT NULL)').bind(day),
-    env.DB.prepare('SELECT count(*) AS n FROM users'),
+      FROM usage WHERE user_id = ? AND ts > ? GROUP BY day ORDER BY day`).bind(uid, since),
+    env.DB.prepare('SELECT ms FROM usage WHERE user_id = ?1 AND ts > ?2 AND ms IS NOT NULL ORDER BY ms LIMIT 1 OFFSET (SELECT count(*) / 2 FROM usage WHERE user_id = ?1 AND ts > ?2 AND ms IS NOT NULL)').bind(uid, day),
   ]);
-  return new Response(JSON.stringify({ days: days.results, median_ms: median.results[0]?.ms ?? null, users: users.results[0].n }), {
-    // A minute of staleness is fine, and it keeps a busy status page off D1.
-    headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' },
+  return new Response(JSON.stringify({ days: days.results, median_ms: median.results[0]?.ms ?? null }), {
+    headers: { ...cors(origin), 'Cache-Control': 'private, no-store' },
   });
 }
 
@@ -346,7 +346,6 @@ export default {
     if (path.startsWith('/slack/')) return slack(req, env, ctx, path);
     if (path === '/mcp') return mcp(req);
     if (path === '/api') return api(req, env, ctx);
-    if (path === '/usage') return usage(env);
     // Full-page redirects, so there's no Origin header to check.
     if (path.startsWith('/auth/')) return auth(req, env, path);
     // Spoofable with curl, so it isn't the real defence — the rate limit and the
@@ -355,6 +354,7 @@ export default {
     if (!ALLOWED.includes(origin) && !DEV.test(origin)) return new Response('forbidden', { status: 403 });
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors(origin) });
     if (path === '/me' || path.startsWith('/chats/')) return account(req, env, path, origin);
+    if (path === '/usage') return usage(req, env, origin);
     if (req.method !== 'POST') return fail('method not allowed', 405, origin);
 
     // Signed-in visitors are limited per account, so recruiters sharing an
@@ -390,7 +390,7 @@ export default {
     // useful signal when something breaks.
     if (!r.ok) return new Response(r.body, { status: r.status, headers: cors(origin) });
     const j = await r.json();
-    ctx?.waitUntil(logUsage(env, 'chat', j, Date.now() - t));
+    ctx?.waitUntil(logUsage(env, 'chat', j, Date.now() - t, uid));
     // Saving must never cost the visitor their answer, so a D1 failure only logs.
     const reply = j.choices?.[0]?.message?.content;
     if (uid && reply && msgs.at(-1).role === 'user') {

@@ -188,5 +188,14 @@ console.log('health ok');
   const me = await worker.fetch(new Request('https://w/me', { headers: { Origin: 'https://shawnsingh.me' } }), aenv);
   assert.deepEqual(await me.json(), { user: null, providers: ['google'] });
   assert.equal((await worker.fetch(new Request('https://w/chats/1', { headers: { Origin: 'https://shawnsingh.me' } }), aenv)).status, 401);
+
+  // /usage: signed out is refused; signed in only ever queries that user's rows.
+  const u = (h = {}) => worker.fetch(new Request('https://w/usage', { headers: { Origin: 'https://shawnsingh.me', ...h } }), aenv);
+  assert.equal((await u()).status, 401);
+  const binds = [];
+  aenv.DB = { prepare: sql => ({ bind: (...a) => (binds.push([sql, a]), {}) }), batch: async () => [{ results: [] }, { results: [] }] };
+  const mine = await u({ Authorization: 'Bearer ' + await seal(aenv, { t: 'session', uid: 9, exp: Date.now() + 60e3 }) });
+  assert.equal(mine.status, 200);
+  assert.ok(binds.length && binds.every(([sql, a]) => /user_id = \?/.test(sql) && a[0] === 9));
   console.log('auth ok');
 }

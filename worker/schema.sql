@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS messages (
   ts INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS messages_chat ON messages(chat_id);
--- One row per Groq answer: what the public usage dashboard on status.html reads.
+-- One row per Groq answer. status.html shows signed-in visitors their own rows.
+-- Existing databases: ALTER TABLE usage ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
 CREATE TABLE IF NOT EXISTS usage (
   ts INTEGER NOT NULL,
   path TEXT NOT NULL,
@@ -29,6 +30,8 @@ CREATE TABLE IF NOT EXISTS usage (
   prompt INTEGER,
   cached INTEGER,
   out INTEGER,
-  ms INTEGER
+  ms INTEGER,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE   -- null for API, Slack and signed-out chat
 );
 CREATE INDEX IF NOT EXISTS usage_ts ON usage(ts);
+CREATE INDEX IF NOT EXISTS usage_user ON usage(user_id, ts);
