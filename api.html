@@ -110,7 +110,7 @@
   <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
   <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
-  <link rel="stylesheet" href="/assets/ask.css?v=5">
+  <link rel="stylesheet" href="/assets/ask.css?v=6">
 </head>
 <body>
 
@@ -242,6 +242,25 @@
       </div>
     </section>
 
+    <section class="about-section" id="accounts" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Accounts</p>
+          <div>
+            <p class="api-note">Signing in to the chat is optional. It saves your conversations so you can pick them up later, and it gives you your own rate limit instead of sharing one with everyone on your network.</p>
+            <p class="api-note" style="margin-top: 24px;"><b>How sign-in works.</b> Google and LinkedIn both use OpenID Connect's authorization-code flow, so one code path in the Cloudflare Worker handles both, with no auth library.</p>
+            <ul class="api-note" style="margin-top: 12px; padding-left: 20px;">
+              <li>The worker sends you to the provider with a signed <code>state</code>. The state carries a one-time nonce that is also set as an <code>HttpOnly</code> cookie, and the callback rejects the login unless the two match. That stops a sign-in link started in someone else's browser from signing you into their account.</li>
+              <li>The worker exchanges the one-time code, plus its client secret, for an ID token directly with the provider over TLS. The token came from the provider itself, so the spec lets the worker skip its signature check. It still checks that the token was issued for this app and hasn't expired.</li>
+              <li>Your session is an HMAC-signed token, not a database row, so checking it costs nothing. It comes back in the URL fragment, which browsers never send to servers. It's only ever returned to this site's own pages; any other return address is refused.</li>
+              <li>The chat sends the session as an <code>Authorization</code> header rather than a cookie. The site and the API live on different domains, and browsers like Safari block cookies across domains.</li>
+            </ul>
+            <p class="api-note" style="margin-top: 24px;"><b>What's stored.</b> Your name and email from the provider, plus your saved chats, in a Cloudflare D1 database. Nothing is shared or sold. <b>Delete my data</b> in the chat erases your account and every chat at once. The public <a href="/status.html">usage dashboard</a> shows only totals like answers per day and token counts, never what anyone asked.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="about-section">
       <div class="container">
         <div class="about-col-grid" data-reveal>
@@ -296,6 +315,6 @@
     </div>
   </footer>
 
-  <script src="/assets/chat.js?v=5"></script>
+  <script src="/assets/chat.js?v=6"></script>
 </body>
 </html>

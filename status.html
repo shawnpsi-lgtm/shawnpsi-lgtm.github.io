@@ -80,11 +80,25 @@
     .slow .dot { background: #d99a16; }
     .down .dot { background: #d6453d; }
     .down .st { color: #d6453d; }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 24px; margin: 0 0 40px; }
+    .tiles div { border-top: 1px solid var(--border); padding-top: 12px; }
+    .tiles dt { font-size: 0.85rem; color: var(--mid); white-space: nowrap; }
+    .tiles dd { margin: 4px 0 0; font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; color: var(--black); font-variant-numeric: tabular-nums; }
+    .usage { position: relative; margin: 0 0 16px; }
+    .usage figcaption { font-size: 0.85rem; color: var(--mid); margin-bottom: 12px; }
+    .bars { display: flex; align-items: flex-end; gap: 2px; height: 160px; border-bottom: 1px solid var(--border); }
+    /* The whole column is the hover target; the bar inside it is the mark. */
+    .bars > div { flex: 1; height: 100%; display: flex; align-items: flex-end; cursor: default; }
+    .bars > div:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .bars i { display: block; width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; }
+    .bars > div:hover i, .bars > div:focus i { background: var(--accent-hover, var(--accent)); }
+    .axis { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--mid); margin-top: 6px; }
+    .tip { position: absolute; top: 20px; margin: 0; padding: 6px 10px; font-size: 0.85rem; white-space: nowrap; color: var(--black); background: var(--bg-off); border: 1px solid var(--border); border-radius: 8px; pointer-events: none; transform: translateX(-50%); }
   </style>
   <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
   <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
-  <link rel="stylesheet" href="/assets/ask.css?v=5">
+  <link rel="stylesheet" href="/assets/ask.css?v=6">
 </head>
 <body>
 
@@ -152,6 +166,23 @@
         </div>
       </div>
     </section>
+    <section class="about-section" style="border-top: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Usage</p>
+          <div>
+            <dl class="tiles" id="tiles"></dl>
+            <figure class="usage">
+              <figcaption>Answers per day · last 14 days (UTC)</figcaption>
+              <div class="bars" id="bars"></div>
+              <div class="axis" id="axis"></div>
+              <p class="tip" id="tip" hidden></p>
+            </figure>
+            <p class="status-meta" id="usage-meta">Loading…</p>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script>
@@ -215,6 +246,59 @@
     }
     run();
     setInterval(run, 60000);
+
+    // Usage: every Groq answer (chat, API, Slack) is logged to D1 by the worker;
+    // /usage returns daily aggregates, never message content.
+    const fmt = n => n.toLocaleString();
+    async function usage() {
+      let d;
+      try { d = await withTimeout(fetch(W + '/usage').then(ok).then(r => r.json())); }
+      catch (e) { document.getElementById('usage-meta').textContent = 'Usage unavailable · ' + e.message; return; }
+      const byDay = Object.fromEntries(d.days.map(x => [x.day, x]));
+      const days = Array.from({ length: 14 }, (_, i) => new Date(Date.now() - (13 - i) * 864e5).toISOString().slice(0, 10))
+        .map(day => byDay[day] || { day, answers: 0, prompt: 0, cached: 0, out: 0 });
+      const today = days.at(-1);
+      const sum = k => days.reduce((s, x) => s + (x[k] || 0), 0);
+      const tiles = [
+        ['Answers today', fmt(today.answers)],
+        ['Tokens today', fmt((today.prompt || 0) + (today.out || 0))],
+        ['Cache hit, 14 d', sum('prompt') ? Math.round(100 * sum('cached') / sum('prompt')) + '%' : '—'],
+        ['Median reply, 24 h', d.median_ms == null ? '—' : (d.median_ms / 1000).toFixed(1) + ' s'],
+        ['Signed-in visitors', fmt(d.users)],
+      ];
+      document.getElementById('tiles').replaceChildren(...tiles.map(([k, v]) => {
+        const div = document.createElement('div');
+        div.append(Object.assign(document.createElement('dt'), { textContent: k }), Object.assign(document.createElement('dd'), { textContent: v }));
+        return div;
+      }));
+
+      const max = Math.max(1, ...days.map(x => x.answers));
+      const label = x => new Date(x.day + 'T12:00Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+      const tip = document.getElementById('tip'), fig = tip.parentElement;
+      document.getElementById('bars').replaceChildren(...days.map(x => {
+        const col = document.createElement('div');
+        col.tabIndex = 0;
+        col.setAttribute('aria-label', `${label(x)}: ${x.answers} answers`);
+        const bar = document.createElement('i');
+        bar.style.height = x.answers ? `max(2px, ${100 * x.answers / max}%)` : '0';
+        col.append(bar);
+        const show = () => {
+          tip.textContent = `${label(x)} · ${fmt(x.answers)} answers · ${fmt((x.prompt || 0) + (x.out || 0))} tokens`;
+          tip.hidden = false;
+          const c = col.getBoundingClientRect(), f = fig.getBoundingClientRect();
+          // Keep the tip inside the figure at either end.
+          tip.style.left = Math.min(Math.max(c.left - f.left + c.width / 2, tip.offsetWidth / 2), f.width - tip.offsetWidth / 2) + 'px';
+        };
+        const hide = () => { tip.hidden = true; };
+        col.addEventListener('mouseenter', show); col.addEventListener('focus', show);
+        col.addEventListener('mouseleave', hide); col.addEventListener('blur', hide);
+        return col;
+      }));
+      document.getElementById('axis').replaceChildren(...[days[0], days[7], today].map(x => Object.assign(document.createElement('span'), { textContent: label(x) })));
+      document.getElementById('usage-meta').textContent = `${fmt(sum('answers'))} answer${sum('answers') === 1 ? '' : 's'} in 14 days · peak ${fmt(Math.max(...days.map(x => x.answers)))} in a day · counts every chat, API and Slack answer`;
+    }
+    usage();
+    setInterval(usage, 60000);
   </script>
 
   <!-- ============================================================
@@ -245,6 +329,6 @@
     </div>
   </footer>
 
-  <script src="/assets/chat.js?v=5"></script>
+  <script src="/assets/chat.js?v=6"></script>
 </body>
 </html>

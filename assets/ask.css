@@ -92,6 +92,35 @@
 }
 #chat button:hover { background: var(--accent-hover); }
 
+/* Sign-in / saved-chats row (chat.js). Quiet, so the conversation stays the focus. */
+#chat-acct {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 0 4px;
+  font-size: var(--text-sm, .875rem);
+  color: var(--mid);
+}
+#chat-acct:empty { display: none; }
+#chat-acct span { font-weight: 600; color: var(--black); }
+#chat-acct select { min-width: 0; max-width: 100%; flex: 1 1 120px; padding: 4px 8px; font: inherit; color: var(--black); border: 1px solid color-mix(in srgb, var(--black) 12%, transparent); border-radius: 980px; background: color-mix(in srgb, var(--bg-off) 70%, transparent); }
+#chat-acct a, #chat #chat-acct button {
+  display: inline-block;
+  width: auto;
+  height: auto;
+  padding: 3px 10px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--accent);
+  border-radius: 980px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  text-decoration: none;
+}
+#chat-acct a:hover, #chat #chat-acct button:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+#chat-acct :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 /* Every page but the homepage: the chat as a pill centered in the fixed nav, opening
    downward. Phones have no room in the nav, so there it's a corner pill. */
 /* Centered on the nav's midline (nav top + half its 48px height), whatever the pill's size. */

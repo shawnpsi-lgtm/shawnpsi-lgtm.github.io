@@ -21,7 +21,8 @@
   const form = document.getElementById('chat');
   const log = document.getElementById('chat-log');
   const input = document.getElementById('chat-input');
-  const msgs = [];   // system prompt and model are the worker's business
+  let msgs = [];   // system prompt and model are the worker's business
+  let chatId = null;   // the saved chat this conversation appends to, once signed in
 
   const say = (who, text) => {
     const p = document.createElement('p');
@@ -75,6 +76,65 @@
     flush();
   };
 
+  // Optional sign-in, so chats are saved. The worker hands the session back in
+  // the URL fragment after the provider's redirect; keep it and tidy the URL.
+  const KEY = 'shawn-ai-session';
+  const store = { get: () => { try { return localStorage.getItem(KEY); } catch { return null; } },
+                  set: v => { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch {} } };
+  const fresh = location.hash.match(/^#session=([\w.-]+)$/)?.[1];
+  if (fresh) {
+    store.set(fresh);
+    history.replaceState(null, '', location.pathname + location.search);
+    const ask = document.getElementById('ask');
+    if (ask) ask.open = true;   // they left from the chat, so land back in it
+  }
+  const authed = (opts = {}) => {
+    const t = store.get();
+    return t ? { ...opts, headers: { ...opts.headers, Authorization: 'Bearer ' + t } } : opts;
+  };
+  const NAMES = { google: 'Google', linkedin: 'LinkedIn' };
+  const acct = document.createElement('div');
+  acct.id = 'chat-acct';
+  form.prepend(acct);
+  const el = (tag, props) => Object.assign(document.createElement(tag), props);
+  const reset = () => { msgs = []; chatId = null; log.textContent = ''; };
+
+  async function account() {
+    const me = await fetch(PROXY + '/me', authed()).then(r => r.json()).catch(() => null);
+    acct.textContent = '';
+    if (!me) return;
+    if (!me.user) {
+      if (store.get()) store.set(null);   // expired, or the account was deleted
+      if (!me.providers?.length) return;
+      acct.append('Sign in to save chats:');
+      const ret = encodeURIComponent(location.href.split('#')[0]);
+      for (const p of me.providers) acct.append(el('a', { href: `${PROXY}/auth/${p}?return=${ret}`, textContent: NAMES[p] || p }));
+      return;
+    }
+    const pick = el('select', { ariaLabel: 'Saved chats' });
+    pick.append(el('option', { value: '', textContent: 'New chat' }));
+    for (const c of me.chats) pick.append(el('option', { value: c.id, textContent: c.title, selected: c.id === chatId }));
+    pick.addEventListener('change', async () => {
+      reset();
+      if (!pick.value) return;
+      const r = await fetch(PROXY + '/chats/' + pick.value, authed()).then(r => r.json()).catch(() => null);
+      chatId = +pick.value;
+      msgs = r?.messages || [];
+      for (const m of msgs) m.role === 'user' ? say('me', m.content) : render(say('bot', ''), m.content);
+    });
+    const out = el('button', { type: 'button', textContent: 'Sign out' });
+    out.addEventListener('click', () => { store.set(null); reset(); account(); });
+    const del = el('button', { type: 'button', textContent: 'Delete my data' });
+    del.addEventListener('click', async () => {
+      if (!confirm('Delete your account and every saved chat? This can’t be undone.')) return;
+      const r = await fetch(PROXY + '/me', authed({ method: 'DELETE' })).catch(() => null);
+      if (!r?.ok) return alert('Couldn’t delete right now — try again in a minute.');
+      store.set(null); reset(); account();
+    });
+    acct.append(el('span', { textContent: me.user.name || me.user.email || 'Signed in' }), pick, out, del);
+  }
+  account();
+
   for (const b of document.querySelectorAll('#connect button')) b.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(b.dataset.url); }
     catch { prompt('Copy this URL:', b.dataset.url); return; }   // no clipboard: copy by hand
@@ -94,20 +154,23 @@
     msgs.push({ role: 'user', content: text });
     const out = say('bot', '\u2026');
     try {
-      const r = await fetch(PROXY, {
+      const r = await fetch(PROXY, authed({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: msgs }),
-      });
+        body: JSON.stringify({ messages: msgs, chat_id: chatId }),
+      }));
       const raw = await r.text();
       if (!r.ok) {
         let msg = raw.slice(0, 300);
         try { msg = JSON.parse(raw).error?.message || JSON.parse(raw).error || msg; } catch {}
         throw new Error(msg);
       }
-      const reply = JSON.parse(raw).choices[0].message.content;
+      const j = JSON.parse(raw);
+      const reply = j.choices[0].message.content;
       msgs.push({ role: 'assistant', content: reply });
       render(out, reply);
+      // A new saved chat: refresh the picker so it lists (and selects) this one.
+      if (j.chat_id && j.chat_id !== chatId) { chatId = j.chat_id; account(); }
     } catch (err) {
       msgs.pop();   // drop the unanswered turn so a retry isn't sent twice
       out.textContent = err.message || String(err);

@@ -133,3 +133,49 @@ console.log('health ok');
   assert.match(posted.body.text, /who is shawn[\s\S]*a designer/);
   console.log('slack ok');
 }
+
+// Accounts: sessions are signed and typed; sign-in only returns to this site; state is tied to the browser.
+{
+  const { seal, unseal } = await import('./groq-proxy.js');
+  const aenv = { ...env, SESSION_SECRET: 's3cret', GOOGLE_CLIENT_ID: 'gid', GOOGLE_CLIENT_SECRET: 'gsec' };
+  const tok = await seal(aenv, { t: 'session', uid: 7, exp: Date.now() + 1e5 });
+  assert.equal((await unseal(aenv, tok, 'session')).uid, 7);
+  assert.equal(await unseal(aenv, tok, 'state'), null);                                   // wrong type
+  assert.equal(await unseal({ SESSION_SECRET: 'other' }, tok, 'session'), null);           // wrong key
+  assert.equal(await unseal(aenv, tok.slice(0, -2) + 'AA', 'session'), null);              // tampered
+  assert.equal(await unseal(aenv, await seal(aenv, { t: 'session', uid: 7, exp: 1 }), 'session'), null);   // expired
+
+  const go = (url, headers = {}) => worker.fetch(new Request('https://w' + url, { headers, redirect: 'manual' }), aenv);
+  assert.equal((await go('/auth/linkedin?return=https://shawnsingh.me/')).status, 404);     // not configured
+  assert.equal((await go('/auth/google?return=https://evil.test/')).status, 400);          // open redirect
+  const start = await go('/auth/google?return=' + encodeURIComponent('https://shawnsingh.me/work.html'));
+  assert.equal(start.status, 302);
+  const loc = new URL(start.headers.get('Location'));
+  assert.equal(loc.origin, 'https://accounts.google.com');
+  assert.equal(loc.searchParams.get('redirect_uri'), 'https://w/auth/google/callback');
+  const nonce = start.headers.get('Set-Cookie').match(/__Host-nonce=([\w-]+)/)[1];
+  const cb = '/auth/google/callback?code=c&state=' + loc.searchParams.get('state');
+  assert.equal((await go(cb, { Cookie: '__Host-nonce=someone-else' })).status, 400);        // login CSRF
+
+  // Full callback: the provider's ID token becomes a session on the page we left.
+  const idt = 'x.' + Buffer.from(JSON.stringify({ sub: '42', aud: 'gid', exp: Date.now() / 1000 + 60, name: 'Ada' })).toString('base64url') + '.y';
+  globalThis.fetch = async () => new Response(JSON.stringify({ id_token: idt }));
+  let bound;
+  aenv.DB = { prepare: () => ({ bind: (...a) => (bound = a, { first: async () => 9 }) }) };
+  const done = await go(cb, { Cookie: '__Host-nonce=' + nonce });
+  assert.equal(done.status, 302);
+  assert.equal(bound[0], 'google:42');
+  const back = new URL(done.headers.get('Location'));
+  assert.equal(back.origin + back.pathname, 'https://shawnsingh.me/work.html');
+  assert.equal((await unseal(aenv, back.hash.slice('#session='.length), 'session')).uid, 9);
+
+  // Wrong audience: a token minted for another app is refused.
+  globalThis.fetch = async () => new Response(JSON.stringify({ id_token: idt.replace(/\.(.*)\./, '.' + Buffer.from(JSON.stringify({ sub: '42', aud: 'not-us', exp: Date.now() / 1000 + 60 })).toString('base64url') + '.') }));
+  assert.equal((await go(cb, { Cookie: '__Host-nonce=' + nonce })).status, 502);
+
+  // /me: signed out lists providers; account routes need a session.
+  const me = await worker.fetch(new Request('https://w/me', { headers: { Origin: 'https://shawnsingh.me' } }), aenv);
+  assert.deepEqual(await me.json(), { user: null, providers: ['google'] });
+  assert.equal((await worker.fetch(new Request('https://w/chats/1', { headers: { Origin: 'https://shawnsingh.me' } }), aenv)).status, 401);
+  console.log('auth ok');
+}

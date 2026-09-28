@@ -32,7 +32,8 @@ ${SITE}
 
 const cors = origin => ({
   'Access-Control-Allow-Origin': origin,
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE',
   'Content-Type': 'application/json',
   Vary: 'Origin',
 });
@@ -88,17 +89,23 @@ const groq = (env, opts, msgs) => fetch('https://api.groq.com/openai/v1/chat/com
 });
 
 // One line per Groq answer for Workers Logs (wrangler tail, or the dashboard):
-// the numbers the free-tier budget is audited from.
-const logUsage = (path, j) => console.log(JSON.stringify({
-  path, model: j.model, prompt: j.usage?.prompt_tokens, cached: j.usage?.prompt_tokens_details?.cached_tokens ?? 0,
-  out: j.usage?.completion_tokens, reason: j.usage?.completion_tokens_details?.reasoning_tokens, finish: j.choices?.[0]?.finish_reason,
-}));
+// the numbers the free-tier budget is audited from. The same numbers go to D1
+// for the public dashboard on status.html; the returned promise is for waitUntil.
+const logUsage = (env, path, j, ms) => {
+  const u = {
+    path, model: j.model, prompt: j.usage?.prompt_tokens, cached: j.usage?.prompt_tokens_details?.cached_tokens ?? 0,
+    out: j.usage?.completion_tokens, reason: j.usage?.completion_tokens_details?.reasoning_tokens, finish: j.choices?.[0]?.finish_reason, ms,
+  };
+  console.log(JSON.stringify(u));
+  return env.DB?.prepare('INSERT INTO usage (ts, path, model, prompt, cached, out, ms) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(Date.now(), path, u.model ?? null, u.prompt ?? null, u.cached, u.out ?? null, ms ?? null).run().catch(e => console.error('usage log', e));
+};
 
 // /api: open to any origin. Bare GET returns the digest (free, like /mcp);
 // ?q= gets an answer. Groq limits per model, so the API runs on its own model
 // and its traffic can only exhaust its own quota, never the site chat's.
 const API_MODEL = 'openai/gpt-oss-20b';
-async function api(req, env) {
+async function api(req, env, ctx) {
   const params = new URL(req.url).searchParams;
   // &plain gives bare text instead of JSON, so the shell CLI needs no JSON parser.
   const plain = params.has('plain');
@@ -111,12 +118,13 @@ async function api(req, env) {
 
   const { success } = await env.API_LIMITER.limit({ key: req.headers.get('CF-Connecting-IP') || 'anon' });
   if (!success) return out({ error: 'Too many requests — give it a minute.' }, 429);
+  const t = Date.now();
   const r = await groq(env, { model: API_MODEL, max_tokens: 400, reasoning_effort: 'low' }, [{ role: 'user', content: q.slice(0, 800) }]);
   if (r.status === 429) return out({ error: 'Too many requests — give it a minute.' }, 429);
   // Groq's message holds no key and is the only useful signal when something breaks.
   if (!r.ok) return out({ error: (await r.json().catch(() => null))?.error?.message || 'upstream error' }, 502);
   const j = await r.json();
-  logUsage('api', j);
+  ctx?.waitUntil(logUsage(env, 'api', j, Date.now() - t));
   return out({ answer: j.choices?.[0]?.message?.content ?? '' });
 }
 
@@ -159,9 +167,10 @@ async function slack(req, env, ctx, path) {
 
   // Slack gives up after 3s, so ack now and post the answer to response_url.
   ctx.waitUntil((async () => {
+    const t = Date.now();
     const r = await groq(env, { model: API_MODEL, reasoning_effort: 'low' }, [{ role: 'user', content: q.slice(0, 800) }]);
     const j = r.ok ? await r.json() : null;
-    if (j) logUsage('slack', j);
+    if (j) await logUsage(env, 'slack', j, Date.now() - t);
     const text = j?.choices?.[0]?.message?.content || (r.status === 429 ? 'Too many questions — give it a minute.' : 'Something broke — try again shortly.');
     await fetch(f.get('response_url'), {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -169,6 +178,146 @@ async function slack(req, env, ctx, path) {
     });
   })());
   return new Response(null, { status: 200 });
+}
+
+// Accounts: optional sign-in so a visitor's chats are saved. Both providers
+// speak OpenID Connect's authorization-code flow, so one code path serves both.
+// A provider switches on once its client ID is in [vars] and its secret is set.
+const PROVIDERS = {
+  google: { auth: 'https://accounts.google.com/o/oauth2/v2/auth', token: 'https://oauth2.googleapis.com/token', env: 'GOOGLE' },
+  linkedin: { auth: 'https://www.linkedin.com/oauth/v2/authorization', token: 'https://www.linkedin.com/oauth/v2/accessToken', env: 'LINKEDIN' },
+};
+const configured = env => Object.keys(PROVIDERS).filter(p => env[PROVIDERS[p].env + '_CLIENT_ID'] && env[PROVIDERS[p].env + '_CLIENT_SECRET']);
+
+// Sessions and OAuth state are HMAC-signed tokens rather than database rows:
+// checking one costs no D1 read, and there's nothing to expire or clean up.
+// ponytail: sign-out only drops the browser's copy; a leaked token works until
+// it expires (30 days). Add a sessions table if revocation ever matters.
+const enc = s => new TextEncoder().encode(s);
+const b64u = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+const hmac = env => crypto.subtle.importKey('raw', enc(env.SESSION_SECRET || ''), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
+export async function seal(env, obj) {
+  const body = b64u(enc(JSON.stringify(obj)));
+  return body + '.' + b64u(new Uint8Array(await crypto.subtle.sign('HMAC', await hmac(env), enc(body))));
+}
+export async function unseal(env, token, type) {
+  try {
+    const [body, sig] = token.split('.');
+    // verify(), not a string compare, so the check runs in constant time.
+    if (!env.SESSION_SECRET || !await crypto.subtle.verify('HMAC', await hmac(env), unb64u(sig), enc(body))) return null;
+    const o = JSON.parse(new TextDecoder().decode(unb64u(body)));
+    return o.t === type && o.exp > Date.now() ? o : null;   // a state token can't pass as a session
+  } catch { return null; }
+}
+const userId = async (req, env) =>
+  (await unseal(env, (req.headers.get('Authorization') || '').replace(/^Bearer /, ''), 'session'))?.uid ?? null;
+const siteOrigin = url => { try { const o = new URL(url).origin; return ALLOWED.includes(o) || DEV.test(o); } catch { return false; } };
+
+// /auth/<provider>?return=<page>: off to the provider, then back to <page> with
+// the session in the URL fragment (fragments never reach a server or a log).
+async function auth(req, env, path) {
+  const url = new URL(req.url);
+  const [, , name, step] = path.split('/');
+  const p = PROVIDERS[name];
+  if (!p || !configured(env).includes(name)) return new Response('sign-in not available', { status: 404 });
+  const redirect = `${url.origin}/auth/${name}/callback`;
+  const id = env[p.env + '_CLIENT_ID'];
+
+  if (!step) {
+    // Only this site's pages may receive a session, or the fragment would hand it to anyone.
+    const ret = url.searchParams.get('return') || '';
+    if (!siteOrigin(ret)) return new Response('bad return url', { status: 400 });
+    // The nonce rides in both a cookie and the signed state. The callback demands
+    // they match, so a login link started in someone else's browser can't sign
+    // this one into their account (login CSRF).
+    const nonce = b64u(crypto.getRandomValues(new Uint8Array(16)));
+    const state = await seal(env, { t: 'state', p: name, ret, nonce, exp: Date.now() + 600e3 });
+    return new Response(null, { status: 302, headers: {
+      Location: p.auth + '?' + new URLSearchParams({ response_type: 'code', client_id: id, redirect_uri: redirect, scope: 'openid profile email', state }),
+      'Set-Cookie': `__Host-nonce=${nonce}; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=600`,
+    } });
+  }
+
+  if (step !== 'callback') return new Response('not found', { status: 404 });
+  const st = await unseal(env, url.searchParams.get('state') || '', 'state');
+  const cookie = (req.headers.get('Cookie') || '').match(/__Host-nonce=([\w-]+)/)?.[1];
+  if (!st || st.p !== name || st.nonce !== cookie) return new Response('sign-in expired, try again', { status: 400 });
+  const back = new URL(st.ret);
+  const code = url.searchParams.get('code');
+  if (!code) return Response.redirect(back.href, 302);   // they hit Cancel
+
+  const tok = await fetch(p.token, {
+    method: 'POST',
+    body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: redirect, client_id: id, client_secret: env[p.env + '_CLIENT_SECRET'] }),
+  }).then(r => r.json()).catch(() => ({}));
+  // The ID token came straight from the provider over TLS, in exchange for a
+  // one-time code and our secret, so OIDC Core 3.1.3.7 lets us skip its
+  // signature check. Audience and expiry are still ours to check.
+  let claims;
+  try { claims = JSON.parse(new TextDecoder().decode(unb64u(tok.id_token.split('.')[1]))); } catch {}
+  if (!claims?.sub || claims.aud !== id || claims.exp * 1000 < Date.now()) return new Response('sign-in failed', { status: 502 });
+
+  const uid = await env.DB.prepare(
+    'INSERT INTO users (sub, email, name, created) VALUES (?, ?, ?, ?) ON CONFLICT(sub) DO UPDATE SET email = excluded.email, name = excluded.name RETURNING id',
+  ).bind(`${name}:${claims.sub}`, claims.email ?? null, claims.name ?? claims.given_name ?? null, Date.now()).first('id');
+  back.hash = 'session=' + await seal(env, { t: 'session', uid, exp: Date.now() + 30 * 864e5 });
+  return new Response(null, { status: 302, headers: { Location: back.href, 'Set-Cookie': '__Host-nonce=; Path=/; Secure; HttpOnly; Max-Age=0' } });
+}
+
+// /me and /chats/<id>, for the chat UI. Called from this site only, so they
+// sit behind the same origin check as the chat.
+async function account(req, env, path, origin) {
+  const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: cors(origin) });
+  const uid = await userId(req, env);
+  if (path === '/me' && req.method === 'GET') {
+    if (!uid) return json({ user: null, providers: configured(env) });
+    const [user, chats] = await env.DB.batch([
+      env.DB.prepare('SELECT name, email FROM users WHERE id = ?').bind(uid),
+      env.DB.prepare('SELECT id, title FROM chats WHERE user_id = ? ORDER BY updated DESC LIMIT 50').bind(uid),
+    ]);
+    // A valid token for a deleted account is just signed out.
+    return json(user.results[0] ? { user: user.results[0], chats: chats.results } : { user: null, providers: configured(env) });
+  }
+  if (!uid) return json({ error: 'sign in first' }, 401);
+  if (path === '/me' && req.method === 'DELETE') {
+    await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(uid).run();   // cascades to chats and messages
+    return json({ deleted: true });
+  }
+  const chat = path.match(/^\/chats\/(\d+)$/)?.[1];
+  if (chat && req.method === 'GET') {
+    const { results } = await env.DB.prepare(
+      'SELECT m.role, m.content FROM messages m JOIN chats c ON c.id = m.chat_id WHERE c.id = ? AND c.user_id = ? ORDER BY m.rowid',
+    ).bind(chat, uid).all();
+    return json({ messages: results });
+  }
+  return json({ error: 'not found' }, 404);
+}
+
+// Appends one question and answer to the user's chat, starting a new chat when
+// chatId is missing or isn't theirs. Returns the chat's id.
+async function saveTurn(env, uid, chatId, q, a) {
+  const now = Date.now();
+  const id = (chatId && await env.DB.prepare('UPDATE chats SET updated = ? WHERE id = ? AND user_id = ? RETURNING id').bind(now, chatId, uid).first('id'))
+    || await env.DB.prepare('INSERT INTO chats (user_id, title, updated) VALUES (?, ?, ?) RETURNING id').bind(uid, q.slice(0, 60), now).first('id');
+  const add = env.DB.prepare('INSERT INTO messages (chat_id, role, content, ts) VALUES (?, ?, ?, ?)');
+  await env.DB.batch([add.bind(id, 'user', q, now), add.bind(id, 'assistant', a, now)]);
+  return id;
+}
+
+// /usage: the public dashboard's numbers. Aggregates only, never content.
+async function usage(env) {
+  const since = Date.now() - 14 * 864e5, day = Date.now() - 864e5;
+  const [days, median, users] = await env.DB.batch([
+    env.DB.prepare(`SELECT date(ts / 1000, 'unixepoch') AS day, count(*) AS answers, sum(prompt) AS prompt, sum(cached) AS cached, sum(out) AS out
+      FROM usage WHERE ts > ? GROUP BY day ORDER BY day`).bind(since),
+    env.DB.prepare('SELECT ms FROM usage WHERE ts > ?1 AND ms IS NOT NULL ORDER BY ms LIMIT 1 OFFSET (SELECT count(*) / 2 FROM usage WHERE ts > ?1 AND ms IS NOT NULL)').bind(day),
+    env.DB.prepare('SELECT count(*) AS n FROM users'),
+  ]);
+  return new Response(JSON.stringify({ days: days.results, median_ms: median.results[0]?.ms ?? null, users: users.results[0].n }), {
+    // A minute of staleness is fine, and it keeps a busy status page off D1.
+    headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' },
+  });
 }
 
 // /health: for status.html. Listing Groq's models costs no tokens, yet proves the
@@ -189,16 +338,23 @@ export default {
     if (path === '/health') return health(env);
     if (path.startsWith('/slack/')) return slack(req, env, ctx, path);
     if (path === '/mcp') return mcp(req);
-    if (path === '/api') return api(req, env);
+    if (path === '/api') return api(req, env, ctx);
+    if (path === '/usage') return usage(env);
+    // Full-page redirects, so there's no Origin header to check.
+    if (path.startsWith('/auth/')) return auth(req, env, path);
     // Spoofable with curl, so it isn't the real defence — the rate limit and the
     // caps below are. It does stop other sites from spending the quota.
     const origin = req.headers.get('Origin') || '';
     if (!ALLOWED.includes(origin) && !DEV.test(origin)) return new Response('forbidden', { status: 403 });
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors(origin) });
+    if (path === '/me' || path.startsWith('/chats/')) return account(req, env, path, origin);
     if (req.method !== 'POST') return fail('method not allowed', 405, origin);
 
+    // Signed-in visitors are limited per account, so recruiters sharing an
+    // office IP don't share one budget.
+    const uid = await userId(req, env);
     const ip = req.headers.get('CF-Connecting-IP') || 'anon';
-    const { success } = await env.RATE_LIMITER.limit({ key: ip });
+    const { success } = await env.RATE_LIMITER.limit({ key: uid ? 'user:' + uid : ip });
     if (!success) return fail('Too many messages — give it a minute.', 429, origin);
 
     // Model, system prompt and token cap are ours; only the turns come from the
@@ -214,6 +370,7 @@ export default {
     // gpt-oss thinks before it answers and bills for it. On a portfolio Q&A
     // that reasoning buys nothing, and tokens are the scarce thing here.
     const ask = model => groq(env, { model, reasoning_effort: 'low' }, msgs);
+    const t = Date.now();
     let r = await ask(MODEL);
     // Groq's free tier is 8k tokens/min per model and the prompt is ~1.2k of every
     // request, so its 429 is the one error a visitor will actually hit. Each model
@@ -225,7 +382,13 @@ export default {
     // useful signal when something breaks.
     if (!r.ok) return new Response(r.body, { status: r.status, headers: cors(origin) });
     const j = await r.json();
-    logUsage('chat', j);
+    ctx?.waitUntil(logUsage(env, 'chat', j, Date.now() - t));
+    // Saving must never cost the visitor their answer, so a D1 failure only logs.
+    const reply = j.choices?.[0]?.message?.content;
+    if (uid && reply && msgs.at(-1).role === 'user') {
+      j.chat_id = await saveTurn(env, uid, Number(body.chat_id) || null, msgs.at(-1).content, reply)
+        .catch(e => (console.error('save chat', e), undefined));
+    }
     return new Response(JSON.stringify(j), { headers: cors(origin) });
   },
 };

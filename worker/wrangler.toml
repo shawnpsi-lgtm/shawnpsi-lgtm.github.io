@@ -6,6 +6,7 @@ compatibility_date = "2026-09-01"
 # SLACK_SIGNING_SECRET are secrets: npx wrangler secret put <NAME> --config worker/wrangler.toml
 [vars]
 SLACK_CLIENT_ID = "4161243200950.12168948591796"
+GOOGLE_CLIENT_ID = "222939189378-m9ktm58hn3dap0res54husvr7tfk712l.apps.googleusercontent.com"
 
 # Workers Logs: keeps the per-request token lines from logUsage().
 [observability]
@@ -26,3 +27,11 @@ name = "API_LIMITER"
 type = "ratelimit"
 namespace_id = "1002"
 simple = { limit = 3, period = 60 }
+
+# Accounts, saved chats and the usage log. Schema: worker/schema.sql.
+# Sign-in also needs secrets: SESSION_SECRET, plus GOOGLE_CLIENT_SECRET /
+# LINKEDIN_CLIENT_SECRET once each provider's client ID is added to [vars].
+[[d1_databases]]
+binding = "DB"
+database_name = "shawn-ai"
+database_id = "09b7d4d5-4f2a-4263-bf25-c4a29a8bf467"
