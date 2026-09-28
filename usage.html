@@ -68,6 +68,8 @@
         gap: 24px;
       }
     }
+    /* let the graph scroll instead of widening the grid past the screen */
+    .about-col-grid > div { min-width: 0; }
     .status-banner { font-family: var(--serif); font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 700; color: var(--black); margin: 0 0 8px; }
     .status-meta { font-size: 0.9rem; color: var(--mid); margin: 0 0 32px; }
     .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 24px; margin: 0 0 40px; }
@@ -77,10 +79,10 @@
     .usage { position: relative; margin: 0 0 16px; --l1: color-mix(in srgb, var(--accent) 35%, var(--border)); --l2: color-mix(in srgb, var(--accent) 60%, var(--border)); --l3: color-mix(in srgb, var(--accent) 80%, var(--border)); --l4: var(--accent); }
     .usage figcaption { font-size: 0.85rem; color: var(--mid); margin-bottom: 12px; }
     /* Contribution graph: one column per week, one row per weekday (Sun at top), shaded by answers. */
-    .grid-wrap { display: flex; gap: 8px; overflow-x: auto; padding: 2px; }
-    .days, .bars { display: grid; grid-template-rows: repeat(7, 13px); gap: 3px; }
-    .days { font-size: 0.7rem; color: var(--mid); line-height: 13px; }
-    .bars { grid-auto-flow: column; grid-auto-columns: 13px; }
+    .grid-wrap { display: flex; gap: 8px; }
+    .days, .bars { display: grid; align-content: start; grid-template-rows: repeat(7, 13px); gap: 3px; }
+    .days { font-size: 0.7rem; color: var(--mid); line-height: 13px; padding: 2px 0; }
+    .bars { grid-auto-flow: column; grid-auto-columns: 13px; overflow-x: auto; min-width: 0; padding: 2px; }
     .bars > div { border-radius: 3px; background: var(--border); cursor: default; }
     .bars > div[data-l="1"] { background: var(--l1); }
     .bars > div[data-l="2"] { background: var(--l2); }
@@ -240,6 +242,8 @@
         col.addEventListener('mouseleave', hide); col.addEventListener('blur', hide);
         return col;
       }));
+      // On narrow screens the graph scrolls; start at the latest week.
+      const bars = document.getElementById('bars'); bars.scrollLeft = bars.scrollWidth;
       document.getElementById('axis').replaceChildren('Less', ...[0, 1, 2, 3, 4].map(l => {
         const i = document.createElement('i');
         if (l) i.style.background = `var(--l${l})`;
