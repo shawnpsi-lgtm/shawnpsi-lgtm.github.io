@@ -83,8 +83,11 @@
   .chant{height:200vh;margin:0 0 clamp(24px,4vw,48px)}
   .chant__pin{
     position:sticky;top:var(--nav-height);height:calc(100vh - var(--nav-height));
-    display:grid;align-items:center
+    display:grid;align-items:center;overflow:hidden;isolation:isolate;
+    --ink:#f0f1eb;--bg:#090a08;padding:0 clamp(16px,4vw,48px)
   }
+  .chant__pin video{position:absolute;inset:5%;width:90%;height:90%;object-fit:cover;z-index:-1;filter:brightness(.55)}
+  @media (max-width:640px){.chant__pin video{inset:0;width:100%;height:100%}}
   .chant p{
     margin:0;max-width:22ch;
     font-size:clamp(32px,5.2vw,76px);font-weight:500;line-height:1.1;
@@ -97,7 +100,7 @@
   .ink-words span.is-on{color:var(--ink)}
   @media (prefers-reduced-motion:reduce){
     .chant{height:auto}
-    .chant__pin{position:static;height:auto;padding:48px 0}
+    .chant__pin{position:relative;height:auto;padding:48px clamp(16px,4vw,48px)}
     .ink-words span{color:var(--ink);transition:none}
   }
   .problem{margin:0 0 clamp(88px,10vw,148px);padding-top:26px;border-top:1px solid var(--line)}
@@ -189,6 +192,7 @@
     .gantt__head,.gantt__row{grid-template-columns:1fr}
     .gantt__head .gantt__tf{display:none}
     .gantt__phases span{flex-direction:column;align-items:flex-start;gap:2px;padding:10px 8px;letter-spacing:.08em;font-size:10px}
+    .gantt__phases{margin:0 12px}
     .gantt__phases span:first-child{border-left:0}
     .gantt__phases span i{display:block;font-size:9px;letter-spacing:.04em;opacity:.75}
     .gantt__row{min-height:0}
@@ -362,6 +366,7 @@
 <main>
   <section class="chant" aria-label="Critical situations on the battlefield require solutions that operationalize swift decision-making">
     <div class="chant__pin">
+      <video src="videos/ngc2_chant.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
       <p class="ink-words">
         <span>Critical</span> <span>situations</span> <span>on</span> <span>the</span> <span>battlefield</span> <span>require</span> <span>solutions</span> <span>that</span> <span>operationalize</span> <span>swift</span> <span>decision-making</span>
       </p>
@@ -631,17 +636,17 @@
   // kind: omit = baseline, 'add' = new vs last FRAGO, 'mod' = changed
   const ROWS = [
     { unit: 'TF Rogue', tasks: [
-      { label: 'Pre-flight check',  start: [0, .06], end: [0, .92] },
-      { label: 'Clear OBJ Scarif',  start: [1, 0],   end: [2, 1] },
-      { label: 'Secure the plans',  start: [3, .04], end: [3, .95], kind: 'mod' },
+      { label: 'Avengers, ASSEMBLE!!',  start: [0, .06], end: [0, .92] },
+      { label: 'Clear OBJ Scarif — HULK SMASH',  start: [1, 0],   end: [2, 1] },
+      { label: 'ACCIO Death Star plans!',  start: [3, .04], end: [3, .95], kind: 'mod' },
     ]},
-    { unit: 'TF Ghost', tasks: [
-      { label: 'Sensor sweep',      start: [1, .38], end: [2, 1] },
-      { label: 'Block ISD Gate',    start: [3, 0],   end: [3, 1], kind: 'add' },
+    { unit: 'TF Dumbledore', tasks: [
+      { label: 'I solemnly swear… Marauder’s Map sweep',      start: [1, .38], end: [2, 1] },
+      { label: 'Block ISD Gate w/ Cap’s shield',    start: [3, 0],   end: [3, 1], kind: 'add' },
     ]},
-    { unit: 'TF Gold', tasks: [
-      { label: 'Emplace ion cannon', start: [2, 0],  end: [2, 1] },
-      { label: 'Covering fire',     start: [3, .48], end: [4, 1], kind: 'add' },
+    { unit: 'TF Stark', tasks: [
+      { label: 'Emplace Iron Man’s ion cannon (by Hagrid)', start: [2, 0],  end: [2, 1] },
+      { label: 'EXPECTO PATRONUM covering fire',     start: [3, .48], end: [4, 1], kind: 'add' },
     ]},
   ];
 
