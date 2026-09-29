@@ -36,21 +36,26 @@
   // Replies are plain text, but the model likes to cite pages and URLs,
   // sometimes as [text](url) or wrapped in **bold**. Turn those into links,
   // built as DOM nodes (never innerHTML) and only for http(s) or site paths.
-  const LINK = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s)*<>]*[^\s)*<>.,;:!?'"]|\/[\w./-]+\.html\b)/g;
+  const LINK = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s)*<>]*[^\s)*<>.,;:!?'"]|\/[\w./-]+\.(?:html|pdf)\b|\/(?:beatfx|sayclip)\/)/g;
   const TITLES = {
     '/about.html': 'About', '/work.html': 'Work', '/project-cloudexa.html': 'Cloudexa',
     '/project-emmy.html': 'Emmy Award', '/project-djai.html': 'DJai', '/project-ngc2.html': 'NGC2',
-    '/project-visuallyrepresented.html': 'Visually Represented',
+    '/project-visuallyrepresented.html': 'Visually Represented', '/shawnfluence.html': 'Shawnfluence',
+    '/files/resume.pdf': 'R\u00e9sum\u00e9', '/beatfx/': 'BEAT FX', '/sayclip/': 'Sayclip',
   };
+  // Any other site path gets a name from its file, so no raw path shows: /privacy.html -> Privacy.
+  const pageName = href => href.split('/').filter(Boolean).pop().replace(/\.\w+$/, '').replace(/[-_]/g, ' ')
+    .replace(/^./, c => c.toUpperCase());
   const linkify = (el, text) => {
     let i = 0;
     for (const m of text.matchAll(LINK)) {
-      const href = m[2] || m[3];
+      const href = (m[2] || m[3]).split('#')[0];   // never keep #fragments
       if (!/^(https?:\/\/|\/)/.test(href)) continue;
       el.append(text.slice(i, m.index));
       const a = document.createElement('a');
       a.href = href;
-      a.textContent = (TITLES[href] ? TITLES[href] + ' \u2192' : m[1]) || (href[0] === '/' ? href : new URL(href).hostname);
+      a.textContent = (TITLES[href] ? TITLES[href] + ' \u2192' : m[1])
+        || (href[0] === '/' ? pageName(href) + ' \u2192' : new URL(href).hostname);
       if (href[0] !== '/') { a.target = '_blank'; a.rel = 'noopener'; }
       el.append(a);
       i = m.index + m[0].length;
@@ -60,7 +65,8 @@
   // Runs of "- item" lines become a <ul>; everything else stays pre-wrap text.
   const render = (el, text) => {
     // The model often writes paths with U+2010/2011 hyphens, which the regex misses.
-    text = text.replace(/\*\*/g, '').replace(/[\u2010\u2011]/g, '-');
+    // Stray markdown * and # go too, except a "* item" bullet at the start of a line.
+    text = text.replace(/(?<!^[ \t]*)\*|^#+\s*/gm, '').replace(/[\u2010\u2011]/g, '-');
     el.textContent = '';
     let ul = null, buf = '';
     const flush = () => { if (buf.trim()) { linkify(el, buf.trim()); ul = null; } buf = ''; };
@@ -199,6 +205,9 @@
     b.reset = setTimeout(() => { b.textContent = b.dataset.label; b.classList.remove('done'); }, 2000);
   });
 
+  // The Shawnfluence logo, for the searching bubble.
+  const SF_LOGO = '<img src="/images/desk/shawnfluence.webp" alt="" width="16" height="16">';
+
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const text = input.value.trim();
@@ -206,7 +215,12 @@
     input.value = '';
     say('me', text);
     msgs.push({ role: 'user', content: text });
-    const out = say('bot', '\u2026');
+    // The first two questions of a chat show a "searching" shimmer, held for
+    // a beat so it reads even when Groq answers instantly.
+    const searching = msgs.filter(m => m.role === 'user').length <= 2;
+    const out = say(searching ? 'bot searching' : 'bot', searching ? 'Searching Shawnfluence' : '\u2026');
+    if (searching) out.insertAdjacentHTML('afterbegin', SF_LOGO);
+    const beat = searching && new Promise(r => setTimeout(r, 2200));
     try {
       const r = await fetch(PROXY, authed({
         method: 'POST',
@@ -222,13 +236,15 @@
       const j = JSON.parse(raw);
       const reply = j.choices[0].message.content;
       msgs.push({ role: 'assistant', content: reply });
+      await beat;
+      out.classList.remove('searching');
       render(out, reply);
       // A new saved chat: refresh the picker so it lists (and selects) this one.
       if (j.chat_id && j.chat_id !== chatId) { chatId = j.chat_id; account(); }
     } catch (err) {
       msgs.pop();   // drop the unanswered turn so a retry isn't sent twice
       out.textContent = err.message || String(err);
-      out.classList.add('err');
+      out.classList.replace('searching', 'err') || out.classList.add('err');
     }
     log.scrollTop = log.scrollHeight;
   });

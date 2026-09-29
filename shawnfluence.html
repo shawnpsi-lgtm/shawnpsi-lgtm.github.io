@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shawnfluence</title>
+<meta name="description" content="Shawn Singh's projects, documented like a Confluence space." />
+<link rel="icon" type="image/svg+xml" href="/shawnlogo.svg" />
+<style>
+:root{
+  --text:#172B4D;--subtle:#44546F;--subtlest:#626F86;--link:#0C66E4;--brand:#0C66E4;--brand-hover:#0055CC;
+  --border:#DCDFE4;--bg:#fff;--bg-neutral:#091E420F;--bg-hover:#091E4224;--sidebar:#F7F8F9;--selected:#E9F2FF;
+  --info:#E9F2FF;--info-i:#1D7AFC;--note:#F3F0FF;--note-i:#8270DB;--ok:#DCFFF1;--ok-i:#22A06B;--warn:#FFF7D6;--warn-i:#E2B203;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,"Fira Sans","Droid Sans","Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:14px/20px var(--font);-webkit-font-smoothing:antialiased}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font:inherit;color:inherit;cursor:pointer}
+svg{flex-shrink:0}
+
+/* top nav */
+.top{position:fixed;inset:0 0 auto;height:56px;display:flex;align-items:center;gap:4px;padding:0 12px;border-bottom:1px solid var(--border);background:#fff;z-index:20}
+.ibtn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:0;border-radius:3px;background:none;color:var(--subtle)}
+.ibtn:hover{background:var(--bg-neutral)}
+.logo{display:flex;align-items:center;gap:6px;padding:0 8px;height:32px;border-radius:3px;color:var(--text);font-weight:600;font-size:16px;letter-spacing:-.01em}
+.logo:hover{background:var(--bg-neutral);text-decoration:none}
+.tnav{display:flex;gap:2px;margin-left:8px}
+.tnav button{display:flex;align-items:center;gap:4px;height:32px;padding:0 8px;border:0;border-radius:3px;background:none;color:var(--subtle);font-weight:500}
+.tnav button:hover{background:var(--bg-neutral);color:var(--text)}
+.create{display:flex;align-items:center;gap:4px;height:32px;margin-left:8px;padding:0 10px;border:0;border-radius:3px;background:var(--brand);color:#fff!important;font-weight:500}
+.create:hover{background:var(--brand-hover)}
+.search{position:relative;margin-left:8px;width:240px}
+.rovo-btn{margin-left:auto!important}
+.search input{width:100%;height:32px;padding:0 8px 0 32px;border:1px solid #8590A2;border-radius:3px;font:inherit;color:var(--text);background:#fff}
+.search input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:transparent}
+.search svg{position:absolute;left:8px;top:8px;color:var(--subtle)}
+.results{position:absolute;top:36px;left:0;right:0;background:#fff;border-radius:3px;box-shadow:0 8px 12px #091E4226,0 0 1px #091E424F;padding:4px 0;display:none}
+.results.open{display:block}
+.results a{display:flex;gap:8px;padding:6px 12px;color:var(--text)}
+.results a:hover,.results a.hl{background:var(--bg-neutral);text-decoration:none}
+.results small{display:block;color:var(--subtlest);font-size:11px;line-height:14px}
+.results p{margin:0;padding:8px 12px;color:var(--subtlest)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:#1F845A;color:#fff;font-weight:600}
+.me{width:24px;height:24px;font-size:10px;margin:0 4px}
+
+/* sidebar */
+.side{position:fixed;top:56px;bottom:0;left:0;width:280px;background:var(--sidebar);border-right:1px solid var(--border);overflow-y:auto;padding:16px 8px;z-index:10;transition:transform .2s}
+.space{display:flex;align-items:center;gap:8px;padding:4px 8px 16px}
+.space-ico{width:32px;height:32px;border-radius:3px;background:linear-gradient(135deg,#0C66E4,#6E5DC6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.space b{display:block;font-size:14px}
+.space small{color:var(--subtlest);font-size:12px}
+.snav a,.tree a{display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border-radius:3px;color:var(--subtle);font-weight:500}
+.snav a:hover,.tree a:hover{background:var(--bg-neutral);text-decoration:none;color:var(--text)}
+.snav a.on,.tree a.on{background:var(--selected);color:var(--brand)}
+.sect{display:flex;align-items:center;justify-content:space-between;margin:16px 0 4px;padding:0 8px;color:var(--subtlest);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.02em}
+.tree ul{list-style:none;margin:0;padding:0}
+.tree ul ul{padding-left:16px}
+.tree a{font-weight:400;color:var(--text)}
+.tree .caret{width:16px;display:inline-flex;color:var(--subtlest);transition:transform .15s}
+.tree .closed>a .caret{transform:rotate(-90deg)}
+.tree .closed>ul{display:none}
+.tree .emoji{width:16px;text-align:center}
+
+/* page */
+main{margin-left:280px;padding-top:56px;min-height:100%}
+.bar{display:flex;align-items:center;gap:8px;height:48px;padding:0 24px 0 40px;position:sticky;top:56px;background:#fffffff2;z-index:5}
+.crumbs{display:flex;flex-wrap:wrap;gap:4px;color:var(--subtlest);min-width:0;overflow:hidden;white-space:nowrap}
+.crumbs a{color:var(--subtlest)}
+.crumbs span{color:var(--subtlest)}
+.actions{margin-left:auto;display:flex;align-items:center;gap:2px}
+.share{height:32px;padding:0 12px;border:0;border-radius:3px;background:var(--bg-neutral);font-weight:500;margin-left:6px}
+.share:hover{background:var(--bg-hover)}
+.cover{height:clamp(120px,22vw,240px)}
+article{max-width:760px;margin:0 auto;padding:32px 40px 96px}
+.pemoji{font-size:48px;line-height:1;margin:8px 0 12px}
+.cover+article .pemoji{margin-top:-56px;position:relative}
+h1{font-size:29px;line-height:32px;font-weight:600;letter-spacing:-.01em;margin:0 0 16px}
+.byline{display:flex;align-items:center;flex-wrap:wrap;gap:6px;color:var(--subtlest);font-size:12px;margin-bottom:24px}
+.byline .avatar{width:24px;height:24px;font-size:10px;margin-right:2px}
+.byline b{color:var(--text);font-weight:500}
+.dot::before{content:"•";margin:0 2px}
+.body h2{font-size:20px;line-height:24px;font-weight:600;margin:32px 0 0;letter-spacing:-.008em}
+.body h3{font-size:16px;line-height:20px;font-weight:600;margin:24px 0 0}
+.body p{margin:12px 0 0;font-size:16px;line-height:24px}
+.body ul,.body ol{margin:12px 0 0;padding-left:24px;font-size:16px;line-height:24px}
+.body li+li{margin-top:4px}
+.body img{display:block;max-width:100%;margin:24px auto 0;border-radius:3px;box-shadow:0 0 0 1px var(--border)}
+.body figcaption{text-align:center;color:var(--subtlest);font-size:12px;margin-top:6px}
+.panel{display:flex;gap:10px;padding:12px 16px;margin:16px 0 0;border-radius:3px;font-size:16px;line-height:24px}
+.panel p:first-child{margin-top:0}
+.panel svg{margin-top:2px}
+.p-info{background:var(--info)}.p-info svg{color:var(--info-i)}
+.p-note{background:var(--note)}.p-note svg{color:var(--note-i)}
+.p-ok{background:var(--ok)}.p-ok svg{color:var(--ok-i)}
+.p-warn{background:var(--warn)}.p-warn svg{color:var(--warn-i)}
+table{border-collapse:collapse;width:100%;margin:16px 0 0;font-size:14px}
+th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--sidebar);font-weight:600}
+.props th{width:28%}
+.table-wrap{overflow-x:auto}
+.loz{display:inline-block;padding:0 4px;border-radius:3px;font-size:11px;line-height:16px;font-weight:700;text-transform:uppercase;white-space:nowrap;background:#091E420F;color:#44546F;margin:1px 2px 1px 0}
+.l-green{background:#DCFFF1;color:#216E4E}.l-blue{background:#E9F2FF;color:#0055CC}
+.l-purple{background:#F3F0FF;color:#5E4DB2}.l-yellow{background:#FFF7D6;color:#7F5F01}.l-red{background:#FFECEB;color:#AE2E24}
+.toc{border-left:2px solid var(--border);padding:4px 0 4px 16px;margin:16px 0 0}
+.toc b{display:block;font-size:12px;color:var(--subtlest);margin-bottom:4px}
+.toc a{display:block;line-height:24px}
+.expand{margin:16px 0 0;border-radius:3px}
+.expand summary{cursor:pointer;padding:6px 4px;color:var(--text);font-size:14px}
+.expand summary:hover{background:var(--bg-neutral)}
+.expand>div{padding:0 8px 8px 20px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:16px}
+.card{display:block;border:1px solid var(--border);border-radius:3px;padding:12px;color:var(--text);transition:box-shadow .15s}
+.card:hover{text-decoration:none;box-shadow:0 4px 8px #091E4226,0 0 1px #091E424F}
+.card .e{font-size:20px}
+.card b{display:block;margin-top:6px}
+.card small{display:block;color:var(--subtlest);margin-top:4px;font-size:12px;line-height:16px}
+.card .loz{margin-top:8px}
+.foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--border)}
+.labels{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.label{padding:0 6px;border-radius:3px;background:var(--bg-neutral);color:var(--subtle);font-size:12px;line-height:20px}
+.label:hover{background:var(--bg-hover);text-decoration:none}
+.reacts{display:flex;gap:6px;margin-top:16px}
+.react{display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--border);border-radius:14px;background:#fff;color:var(--subtle);font-size:12px}
+.react:hover{background:var(--bg-neutral)}
+.react.on{border-color:var(--brand);background:var(--info);color:var(--brand)}
+.comments{margin-top:32px}
+.comments h3{font-size:16px;margin:0 0 16px;font-weight:600}
+.comment{display:flex;gap:12px;margin-bottom:20px}
+.comment .avatar{width:32px;height:32px;font-size:12px}
+.comment b{font-weight:600}
+.comment small{color:var(--subtlest);margin-left:6px}
+.comment p{margin:4px 0 0;font-size:14px}
+.comment input{flex:1;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:3px;font:inherit}
+.comment input:focus{outline:2px solid var(--brand);outline-offset:-1px}
+.flag{position:fixed;left:24px;bottom:24px;display:flex;gap:12px;align-items:flex-start;width:min(380px,calc(100vw - 32px));padding:16px;background:#fff;border-radius:3px;box-shadow:0 8px 12px #091E4226,0 0 1px #091E424F;transform:translateY(160%);transition:transform .25s;z-index:30}
+.flag.show{transform:none}
+.flag svg{color:var(--info-i)}
+.flag b{display:block;margin-bottom:4px}
+.flag span{color:var(--subtle)}
+.menu{display:none}
+
+/* Shawn AI, in the style of Rovo */
+.rovo-btn{display:flex;align-items:center;gap:6px;height:32px;margin-left:8px;padding:0 10px 0 8px;border:1px solid var(--border);border-radius:3px;background:#fff;font-weight:500;color:var(--subtle)}
+.rovo-btn:hover,body.ai-open:not(.ai-float) .rovo-btn{background:var(--bg-neutral);color:var(--text)}
+.ai{position:fixed;top:56px;right:0;bottom:0;width:400px;display:flex;flex-direction:column;background:#fff;border-left:1px solid var(--border);z-index:15;transform:translateX(100%);visibility:hidden;transition:transform .2s,visibility .2s}
+body.ai-open .ai{transform:none;visibility:visible}
+@media (min-width:1101px){body.ai-open:not(.ai-float) main{margin-right:400px}}
+.ai-head{display:flex;align-items:center;gap:6px;height:48px;padding:0 8px 0 16px;border-bottom:1px solid var(--border)}
+.ai-head b{font-size:14px;font-weight:600}
+.ai-head .ibtn{margin-left:auto}.ai-head .ibtn+.ibtn{margin-left:0}
+.ai-log{flex:1;overflow-y:auto;padding:16px}
+.ai-hello{padding:24px 4px 8px}
+.ai-hello h2{margin:14px 0 4px;font-size:20px;line-height:24px;font-weight:600}
+.ai-hello p{margin:0 0 20px;color:var(--subtle)}
+.ai-sugg{display:flex;flex-direction:column;gap:8px}
+.ai-sugg button{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;text-align:left;color:var(--text)}
+.ai-sugg button:hover{background:var(--sidebar)}
+.ai-sugg svg{color:var(--subtle)}
+.msg-me{margin:16px 0 0 48px;padding:8px 12px;border-radius:12px 12px 4px 12px;background:var(--bg-neutral);white-space:pre-wrap;word-wrap:break-word}
+.msg-ai{margin:16px 0 0;font-size:14px;line-height:22px;word-wrap:break-word}
+.msg-ai .who{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-weight:600;font-size:12px;color:var(--subtle)}
+.msg-ai p{margin:0 0 8px;white-space:pre-wrap}
+.msg-ai ul{margin:0 0 8px;padding-left:20px}
+.msg-ai.err p{color:#AE2E24}
+.msg-ai .tools{display:flex;gap:2px;margin-top:2px}
+.msg-ai .tools .ibtn{width:28px;height:28px}
+.msg-ai .tools .on{color:var(--brand)}
+.thinking{background:linear-gradient(90deg,var(--subtlest) 30%,#C0B6F2 50%,var(--subtlest) 70%) 0/300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 1.6s linear infinite}
+@keyframes shimmer{to{background-position:-300% 0}}
+.ai-foot{padding:8px 16px 12px}
+.ai-box{border:1px solid var(--border);border-radius:12px;padding:8px 8px 6px 12px;box-shadow:0 1px 1px #091E4240}
+.ai-box:focus-within{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.ai-box textarea{display:block;width:100%;min-height:24px;max-height:160px;border:0;outline:0;resize:none;font:14px/20px var(--font);color:var(--text);field-sizing:content;padding:2px 0}
+.ai-row{display:flex;align-items:center;gap:4px;margin-top:6px}
+.ai-send{margin-left:auto;width:28px;height:28px;border:0;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center}
+.ai-send:disabled{background:var(--bg-neutral);color:#091E424F;cursor:default}
+.ai-fab{position:fixed;right:24px;bottom:24px;z-index:14;display:flex;align-items:center;gap:8px;height:48px;padding:0 18px 0 14px;border:0;border-radius:24px;background:#292A2E;color:#fff;font-weight:600;box-shadow:0 8px 12px #091E4226,0 0 1px #091E424F;transition:transform .15s,box-shadow .15s}
+.ai-fab:hover{transform:translateY(-2px);box-shadow:0 12px 20px #091E4233,0 0 1px #091E424F}
+body.ai-open:not(.ai-float) .ai-fab{display:none}
+/* The floating button opens the same agent as a small window above it. */
+body.ai-float .ai{top:auto;right:24px;bottom:84px;width:380px;height:min(560px,calc(100vh - 160px));border:0;border-radius:12px;overflow:hidden;box-shadow:0 12px 24px #091E4233,0 0 1px #091E424F;transform:translateY(12px) scale(.98);transform-origin:bottom right;opacity:0;transition:transform .15s,opacity .15s,visibility .15s;z-index:25}
+body.ai-float.ai-open .ai{transform:none;opacity:1}
+body.ai-float .ai .ai-hello{padding-top:8px}
+@media (max-width:900px){.ai-fab{right:16px;bottom:16px;padding:0 12px}.ai-fab span{display:none}body.ai-float .ai{right:16px;left:16px;bottom:76px;width:auto;height:auto;top:72px}}
+.ai-note{margin-top:8px;text-align:center;font-size:11px;color:var(--subtlest)}
+
+@media (max-width:900px){
+  .tnav,.create span,.top .ibtn.hide-sm{display:none}
+  .menu{display:inline-flex}
+  .search{width:auto;flex:1;max-width:240px}
+  .side{transform:translateX(-100%)}
+  body.nav-open .side{transform:none;box-shadow:0 8px 16px #091E4240}
+  main{margin-left:0}
+  .ai{width:100%}
+  .rovo-btn span{display:none}
+  .bar{padding:0 16px}
+  .actions .ibtn.hide-sm{display:none}
+  article{padding:24px 16px 80px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="ibtn menu" id="menu" aria-label="Toggle sidebar"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg></button>
+  <button class="ibtn hide-sm" aria-label="App switcher" data-flag><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 10h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 16h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4z"/></svg></button>
+  <a class="logo" href="#home">
+    <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#0052CC"/><stop offset="1" stop-color="#2684FF"/></linearGradient></defs><path fill="url(#lg)" d="M3 22.5c-.4.6-.2 1.4.4 1.8l6 3.7c.6.4 1.4.2 1.8-.4 2.6-4.3 5.4-3.7 10.6-1.3l6.5 3.1c.7.3 1.5 0 1.8-.7l2.8-6.4c.3-.7 0-1.4-.6-1.7-1.9-.9-5.7-2.7-9.1-4.3C14.8 10.7 8 11.2 3 22.5z"/><path fill="url(#lg)" d="M29 9.5c.4-.6.2-1.4-.4-1.8l-6-3.7c-.6-.4-1.4-.2-1.8.4-2.6 4.3-5.4 3.7-10.6 1.3L3.7 2.6C3 2.3 2.2 2.6 1.9 3.3L-.9 9.7c-.3.7 0 1.4.6 1.7 1.9.9 5.7 2.7 9.1 4.3C17.2 21.3 24 20.8 29 9.5z" transform="translate(1.5 0)"/></svg>
+    Shawnfluence
+  </a>
+  <nav class="tnav">
+    <button data-go="home">Home</button>
+    <button data-flag>Recent <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.3 10.3a1 1 0 0 1 1.4 0L12 12.6l2.3-2.3a1 1 0 1 1 1.4 1.4l-3 3a1 1 0 0 1-1.4 0l-3-3a1 1 0 0 1 0-1.4z"/></svg></button>
+    <button data-go="projects">Spaces <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.3 10.3a1 1 0 0 1 1.4 0L12 12.6l2.3-2.3a1 1 0 1 1 1.4 1.4l-3 3a1 1 0 0 1-1.4 0l-3-3a1 1 0 0 1 0-1.4z"/></svg></button>
+    <button data-flag>Templates</button>
+  </nav>
+  <button class="create" data-flag><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 11V6a1 1 0 0 0-2 0v5H6a1 1 0 0 0 0 2h5v5a1 1 0 0 0 2 0v-5h5a1 1 0 0 0 0-2z"/></svg><span>Create</span></button>
+  <button class="rovo-btn" id="ai-toggle" aria-label="Ask Shawn AI"><svg class="rovo-mark" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#1D7AFC" d="M12 2l4.5 4.5L12 11 7.5 6.5z"/><path fill="#8270DB" d="M17.5 7.5L22 12l-4.5 4.5L13 12z"/><path fill="#22A06B" d="M12 13l4.5 4.5L12 22l-4.5-4.5z"/><path fill="#F5CD47" d="M6.5 7.5L11 12l-4.5 4.5L2 12z"/></svg><span>Shawn AI</span></button>
+  <div class="search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 15l4.3 4.3-1.4 1.4-4.3-4.3a7 7 0 1 1 1.4-1.4zM10.5 16a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z"/></svg>
+    <input id="q" type="search" placeholder="Search" autocomplete="off" aria-label="Search pages" />
+    <div class="results" id="results"></div>
+  </div>
+  <button class="ibtn hide-sm" aria-label="Notifications" data-flag><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 16V11a5.5 5.5 0 0 1 11 0v5l1.5 2H5zm3.5 3h4a2 2 0 0 1-4 0z"/></svg></button>
+  <button class="ibtn hide-sm" aria-label="Help" data-flag><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-4a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm0-9a3 3 0 0 0-3 3h2a1 1 0 1 1 1 1 1 1 0 0 0-1 1v2h2v-1.2A3 3 0 0 0 12 7z"/></svg></button>
+  <span class="avatar me" title="Shawn Singh">SS</span>
+</header>
+
+<aside class="side" id="side">
+  <div class="space">
+    <div class="space-ico">S</div>
+    <div><b>Shawn Singh</b><small>Portfolio space</small></div>
+  </div>
+  <nav class="snav">
+    <a href="#home" data-id="home"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 7v9h-6v-6h-4v6H4v-9z"/></svg>Overview</a>
+    <a href="/" ><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 4h6v6h-2V7.4l-7.3 7.3-1.4-1.4L16.6 6H14zM5 6h6v2H6v10h10v-5h2v7H4V6z"/></svg>shawnsingh.me</a>
+  </nav>
+  <div class="sect">Content <button class="ibtn" style="width:24px;height:24px" aria-label="Create page" data-flag>+</button></div>
+  <nav class="tree" id="tree"></nav>
+</aside>
+
+<main id="main"></main>
+
+<aside class="ai" id="ai" aria-label="Shawn AI">
+  <div class="ai-head"><svg class="rovo-mark" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="#1D7AFC" d="M12 2l4.5 4.5L12 11 7.5 6.5z"/><path fill="#8270DB" d="M17.5 7.5L22 12l-4.5 4.5L13 12z"/><path fill="#22A06B" d="M12 13l4.5 4.5L12 22l-4.5-4.5z"/><path fill="#F5CD47" d="M6.5 7.5L11 12l-4.5 4.5L2 12z"/></svg><b>Shawn AI</b>
+    <button class="ibtn" id="ai-new" aria-label="New chat" title="New chat"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 5h8v2H7v10h10v-6h2v8H5zm13.3-1.7l2.4 2.4-7.3 7.3H11v-2.4z"/></svg></button>
+    <button class="ibtn" id="ai-close" aria-label="Close" title="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.6l5.3-5.3 1.4 1.4-5.3 5.3 5.3 5.3-1.4 1.4-5.3-5.3-5.3 5.3-1.4-1.4 5.3-5.3-5.3-5.3 1.4-1.4z"/></svg></button>
+  </div>
+  <div class="ai-log" id="ai-log" aria-live="polite"></div>
+  <form class="ai-foot" id="ai-form" autocomplete="off">
+    <div class="ai-box">
+      <textarea id="ai-input" rows="1" placeholder="Ask Shawn AI about any project" aria-label="Message"></textarea>
+      <div class="ai-row">
+        <button type="button" class="ibtn" style="width:28px;height:28px" aria-label="Add" data-flag><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 11V6a1 1 0 0 0-2 0v5H6a1 1 0 0 0 0 2h5v5a1 1 0 0 0 2 0v-5h5a1 1 0 0 0 0-2z"/></svg></button>
+        <button class="ai-send" id="ai-send" aria-label="Send" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button>
+      </div>
+    </div>
+    <div class="ai-note">Uses AI. Verify results.</div>
+  </form>
+</aside>
+
+<button class="ai-fab" id="ai-fab" aria-label="Ask Shawn AI"><svg class="rovo-mark" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="#1D7AFC" d="M12 2l4.5 4.5L12 11 7.5 6.5z"/><path fill="#8270DB" d="M17.5 7.5L22 12l-4.5 4.5L13 12z"/><path fill="#22A06B" d="M12 13l4.5 4.5L12 22l-4.5-4.5z"/><path fill="#F5CD47" d="M6.5 7.5L11 12l-4.5 4.5L2 12z"/></svg><span>Ask Shawn AI</span></button>
+
+<div class="flag" id="flag" role="status">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-9a1 1 0 0 0-1 1v3a1 1 0 0 0 2 0v-3a1 1 0 0 0-1-1zm0-3.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></svg>
+  <div><b>This space is read-only</b><span>Shawnfluence is a portfolio. Want to collaborate? <a href="mailto:shawn@visuallyrepresented.co">Email Shawn</a>.</span></div>
+</div>
+
+<script>
+const ICON = {
+  info:'<path d="M12 20a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-9a1 1 0 0 0-1 1v3a1 1 0 0 0 2 0v-3a1 1 0 0 0-1-1zm0-3.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/>',
+  note:'<path d="M6 4h9l3 3v13H6zm3 7v2h6v-2zm0 4v2h4v-2z"/>',
+  ok:'<path d="M12 20a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm-1.4-6.2L8.4 11.6 7 13l3.6 3.6L17 10.2l-1.4-1.4z"/>',
+  warn:'<path d="M13.3 4.8l7.4 13A1.5 1.5 0 0 1 19.4 20H4.6a1.5 1.5 0 0 1-1.3-2.2l7.4-13a1.5 1.5 0 0 1 2.6 0zM12 15a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zm0-7a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0V9a1 1 0 0 0-1-1z"/>'
+};
+const panel = (t, html) => `<div class="panel p-${t}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">${ICON[t]}</svg><div>${html}</div></div>`;
+const loz = (s, c = '') => `<span class="loz ${c && 'l-' + c}">${s}</span>`;
+const props = rows => `<div class="table-wrap"><table class="props"><tbody>${rows.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('')}</tbody></table></div>`;
+const img = (src, cap) => `<figure style="margin:0">${`<img src="${src}" alt="${cap}" loading="lazy">`}<figcaption>${cap}</figcaption></figure>`;
+const stack = s => s.split(', ').map(x => loz(x)).join(' ');
+const caseLink = href => panel('info', `<p>This is the Shawnfluence summary. The full case study lives at <a href="${href}">shawnsingh.me${href}</a>.</p>`);
+
+const STATUS = { done: loz('Shipped', 'green'), live: loz('Live', 'blue'), active: loz('In progress', 'yellow'), concept: loz('Concept', 'purple'), award: loz('Award', 'green') };
+
+// Page tree. parent: null = top level.
+const PAGES = [
+  { id: 'home', title: 'Shawn Singh', emoji: '👋', parent: null, updated: 'Sep 28, 2026', labels: ['portfolio', 'data-science', 'design'], body: () => `
+    ${panel('info', `<p><b>Welcome to Shawnfluence.</b> This space is where Shawn Singh documents his projects the way a team documents theirs: one page per project, with status, stack and decisions.</p>`)}
+    <h2>About</h2>
+    <p><b>data + design.</b> Data Scientist at <b>C3 AI</b> and founder of <b>Visually Represented Studios</b>, based in San Francisco. BS in Data Science &amp; Cognitive Science from USC (May 2026), Dean's Honor List 5×.</p>
+    <p>Open to select freelance and consulting work. Contact: <a href="mailto:shawn@visuallyrepresented.co">shawn@visuallyrepresented.co</a> · <a href="https://www.linkedin.com/in/shawn-singh-72221a203">LinkedIn</a> · <a href="/files/resume.pdf">Résumé (PDF)</a></p>
+    <h2>Project tracker</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Project</th><th>Area</th><th>Year</th><th>Status</th></tr></thead>
+      <tbody>${PAGES.filter(p => p.parent === 'projects').map(p => `<tr><td><a href="#${p.id}">${p.emoji} ${p.title}</a></td><td>${p.area}</td><td>${p.year}</td><td>${STATUS[p.status]}</td></tr>`).join('')}</tbody>
+    </table></div>
+    <h2>Pages in this space</h2>
+    ${children('projects')}
+    ${panel('note', `<p>Prefer the real thing? See <a href="/work.html">Work</a> and <a href="/about.html">About</a> on shawnsingh.me, or ask <a href="#" data-ask="">Shawn AI</a>.</p>`)}
+  ` },
+
+  { id: 'projects', title: 'Projects', emoji: '📁', parent: null, updated: 'Sep 28, 2026', labels: ['index'], body: () => `
+    <p>Every project gets a page. Status, stack and scope are in the properties table at the top of each one.</p>
+    ${children('projects')}
+  ` },
+
+  { id: 'cloudexa', title: 'Cloudexa', emoji: '🏦', parent: 'projects', area: 'Data Science / Frontend', year: 2025, status: 'done', updated: 'Aug 22, 2025', read: 3,
+    cover: '#1D7AFC', labels: ['vue', 'dashboard', 'banking', 'esq-data-solutions'],
+    summary: 'Banking-grade ATM network dashboard for BBVA México.', body: p => `
+    ${props([['Status', STATUS.done], ['Role', 'Designer &amp; Developer'], ['Client', 'ESQ Data Solutions (a Kinective company) for BBVA México'], ['Year', '2025'], ['Stack', stack('Figma, Vue 3, Vite, Pinia, TypeScript, DevExtreme, pgAdmin, Power BI')]])}
+    ${toc(p)}
+    <h2>Overview</h2>
+    <p>A banking-grade data visualization platform for securely managing a network of ATMs, built for BBVA México: <b>14,500+ ATMs</b> serving <b>30M+ customers</b>.</p>
+    <h2>Problem</h2>
+    <p>Operations ran on a fragile Power BI setup. The v1 redesign lacked breadcrumbs and instance management, so operators couldn't tell where they were or act on what they saw.</p>
+    <h2>What shipped</h2>
+    <ul>
+      <li>One scannable view with <b>8 operational metrics</b>: memory usage by service, hotfixes over time, TLS protocols, ciphers and service status by server.</li>
+      <li>Breadcrumbs and instance management.</li>
+      <li>Role-based access control, API services and TLS cipher validation.</li>
+    </ul>
+    ${img('/images/cloudexa1.png', 'Cloudexa dashboard')}
+    ${panel('ok', `<p><b>Outcome:</b> replaced the Power BI dashboards for BBVA México's ATM operations.</p>`)}
+    <h2>Engagement notes</h2>
+    <p>June–August 2025 as a BBVA UI/UX intern with ESQ Data Solutions in Mexico City, flying weekly between Sacramento and Mexico City.</p>
+    ${caseLink('/project-cloudexa.html')}
+  ` },
+
+  { id: 'ngc2', title: 'NGC2', emoji: '🛰️', parent: 'projects', area: 'Data Science / Defense', year: 2026, status: 'active', updated: 'Sep 12, 2026', read: 3,
+    cover: '#2898BD', labels: ['c3-ai', 'us-army', 'llm', 'extraction'],
+    summary: 'U.S. Army Next-Gen Command & Control, with C3 AI.', body: p => `
+    ${props([['Status', STATUS.active], ['Program', 'U.S. Army Next-Gen Command &amp; Control'], ['Organization', 'C3 AI'], ['First formations', '4th ID, 25th ID'], ['Stack', stack('Lattice, Foundry, Edge LLM, Edge-to-cloud mesh')]])}
+    ${toc(p)}
+    <h2>Overview</h2>
+    <p>NGC2 turns dense, format-ambiguous military plans and annexes into structured, trusted mission data.</p>
+    <h2>How it works</h2>
+    <ol>
+      <li><b>Extract.</b> A format-agnostic pipeline pulls tasks out of plans and annexes and validates them across formats and revisions.</li>
+      <li><b>Display.</b> SYNCMAT shows the tasks on a live matrix with owners, timing, and diffs against the last order.</li>
+      <li><b>Integrate.</b> Lattice is the integration layer and Foundry the cloud data layer, over an edge-to-cloud mesh with an on-edge LLM.</li>
+    </ol>
+    <h2>Rollout</h2>
+    <p>The 4th and 25th Infantry Divisions are the first formations, with a path to scale across all eleven divisions.</p>
+    <h2>Sources</h2>
+    <ul><li>Lockheed Martin: <a href="https://www.lockheedmartin.com/en-us/news/features/2026/surging-ahead-with-speed-to-meet-next-generation-command-and-control-ngc2-mission-needs.html" target="_blank" rel="noopener">Surging ahead with speed to meet Next Generation Command and Control (NGC2) mission needs</a></li></ul>
+    ${caseLink('/project-ngc2.html')}
+  ` },
+
+  { id: 'djai', title: 'DJai', emoji: '🎧', parent: 'projects', area: 'UX / Product Design', year: 2024, status: 'concept', updated: 'May 3, 2024', read: 2,
+    cover: '#8270DB', labels: ['ux', 'figma', 'music', 'mobile'],
+    summary: 'Concept app for real DJ control on a phone.', body: p => `
+    ${props([['Status', STATUS.concept], ['Role', 'UX / Product Design'], ['Year', '2024'], ['Tools', stack('Figma')]])}
+    ${toc(p)}
+    <h2>Overview</h2>
+    <p>Music platforms fall short on dynamic, personalized listening. DJai reimagines how people interact with music: not just listening, but shaping it.</p>
+    <h2>Problem</h2>
+    <ul>
+      <li><b>Discovery is hard.</b> Algorithms surface the same artists again and again.</li>
+      <li><b>Playlists are a full-time job.</b> Keeping them in step with mood and context is all manual.</li>
+      <li><b>No app does true DJing.</b> Nobody brings EQ, mixing and live transitions to everyday mobile listening.</li>
+    </ul>
+    <h2>Personas</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Persona</th><th>Who</th><th>Wants</th></tr></thead>
+      <tbody>
+        <tr><td>°1 Irene, 27</td><td>Nurse practitioner, Boston</td><td>Effortless, mood-matched curation after long shifts</td></tr>
+        <tr><td>°2 Marko, 23</td><td>Working DJ, Los Angeles</td><td>Real EQ, live mixing and his decks in his pocket</td></tr>
+      </tbody>
+    </table></div>
+    <h2>Solution</h2>
+    <p><b>Basic mode</b> for AI-curated playback; <b>Advanced mode</b> with EQ knobs, live mixing and performance pads.</p>
+    ${img('/images/djai3.png', 'DJai screens')}
+    ${caseLink('/project-djai.html')}
+  ` },
+
+  { id: 'emmy', title: 'Emmy Award', emoji: '🏆', parent: 'projects', area: 'Animation / Graphics', year: 2022, status: 'award', updated: 'Jun 18, 2022', read: 1,
+    cover: '#F5CD47', labels: ['emmy', 'motion-design', 'after-effects'],
+    summary: '2022 NSPA Emmy for animation and graphics.', body: p => `
+    ${props([['Status', STATUS.award], ['Award', 'Emmy, National Academy of Television Arts &amp; Sciences (NSPA)'], ['Category', 'Animation / Graphics / Special Effects'], ['Year', '2022'], ['Role', 'Compositor &amp; Motion Designer']])}
+    ${panel('ok', `<p>🏆 <b>Winner</b>, 2022 NSPA Emmy Awards.</p>`)}
+    <h2>Overview</h2>
+    <p>Shawn was the compositor and motion designer. Every layer was built from scratch.</p>
+    ${caseLink('/project-emmy.html')}
+  ` },
+
+  { id: 'visuallyrepresented', title: 'Visually Represented', emoji: '🎬', parent: 'projects', area: 'Media / Creative Direction', year: 2019, status: 'live', updated: 'Sep 1, 2026', read: 2,
+    cover: '#2C3E5D', labels: ['media', 'photography', 'video', 'founder'],
+    summary: 'San Francisco media company, founded 2019.', body: p => `
+    ${props([['Status', STATUS.live], ['Role', 'Founder &amp; Creative Director'], ['Founded', '2019, San Francisco'], ['Reach', '1.1M+ monthly organic views'], ['Revenue', '$40k+ / year']])}
+    ${toc(p)}
+    <h2>Services</h2>
+    <p>${stack('Photography, Video, Brand, UGC, 3D animation, Renders, Campaign roll-outs, Interface consulting')}</p>
+    <h2>Selected clients</h2>
+    <ul><li>JELEEL!</li><li>Midwxst</li><li>SSGKobe</li><li>03 Greedo</li><li>DC The Don</li><li>Jaden Smith</li><li>Yonge-Dundas Square billboard design, Toronto</li></ul>
+    ${img('/images/vr_images/jaden.jpg', 'On set')}
+    ${caseLink('/project-visuallyrepresented.html')}
+  ` },
+
+  { id: 'beatfx', title: 'BEAT FX', emoji: '🎛️', parent: 'projects', area: 'Web Audio', year: 2025, status: 'live', updated: 'Sep 13, 2026', read: 1,
+    cover: '#22A06B', labels: ['web-audio', 'dj', 'mobile-web'],
+    summary: 'Pioneer DJM-A9 Beat FX in the browser.', body: p => `
+    ${props([['Status', STATUS.live], ['Type', 'Mobile-first web app'], ['Link', '<a href="/beatfx/">shawnsingh.me/beatfx</a>'], ['Stack', stack('Web Audio API, JavaScript')]])}
+    <h2>Overview</h2>
+    <p>A powerful notepad for on-the-go DJs. It clones the Beat FX section of a Pioneer DJM-A9 mixer: load a track on your phone and play it through live effects.</p>
+    <h2>Effects</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>FX</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td>Reverb</td><td>Room and hall tails</td></tr>
+        <tr><td>Echo</td><td>Beat-synced delay</td></tr>
+        <tr><td>Dub</td><td>Tape-style echo</td></tr>
+        <tr><td>Drum</td><td>Beat-synced TR-909 rolls</td></tr>
+      </tbody>
+    </table></div>
+    <p>Controls: Level/Depth and Time knobs, beat-division arrows, BPM sync and an X-Pad.</p>
+    ${img('/images/beatfx.png', 'BEAT FX on a phone')}
+  ` },
+
+  { id: 'sayclip', title: 'Sayclip', emoji: '✂️', parent: 'projects', area: 'Audio tools / Mac app', year: 2026, status: 'live', updated: 'Sep 14, 2026', read: 1,
+    cover: '#E774BB', labels: ['macos', 'audio', 'sampling'],
+    summary: 'Crate-dig for audio samples by what people say.', body: p => `
+    ${props([['Status', STATUS.live], ['Platforms', 'Mac (Apple Silicon), Web'], ['Link', '<a href="/sayclip/">shawnsingh.me/sayclip</a>'], ['Price', 'Free']])}
+    <h2>Overview</h2>
+    <p>Search real web video captions by what people say, cut the matching timestamp to a WAV, preview the waveform and drag the file straight into a folder or a DAW like Ableton.</p>
+    ${panel('info', `<p>Inspired by Yoink. The Mac app downloads from its card on <a href="/work.html">Work</a>.</p>`)}
+  ` },
+
+  { id: 'experience', title: 'Experience', emoji: '💼', parent: null, updated: 'Sep 28, 2026', read: 2, labels: ['resume'], body: p => `
+    ${toc(p)}
+    <h2>C3 AI</h2>
+    <p>${loz('Current', 'blue')} Data Scientist. See <a href="#ngc2">NGC2</a>.</p>
+    <h2>Avenues Consulting Group</h2>
+    <p>${loz('Aug 2023 – present')} Founding executive board member.</p>
+    <p>Founded this 501(c)(3) with 9 students as USC's first pro-bono, project-based consulting org focused on tech. Grew to <b>120+ members</b>; clients have included LinkedIn, DoorDash, CodeNinjas, Mountain Dew and PepsiCo.</p>
+    <h2>The Beatport Group</h2>
+    <p>${loz('Aug 2024 – present')} USC production intern, one of 10 selected in America.</p>
+    <p>Ran semesterly events for Grammy-winning DJs with London's Lab 54. A 28-day artist marketing campaign he conceived hit <b>1.3M views</b>.</p>
+    <h2>ESQ Data Solutions</h2>
+    <p>${loz('Jun – Aug 2025')} BBVA UI/UX intern, Mexico City. See <a href="#cloudexa">Cloudexa</a>.</p>
+    <h2>Skills</h2>
+    <details class="expand" open><summary>Design</summary><div>${stack('Figma, After Effects, Premiere Pro, Photoshop, Illustrator, Blender, Lightroom, Ableton, AutoCAD, Autodesk')}</div></details>
+    <details class="expand"><summary>Development</summary><div>${stack('Python, JavaScript, TypeScript, Vue 3, HTML/CSS, SQL, Java, C++, R')}</div></details>
+    <details class="expand"><summary>Data</summary><div>${stack('Tableau, Power BI, pandas, NumPy, SPSS, KNIME, Orange, ArcGIS/ESRI, Praat, Excel, SAS, SAP HANA, Amazon EC2, Apache Hadoop')}</div></details>
+  ` },
+];
+const byId = Object.fromEntries(PAGES.map(p => [p.id, p]));
+const kids = id => PAGES.filter(p => p.parent === id);
+
+function children(id) {
+  return `<div class="cards">${kids(id).map(p => `<a class="card" href="#${p.id}"><span class="e">${p.emoji}</span><b>${p.title}</b><small>${p.summary || ''}</small>${STATUS[p.status] || ''}</a>`).join('')}</div>`;
+}
+function toc(p) {
+  const hs = [...p.body.toString().matchAll(/<h2>(.*?)<\/h2>/g)].map(m => m[1]);
+  return `<nav class="toc"><b>On this page</b>${hs.map(h => `<a href="#${p.id}/${slug(h)}">${h}</a>`).join('')}</nav>`;
+}
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+function renderTree(cur) {
+  const open = new Set([cur, byId[cur]?.parent]);
+  const li = p => {
+    const k = kids(p.id);
+    return `<li class="${k.length && !open.has(p.id) && p.id !== 'projects' ? 'closed' : ''}"><a href="#${p.id}" class="${p.id === cur ? 'on' : ''}">
+      <span class="caret" ${k.length ? `data-toggle` : ''}>${k.length ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.3 10.3a1 1 0 0 1 1.4 0L12 12.6l2.3-2.3a1 1 0 1 1 1.4 1.4l-3 3a1 1 0 0 1-1.4 0l-3-3a1 1 0 0 1 0-1.4z"/></svg>' : ''}</span>
+      <span class="emoji">${p.emoji}</span>${p.title}</a>${k.length ? `<ul>${k.map(li).join('')}</ul>` : ''}</li>`;
+  };
+  document.getElementById('tree').innerHTML = `<ul>${kids(null).filter(p => p.id !== 'home').map(li).join('')}</ul>`;
+  document.querySelector('.snav a[data-id=home]').classList.toggle('on', cur === 'home');
+}
+
+let liked = {};
+try { liked = JSON.parse(localStorage.getItem('shawnfluence-likes') || '{}'); } catch {}
+
+function render() {
+  const [id, anchor] = location.hash.slice(1).split('/');
+  const p = byId[id] || byId.home;
+  const chain = [];
+  for (let c = byId[p.parent]; c; c = byId[c.parent]) chain.unshift(c);
+  const read = p.read || 2;
+  document.title = `${p.title} - Shawnfluence`;
+  document.getElementById('main').innerHTML = `
+    <div class="bar">
+      <nav class="crumbs"><a href="#home">Shawn Singh</a>${chain.map(c => `<span>/</span><a href="#${c.id}">${c.title}</a>`).join('')}</nav>
+      <div class="actions">
+        <button class="ibtn" aria-label="Edit" title="Edit" data-flag><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 16.5V20h3.5L18 9.5 14.5 6zM20.7 6.8a1 1 0 0 0 0-1.4l-2.1-2.1a1 1 0 0 0-1.4 0l-1.6 1.6 3.5 3.5z"/></svg></button>
+        <button class="ibtn hide-sm" aria-label="Star" title="Star" data-flag><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 16.6l-4.9 2.9 1.3-5.5-4.3-3.7 5.6-.5L12 4.5l2.3 5.3 5.6.5-4.3 3.7 1.3 5.5z"/></svg></button>
+        <button class="ibtn hide-sm" aria-label="Watch" title="Watch" data-flag><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6c4.5 0 8 4.5 8.5 6-.5 1.5-4 6-8.5 6s-8-4.5-8.5-6C4 10.5 7.5 6 12 6zm0 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg></button>
+        <button class="share" id="share">Share</button>
+        <button class="ibtn" aria-label="More actions" data-flag><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg></button>
+      </div>
+    </div>
+    ${p.cover ? `<div class="cover" style="background:${p.cover}"></div>` : ''}
+    <article>
+      <div class="pemoji">${p.emoji}</div>
+      <h1>${p.title}</h1>
+      <div class="byline"><span class="avatar">SS</span>Owned by <b>Shawn Singh</b><span class="dot"></span>Last updated: ${p.updated}<span class="dot"></span>${read} min read</div>
+      <div class="body">${p.body(p).replace(/<h2>(.*?)<\/h2>/g, (_, h) => `<h2 id="${slug(h)}">${h}</h2>`)}</div>
+      <div class="foot">
+        <div class="labels"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--subtlest)"><path d="M11.6 4H18a2 2 0 0 1 2 2v6.4a2 2 0 0 1-.6 1.4l-6.6 6.6a2 2 0 0 1-2.8 0l-5.4-5.4a2 2 0 0 1 0-2.8l6.6-6.6a2 2 0 0 1 1.4-.6zM16 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>${p.labels.map(l => `<button class="label" data-label="${l}" style="border:0">${l}</button>`).join('')}</div>
+        <div class="reacts">
+          <button class="react ${liked[p.id] ? 'on' : ''}" id="like">👍 <span>${liked[p.id] ? 'You like this' : 'Like'}</span></button>
+          <button class="react" data-flag>😀 Add reaction</button>
+        </div>
+        <section class="comments">
+          <h3>Comments</h3>
+          <div class="comment"><span class="avatar" style="background:#6E5DC6">AI</span><div><b>Shawn AI</b><small>just now</small><p>Questions about ${p.title}? <a href="#" data-ask="Tell me about ${p.title}">Ask me</a>.</p></div></div>
+          <div class="comment"><span class="avatar" style="background:#8590A2">?</span><input placeholder="Add a comment…" data-flag readonly></div>
+        </section>
+      </div>
+    </article>`;
+  renderTree(p.id);
+  document.body.classList.remove('nav-open');
+  if (anchor) document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  else scrollTo(0, 0);
+}
+
+addEventListener('hashchange', render);
+
+let flagTimer;
+function flag() { const f = document.getElementById('flag'); f.classList.add('show'); clearTimeout(flagTimer); flagTimer = setTimeout(() => f.classList.remove('show'), 4000); }
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-flag],[data-go],[data-toggle],[data-label],#like,#share,#menu');
+  if (!t) { if (!e.target.closest('.search')) results.classList.remove('open'); return; }
+  if (t.dataset.toggle !== undefined) { e.preventDefault(); t.closest('li').classList.toggle('closed'); return; }
+  if (t.dataset.label) { q.value = t.dataset.label; q.focus(); search(); return; }
+  if (t.dataset.go) { location.hash = t.dataset.go; return; }
+  if (t.id === 'menu') { document.body.classList.toggle('nav-open'); return; }
+  if (t.id === 'like') {
+    const id = (location.hash.slice(1).split('/')[0]) || 'home';
+    liked[id] = !liked[id];
+    try { localStorage.setItem('shawnfluence-likes', JSON.stringify(liked)); } catch {}
+    t.classList.toggle('on', liked[id]); t.querySelector('span').textContent = liked[id] ? 'You like this' : 'Like';
+    return;
+  }
+  if (t.id === 'share') {
+    navigator.clipboard?.writeText(location.href).then(() => { t.textContent = 'Link copied'; setTimeout(() => t.textContent = 'Share', 1500); }, flag);
+    return;
+  }
+  flag();
+});
+
+// Search: title, summary, labels and body text.
+const q = document.getElementById('q'), results = document.getElementById('results');
+const text = p => (p.title + ' ' + (p.summary || '') + ' ' + p.labels.join(' ') + ' ' + p.body(p).replace(/<[^>]+>/g, ' ')).toLowerCase();
+function search() {
+  const s = q.value.trim().toLowerCase();
+  if (!s) { results.classList.remove('open'); return; }
+  const hits = PAGES.filter(p => text(p).includes(s));
+  results.innerHTML = hits.length
+    ? hits.map((p, i) => `<a href="#${p.id}" class="${i ? '' : 'hl'}"><span>${p.emoji}</span><span>${p.title}<small>Shawn Singh${p.parent ? ' / ' + byId[p.parent].title : ''}</small></span></a>`).join('')
+    : `<p>No results for “${q.value}”</p>`;
+  results.classList.add('open');
+}
+q.addEventListener('input', search);
+q.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { const a = results.querySelector('a'); if (a) { location.hash = a.getAttribute('href'); q.value = ''; results.classList.remove('open'); q.blur(); } }
+  if (e.key === 'Escape') { q.value = ''; results.classList.remove('open'); q.blur(); }
+});
+results.addEventListener('click', () => { q.value = ''; results.classList.remove('open'); });
+addEventListener('keydown', e => { if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); } });
+
+// Shawn AI, as a Rovo-style side panel. Same worker as the site-wide chat
+// (assets/chat.js); it holds the key and system prompt and only answers this
+// site's origins.
+const PROXY = 'https://groq-chat.shawnpsi.workers.dev';
+const aiLog = document.getElementById('ai-log'), aiForm = document.getElementById('ai-form'),
+      aiInput = document.getElementById('ai-input'), aiSend = document.getElementById('ai-send');
+let aiMsgs = [];
+const MARK = document.querySelector('.ai-head .rovo-mark').outerHTML;
+// The model cites the site's case-study URLs; point those at the pages here.
+const HERE = { '/project-cloudexa.html': 'cloudexa', '/project-ngc2.html': 'ngc2', '/project-djai.html': 'djai',
+  '/project-emmy.html': 'emmy', '/project-visuallyrepresented.html': 'visuallyrepresented', '/beatfx/': 'beatfx', '/sayclip/': 'sayclip', '/shawnfluence.html': 'home' };
+const LINK = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s)*<>]*[^\s)*<>.,;:!?'"]|\/[\w./-]+\.html\b)/g;
+
+function linkify(el, text) {   // DOM nodes, never innerHTML: this is model output
+  let i = 0;
+  for (const m of text.matchAll(LINK)) {
+    let href = m[2] || m[3];
+    if (!/^(https?:\/\/|\/)/.test(href)) continue;
+    el.append(text.slice(i, m.index));
+    const path = href.replace(/^https?:\/\/(www\.)?shawnsingh\.me/, '');
+    const a = document.createElement('a');
+    if (HERE[path]) { a.href = '#' + HERE[path]; a.textContent = byId[HERE[path]].title; }
+    else { a.href = href; a.textContent = m[1] || href; if (href[0] !== '/') { a.target = '_blank'; a.rel = 'noopener'; } }
+    el.append(a);
+    i = m.index + m[0].length;
+  }
+  el.append(text.slice(i));
+}
+function fill(el, text) {   // paragraphs and "- " lists
+  text = text.replace(/\*\*/g, '').replace(/[‐‑]/g, '-');
+  for (const block of text.split(/\n\s*\n/)) {
+    const lines = block.split('\n').filter(l => l.trim());
+    if (lines.length && lines.every(l => /^\s*[-*•]\s+/.test(l))) {
+      const ul = document.createElement('ul');
+      for (const l of lines) { const li = document.createElement('li'); linkify(li, l.replace(/^\s*[-*•]\s+/, '')); ul.append(li); }
+      el.append(ul);
+    } else if (lines.length) { const p = document.createElement('p'); linkify(p, lines.join('\n')); el.append(p); }
+  }
+}
+const scrollAi = () => aiLog.scrollTop = aiLog.scrollHeight;
+
+function hello() {
+  const p = byId[location.hash.slice(1).split('/')[0]] || byId.home;
+  const sugg = p.parent === 'projects'
+    ? [`Summarize the ${p.title} project`, `What was Shawn's role on ${p.title}?`, `What stack did ${p.title} use?`]
+    : ['What is Shawn working on now?', 'Which project should I look at first?', 'How do I contact Shawn?'];
+  aiMsgs = [];
+  aiLog.innerHTML = `<div class="ai-hello">${MARK.replace(/width="20" height="20"/, 'width="32" height="32"')}
+    <h2>Hi, I'm Shawn AI</h2><p>Ask me anything about Shawn's projects, experience or skills.</p>
+    <div class="ai-sugg">${sugg.map(s => `<button type="button" data-ask="${s}"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>${s}</button>`).join('')}</div></div>`;
+}
+
+// float: small window over the corner button, false: docked side panel,
+// undefined: keep whichever mode it's in.
+function openAi(open, float) {
+  const b = document.body.classList;
+  if (float !== undefined && open) b.toggle('ai-float', float);
+  b.toggle('ai-open', open);
+  if (open) { if (!aiMsgs.length) hello(); aiInput.focus(); }
+}
+
+async function ask(text) {
+  text = text.trim();
+  if (!text || aiSend.dataset.busy) return;
+  aiLog.querySelector('.ai-hello')?.remove();
+  const me = document.createElement('div'); me.className = 'msg-me'; me.textContent = text; aiLog.append(me);
+  const out = document.createElement('div'); out.className = 'msg-ai';
+  out.innerHTML = `<div class="who">${MARK.replace(/width="20" height="20"/, 'width="16" height="16"')}Shawn AI</div><p class="thinking">Thinking…</p>`;
+  aiLog.append(out); scrollAi();
+  aiMsgs.push({ role: 'user', content: text });
+  aiSend.dataset.busy = 1; aiSend.disabled = true;
+  try {
+    const r = await fetch(PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: aiMsgs }) });
+    const raw = await r.text();
+    if (!r.ok) { let m = raw.slice(0, 300); try { m = JSON.parse(raw).error?.message || JSON.parse(raw).error || m; } catch {} throw new Error(m); }
+    const reply = JSON.parse(raw).choices[0].message.content;
+    aiMsgs.push({ role: 'assistant', content: reply });
+    out.querySelector('.thinking').remove();
+    fill(out, reply);
+    out.insertAdjacentHTML('beforeend', `<div class="tools">
+      <button class="ibtn" data-copy aria-label="Copy" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 4h10a2 2 0 0 1 2 2v10h-2V6H8zM4 8h10a2 2 0 0 1 2 2v10H4z"/></svg></button>
+      <button class="ibtn" data-rate aria-label="Helpful" title="Helpful"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 10h3v10H4zm5 10V10l4-7c1.5 0 2.5 1.2 2 2.6L14 9h5a2 2 0 0 1 2 2.3l-1.2 6.8A2.5 2.5 0 0 1 17.3 20z"/></svg></button>
+      <button class="ibtn" data-rate aria-label="Not helpful" title="Not helpful"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="transform:rotate(180deg)"><path d="M4 10h3v10H4zm5 10V10l4-7c1.5 0 2.5 1.2 2 2.6L14 9h5a2 2 0 0 1 2 2.3l-1.2 6.8A2.5 2.5 0 0 1 17.3 20z"/></svg></button></div>`);
+    out.querySelector('[data-copy]').dataset.copy = reply;
+  } catch (err) {
+    aiMsgs.pop();   // drop the unanswered turn so a retry isn't sent twice
+    out.classList.add('err');
+    out.querySelector('.thinking').className = '';
+    out.querySelector('p').textContent = err.message || String(err);
+  }
+  delete aiSend.dataset.busy; aiSend.disabled = !aiInput.value.trim();
+  scrollAi();
+}
+
+aiForm.addEventListener('submit', e => { e.preventDefault(); const t = aiInput.value; aiInput.value = ''; ask(t); });
+aiInput.addEventListener('input', () => { aiSend.disabled = !aiInput.value.trim() || !!aiSend.dataset.busy; });
+aiInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); aiForm.requestSubmit(); } });
+const aiShown = float => document.body.classList.contains('ai-open') && document.body.classList.contains('ai-float') === float;
+document.getElementById('ai-toggle').addEventListener('click', () => openAi(!aiShown(false), false));
+document.getElementById('ai-fab').addEventListener('click', () => openAi(!aiShown(true), true));
+document.getElementById('ai-close').addEventListener('click', () => openAi(false));
+document.getElementById('ai-new').addEventListener('click', () => { hello(); aiInput.focus(); });
+addEventListener('hashchange', () => { if (!aiMsgs.length && document.body.classList.contains('ai-open')) hello(); });
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-ask],[data-copy],[data-rate]');
+  if (!a) return;
+  e.preventDefault(); e.stopPropagation();
+  if (a.dataset.ask !== undefined) { openAi(true); ask(a.dataset.ask); }
+  else if (a.dataset.copy) navigator.clipboard?.writeText(a.dataset.copy).then(() => { a.classList.add('on'); setTimeout(() => a.classList.remove('on'), 1200); });
+  else { a.parentNode.querySelectorAll('[data-rate]').forEach(b => b.classList.toggle('on', b === a)); }
+}, true);
+
+render();
+</script>
+</body>
+</html>

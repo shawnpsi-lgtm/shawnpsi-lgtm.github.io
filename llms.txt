@@ -18,6 +18,7 @@
 - [Visually Represented](https://shawnsingh.me/project-visuallyrepresented.html): media company founded 2019
 - [BEAT FX](https://shawnsingh.me/beatfx/): Pioneer DJM-A9 Beat FX in the browser
 - [Sayclip](https://shawnsingh.me/sayclip/): search video captions and cut audio samples
+- [Shawnfluence](https://shawnsingh.me/shawnfluence.html): every project as a Confluence-style wiki page
 
 ## For agents
 

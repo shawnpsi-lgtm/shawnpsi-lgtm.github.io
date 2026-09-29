@@ -16,8 +16,8 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=30">
-  <link rel="stylesheet" href="/assets/ask.css?v=7">
+  <link rel="stylesheet" href="/assets/home.css?v=32">
+  <link rel="stylesheet" href="/assets/ask.css?v=11">
   <script src="/assets/page-transition.js?v=1"></script>
 </head>
 <body>
@@ -43,10 +43,6 @@
     <img src="/images/desk/IMG_5494-thumb.jpg" alt="Artist seated on a director's chair in a white cyc studio" draggable="false" />
     <figcaption>IMG_5494.jpg</figcaption>
   </figure>
-  <figure class="desktop-icon desktop-file" data-full="/images/desk/IMG_5496.jpg" data-caption="03 Greedo / Complex Magazine / Los Angeles">
-    <img src="/images/desk/IMG_5496-thumb.jpg" alt="Two people embracing on set" draggable="false" />
-    <figcaption>IMG_5496.jpg</figcaption>
-  </figure>
   <figure class="desktop-icon desktop-file" data-full="/videos/chicago.mp4">
     <img src="/images/desk/chicago-thumb.jpg" alt="Looking up at Chicago skyscrapers through trees" draggable="false" />
     <figcaption>chicago.mp4</figcaption>
@@ -54,6 +50,10 @@
   <figure class="desktop-icon desktop-file" data-full="/videos/go.mp4">
     <img src="/images/desk/go-thumb.jpg" alt="Performer on stage with a mic, crowd filming" draggable="false" />
     <figcaption>go.mp4</figcaption>
+  </figure>
+  <figure id="desktop-shawnfluence" class="desktop-icon desktop-file desktop-app" data-href="/shawnfluence.html">
+    <img src="/images/desk/shawnfluence.webp" alt="Shawnfluence app icon" draggable="false" />
+    <figcaption>Shawnfluence</figcaption>
   </figure>
 
   <div id="quicklook" hidden>
@@ -293,6 +293,7 @@
       fill(vol);
 
       function open(el) {
+        if (el.dataset.href) { location.href = el.dataset.href; return; }  // apps launch, no preview
         const i = files.indexOf(el);
         if (i < 0 && el !== folder) return;      // nothing else has a preview
         at = i;
@@ -468,6 +469,6 @@
     scene2();  // a reload mid-page restores scrollY without firing scroll
   </script>
 
-  <script src="/assets/chat.js?v=7"></script>
+  <script src="/assets/chat.js?v=14"></script>
 </body>
 </html>

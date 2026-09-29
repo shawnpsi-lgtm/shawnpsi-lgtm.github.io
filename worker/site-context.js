@@ -71,6 +71,9 @@ The Beatport Group — USC production intern, Aug 2024–present. One of only 10
 ESQ Data Solutions — BBVA UI/UX intern, Mexico City, June–August 2025 (the
   Cloudexa engagement). Flew weekly between Sacramento and Mexico City.
 
+SHAWNFLUENCE — /shawnfluence.html, a wiki of the same content: about,
+education, contact, every job and skills.
+
 SKILLS
 Design: Figma, After Effects, Premiere Pro, Photoshop, Illustrator, Blender,
   Lightroom, Ableton, AutoCAD, Autodesk.

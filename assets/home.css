@@ -59,12 +59,13 @@
        viewport, so a % left would sit off-screen. */
     #desktop-folder { left: 2.3vw; top: 13.9svh; }
     .desktop-icon[data-full$="5494.jpg"] { left: 9.7vw; top: 31.5svh; }
-    .desktop-icon[data-full$="5496.jpg"] { left: 2.3vw; top: 51.1svh; }
     .desktop-icon[data-full*="Psychiatric"] { left: 22.5vw; top: 78.5svh; }
     .desktop-icon[data-full$="resume.pdf"] { left: 32.2vw; top: 78.5svh; }
     .desktop-icon[data-full$="chicago.mp4"] { left: 61vw; top: 13.5svh; }
     .desktop-icon[data-full$=".mp3"] { left: 84.8vw; top: 49.7svh; }
     .desktop-icon[data-full="/videos/go.mp4"] { left: 69.2vw; top: 84.7svh; }
+    #desktop-shawnfluence { left: 2.3vw; top: 51.1svh; }
+    .desktop-app img { width: 64px; border-radius: 22%; }
     /* Song name wraps at spaces, not mid-letter like the photo filenames. */
     .desktop-icon[data-full$=".mp3"] figcaption {
       word-break: normal;
@@ -558,12 +559,12 @@
       .desktop-icon[data-full*="Psychiatric"] { display: none; }
       .desktop-icon[data-full$="resume.pdf"] { left: 310px !important; top: calc(100svh - 148px) !important; }
       [data-full$="5494.jpg"] { left: 10px !important; }
-      [data-full$="5496.jpg"] { left: 110px !important; }
       .desktop-icon[data-full$=".mp3"] { left: calc(100vw - 102px) !important; }
       /* Videos sit on the hero floor, under the photos / dock. */
       .desktop-icon[data-full$=".mp4"] { top: calc(100svh - 148px) !important; }
       [data-full$="chicago.mp4"] { left: 110px !important; }
       [data-full="/videos/go.mp4"] { left: 210px !important; }
+      #desktop-shawnfluence { left: 110px !important; top: 196px !important; }
 
       /* Photo/video Quick Look. The panel gets a definite width and the media
          fills it, rather than the panel shrink-wrapping the media — left to
