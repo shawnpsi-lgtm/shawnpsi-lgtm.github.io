@@ -867,23 +867,13 @@ guardrail: [
 
 var CARDS = [
   { place:'sort', label:'Format-agnostic AI sorting', tag:'NORMALIZE / ROUTE',
-    note:'Heterogeneous inputs are normalized before anything is extracted. Domain ' +
-         'invariants are identified up front and each sub-problem is routed to the ' +
-         'parser best suited to it — deterministic where structure is recognizable, ' +
-         'model-driven where it is not. Every branch converges on one schema, so ' +
-         'nothing downstream forks per format.',
+    note:'Every input is normalized and routed to the best-suited parser, deterministic or model-driven, before converging on one schema.',
     opts:{cols:420,rows:280,dist:4.2,spin:0.04,tilt:0.10,wobble:0.07,point:1.9,speed:0.7} },
   { place:'versions', label:'Version-control entity matching', tag:'DIFF / RESOLVE',
-    note:'Successive revisions are diffed at the entity level, not the text level. ' +
-         'Entities resolve across versions against stable IDs, so each record classifies ' +
-         'as an add, a change, or a delete against its parent baseline and carries its ' +
-         'lineage forward. Provenance survives the update instead of being re-derived.',
+    note:'Revisions are diffed entity by entity against stable IDs, so every add, change, or delete keeps its lineage and provenance.',
     opts:{cols:400,rows:280,dist:4.15,spin:0.05,tilt:0.26,wobble:0.06,point:2.0,speed:0.6} },
   { place:'guardrail', label:'Semantic-enhanced guardrails', tag:'CONSTRAIN / VALIDATE',
-    note:'Model scope is bounded by construction. Generation is constrained to the ' +
-         'schema, and every output is validated against the source span it claims to ' +
-         'come from before it is allowed to reach state. Semantic checks reject what ' +
-         'passes a type check but is not supported by the document.',
+    note:'Generation is constrained to the schema, and every output must trace to a supporting source span before it reaches state.',
     opts:{cols:360,rows:270,dist:4.1,spin:0.12,tilt:0.16,wobble:0.06,point:2.0,speed:0.6} }
 ];
 

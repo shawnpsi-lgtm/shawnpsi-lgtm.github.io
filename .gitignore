@@ -54,3 +54,4 @@ src/assets/vite.svg
 # wrangler local secrets
 worker/.dev.vars
 .claude/settings.local.json
+ngc2-card-notes-long.txt
