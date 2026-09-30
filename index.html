@@ -56,12 +56,12 @@
     <figcaption>untitled</figcaption>
   </figure>
 
-  <label id="icons-toggle"><input type="checkbox" role="switch" checked aria-label="Show desktop icons" /></label>
+  <label id="icons-toggle"><input type="checkbox" role="switch" aria-label="Show desktop icons" /></label>
   <script>
     (() => {
       const box = document.querySelector('#icons-toggle input');
       const set = on => { box.checked = on; document.body.classList.toggle('icons-off', !on); };
-      try { set(localStorage.getItem('icons') !== 'off'); } catch {}
+      set(false);   // icons start hidden on every load
       // Centre it in the gap between the "View my work" and "Ask Shawn AI" pills.
       // They're React-rendered with no stable hook, so find them by href.
       window.placeIconsToggle = () => {
@@ -73,7 +73,7 @@
         t.top = (rb.top + rb.bottom) / 2 + scrollY + 'px';
       };
       addEventListener('resize', placeIconsToggle);
-      box.onchange = () => { set(box.checked); try { localStorage.setItem('icons', box.checked ? 'on' : 'off'); } catch {} };
+      box.onchange = () => set(box.checked);
     })();
   </script>
 
