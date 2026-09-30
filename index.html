@@ -10,13 +10,13 @@
   <meta name="description" content="Shawn Singh — [YOUR_TITLE] based in San Francisco." />
   <link rel="icon" type="image/svg+xml" href="/shawnlogo.svg" />
 
-  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js?v=16"></script>
+  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js?v=17"></script>
   <link rel="modulepreload" crossorigin href="/assets/styles-GID8uTDy.js">
   <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=32">
+  <link rel="stylesheet" href="/assets/home.css?v=39">
   <link rel="stylesheet" href="/assets/ask.css?v=11">
   <script src="/assets/page-transition.js?v=1"></script>
 </head>
@@ -51,10 +51,31 @@
     <img src="/images/desk/go-thumb.jpg" alt="Performer on stage with a mic, crowd filming" draggable="false" />
     <figcaption>go.mp4</figcaption>
   </figure>
-  <figure id="desktop-shawnfluence" class="desktop-icon desktop-file desktop-app" data-href="/shawnfluence.html">
-    <img src="/images/desk/shawnfluence.webp" alt="Shawnfluence app icon" draggable="false" />
-    <figcaption>Shawnfluence</figcaption>
+  <figure id="desktop-shawnfluence" class="desktop-icon desktop-file desktop-app" data-href="https://untitled.stream/library/project/vpGBSoh5IqLhodOROYp1v">
+    <img src="https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/41/73/75/4173752e-c0fc-5fd7-3eb3-d660bb8eec2e/Placeholder.mill/200x200bb-75.webp" alt="untitled app icon" draggable="false" />
+    <figcaption>untitled</figcaption>
   </figure>
+
+  <label id="icons-toggle"><input type="checkbox" role="switch" checked aria-label="Show desktop icons" /></label>
+  <script>
+    (() => {
+      const box = document.querySelector('#icons-toggle input');
+      const set = on => { box.checked = on; document.body.classList.toggle('icons-off', !on); };
+      try { set(localStorage.getItem('icons') !== 'off'); } catch {}
+      // Centre it in the gap between the "View my work" and "Ask Shawn AI" pills.
+      // They're React-rendered with no stable hook, so find them by href.
+      window.placeIconsToggle = () => {
+        const b = document.querySelector('a.block[href="#scene2"]'), a = b?.previousElementSibling;
+        if (!a) return;
+        const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+        const t = box.parentElement.style;
+        t.left = (ra.right + rb.left) / 2 + scrollX + 'px';
+        t.top = (rb.top + rb.bottom) / 2 + scrollY + 'px';
+      };
+      addEventListener('resize', placeIconsToggle);
+      box.onchange = () => { set(box.checked); try { localStorage.setItem('icons', box.checked ? 'on' : 'off'); } catch {} };
+    })();
+  </script>
 
   <div id="quicklook" hidden>
     <figure>
@@ -395,6 +416,7 @@
         if (document.body.classList.contains('desk-on')) return;
         if (!document.querySelector('.nav')) return;
         document.body.classList.add('desk-on');
+        placeIconsToggle();
       };
       let hashed = false;
       const jumpHash = () => {

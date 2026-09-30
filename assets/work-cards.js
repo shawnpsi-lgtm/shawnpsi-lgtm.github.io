@@ -168,19 +168,20 @@
         ['[href="project-emmy.html"]', '', 'Award-winning animation and visual effects'],
         ['[href="project-cloudexa.html"]', '', 'Banking-grade ATM operations dashboard'],
         ['[href="/beatfx/"]', 'BEAT FX', 'a powerful notepad for on the go DJs'],
-        [':has([src$="igstory.mp4"])', 'MARTINIQUE, FRANCE', 'Hennessy'],
-        [':has([src$="trailer.mp4"])', 'LONDON, UK', 'LAB 54'],
+        [':has([src$="igstory.mp4"])', 'MARTINIQUE, FRANCE', 'Hennessy', 'Select Client'],
+        [':has([src$="trailer.mp4"])', 'LONDON, UK', 'LAB 54', 'Select Client'],
         ['[href="project-visuallyrepresented.html"]', '', 'A Visual System for brands'],
         ['.card-wrap--tv', 'SHAWN TV', ''],
         ['[href="/sayclip/"]', '', 'Crate-dig for Audio Samples by Query'],
       ];
-      for (const [sel, kicker, line] of items) {
+      for (const [sel, kicker, line, tag] of items) {
         const card = document.querySelector('.grid .card-wrap' + sel + ' .card');
         if (!card || card.querySelector('.card-copy')) continue;
         const el = document.createElement('div');
         el.className = 'card-copy';
         el.innerHTML = (kicker ? '<span>' + kicker + '</span>' : '') + '<b>' + line + '</b>';
         card.append(el);
+        if (tag) card.insertAdjacentHTML('beforeend', '<span class="card-tag">' + tag + '</span>');
       }
     };
 
