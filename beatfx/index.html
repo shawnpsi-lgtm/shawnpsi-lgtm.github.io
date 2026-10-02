@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#111111">
   <title>BEAT FX</title>
   <link rel="icon" type="image/svg+xml" href="./logo.svg">
-  <link rel="stylesheet" href="./css/style.css?v=21">
+  <link rel="stylesheet" href="./css/style.css?v=22">
   <link rel="stylesheet" href="./css/skin-rmx.css?v=25">
 </head>
 <body>
@@ -22,6 +22,7 @@
         <label class="file-label" for="file-input">
           <span id="file-name">LOAD TRACK&hellip;</span>
         </label>
+        <button id="r2-btn" class="deck-btn" aria-label="Load from r2music">R2</button>
       </div>
       <input type="file" id="file-input" accept=".mp3,.wav,.m4a,.flac,audio/*" hidden>
       <div class="transport-row">
@@ -142,8 +143,19 @@
     </section>
   </main>
 
+  <!-- Load from the user's r2music library (js/r2.js) -->
+  <dialog id="r2-dialog" class="r2-dialog">
+    <div class="r2-head">
+      <select id="r2-list" aria-label="List"><option value="">ALL TRACKS</option></select>
+      <button id="r2-close" class="deck-btn" aria-label="Close">&times;</button>
+    </div>
+    <input id="r2-filter" type="search" placeholder="SEARCH" autocomplete="off">
+    <p id="r2-status" class="r2-status"></p>
+    <ul id="r2-tracks" class="r2-tracks"></ul>
+  </dialog>
   <script src="./js/knob.js?v=6"></script>
   <script src="./js/audio.js?v=36"></script>
-  <script src="./js/app.js?v=28"></script>
+  <script src="./js/app.js?v=29"></script>
+  <script src="./js/r2.js?v=1"></script>
 </body>
 </html>

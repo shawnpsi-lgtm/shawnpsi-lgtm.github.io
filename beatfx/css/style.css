@@ -479,3 +479,27 @@ button:disabled { opacity: 0.35; }
 .hotcue-btn.cue-b { border-color: #1c6b4f; }
 .hotcue-btn.cue-a.set { border-color: #ff2c1e; color: #ff6a5c; background: rgba(255, 44, 30, 0.12); }
 .hotcue-btn.cue-b.set { border-color: #35e0a0; color: #7dffcf; background: rgba(53, 224, 160, 0.12); }
+
+/* r2music library picker (js/r2.js) */
+.r2-dialog {
+  width: min(92vw, 480px); max-height: 80dvh; padding: 12px; display: none; margin: auto; inset: 0;
+  background: var(--panel); color: var(--label); border: 1px solid var(--edge); border-radius: 10px;
+  font-size: 11px; letter-spacing: 1.5px;
+}
+.r2-dialog[open] { display: flex; flex-direction: column; gap: 8px; }
+.r2-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+.r2-head { display: flex; gap: 8px; }
+.r2-head select, .r2-dialog input {
+  flex: 1; min-height: 36px; padding: 0 10px; font: inherit; letter-spacing: inherit;
+  color: var(--label); background: #000; border: 1px solid var(--edge); border-radius: 6px;
+}
+.r2-head .deck-btn { min-height: 36px; font-size: 16px; }
+.r2-status { margin: 0; color: var(--dim); text-align: center; }
+.r2-status:empty { display: none; }
+.r2-status a { color: var(--blue); }
+.r2-tracks { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+.r2-tracks button {
+  width: 100%; padding: 12px 8px; text-align: left; font: inherit; font-size: 13px; letter-spacing: 0;
+  color: var(--label); background: none; border: 0; border-bottom: 1px solid var(--edge); cursor: pointer;
+}
+.r2-tracks button:hover, .r2-tracks button:focus-visible { background: rgba(255, 255, 255, 0.06); }

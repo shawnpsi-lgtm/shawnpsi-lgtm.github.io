@@ -32,12 +32,19 @@
   /* --- file load --- */
   var fileInput = $('file-input'), fileName = $('file-name'), playBtn = $('play-btn');
   fileInput.addEventListener('change', function () {
-    var f = fileInput.files[0];
-    if (!f) return;
+    if (fileInput.files[0]) loadFile(fileInput.files[0]);
+  });
+  // src: a File, or a promise of one (r2.js downloads before decoding)
+  function loadFile(src) {
+    var f;
     var loadDeck = curDeck; // a deck switch mid-analysis must not misfile UI
-    fileName.textContent = 'DECODING…';
+    fileName.textContent = src instanceof Blob ? 'DECODING…' : 'DOWNLOADING…';
     playBtn.disabled = true;
-    Engine.loadTrack(f).then(function (buf) {
+    Promise.resolve(src).then(function (file) {
+      f = file;
+      if (curDeck === loadDeck) fileName.textContent = 'DECODING…';
+      return Engine.loadTrack(f);
+    }).then(function (buf) {
       // rekordbox-style: analyze (BPM, beat grid, waveform) before playing
       if (curDeck === loadDeck) {
         fileName.textContent = 'ANALYZING…';
@@ -64,9 +71,10 @@
         refreshTransport();
       });
     }).catch(function () {
-      if (curDeck === loadDeck) fileName.textContent = 'COULD NOT DECODE FILE';
+      if (curDeck === loadDeck) fileName.textContent = f ? 'COULD NOT DECODE FILE' : 'COULD NOT DOWNLOAD TRACK';
     });
-  });
+  }
+  window.BeatFX = { loadFile: loadFile };
 
   /* --- transport --- */
   function setPlayUI(playing) {
