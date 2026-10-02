@@ -53,11 +53,13 @@
   /* --- lifecycle (call inside a user gesture for iOS) --- */
   Engine.ensure = function () {
     if (!Engine.ctx) {
+      // iOS mutes Web Audio when the ring/silent switch is on; 'playback' plays through it like a music app (Safari 16.4+)
+      if (navigator.audioSession) navigator.audioSession.type = 'playback';
       var AC = window.AudioContext || window.webkitAudioContext;
       Engine.ctx = new AC();
       buildGraph();
     }
-    if (Engine.ctx.state === 'suspended') Engine.ctx.resume();
+    if (Engine.ctx.state !== 'running') Engine.ctx.resume(); // 'suspended', or iOS 'interrupted'
     return Engine.ctx;
   };
 

@@ -40,11 +40,12 @@
     var loadDeck = curDeck; // a deck switch mid-analysis must not misfile UI
     fileName.textContent = src instanceof Blob ? 'DECODING…' : 'DOWNLOADING…';
     playBtn.disabled = true;
-    Promise.resolve(src).then(function (file) {
+    // a local file decodes right away, inside the picker's gesture, as before
+    (src instanceof Blob ? Engine.loadTrack(f = src) : src.then(function (file) {
       f = file;
       if (curDeck === loadDeck) fileName.textContent = 'DECODING…';
       return Engine.loadTrack(f);
-    }).then(function (buf) {
+    })).then(function (buf) {
       // rekordbox-style: analyze (BPM, beat grid, waveform) before playing
       if (curDeck === loadDeck) {
         fileName.textContent = 'ANALYZING…';
