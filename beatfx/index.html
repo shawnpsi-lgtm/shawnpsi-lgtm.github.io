@@ -146,8 +146,8 @@
   <!-- Load from the user's r2music library (js/r2.js) -->
   <dialog id="r2-dialog" class="r2-dialog">
     <div class="r2-head">
-      <select id="r2-list" aria-label="List"><option value="">ALL TRACKS</option></select>
-      <button id="r2-close" class="deck-btn" aria-label="Close">&times;</button>
+      <select id="r2-list" aria-label="List" hidden><option value="">ALL TRACKS</option></select>
+      <button id="r2-close" class="deck-btn" aria-label="Close" autofocus>&times;</button>
     </div>
     <input id="r2-filter" type="search" placeholder="SEARCH" autocomplete="off">
     <p id="r2-status" class="r2-status"></p>
@@ -156,6 +156,6 @@
   <script src="./js/knob.js?v=6"></script>
   <script src="./js/audio.js?v=37"></script>
   <script src="./js/app.js?v=30"></script>
-  <script src="./js/r2.js?v=2"></script>
+  <script src="./js/r2.js?v=3"></script>
 </body>
 </html>
