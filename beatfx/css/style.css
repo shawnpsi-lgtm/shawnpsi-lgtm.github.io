@@ -488,7 +488,8 @@ button:disabled { opacity: 0.35; }
 }
 .r2-dialog[open] { display: flex; flex-direction: column; gap: 8px; }
 .r2-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
-.r2-head { display: flex; gap: 8px; }
+.r2-head { display: flex; gap: 8px; justify-content: flex-end; }
+.r2-head select[hidden] { display: none; }
 .r2-head select, .r2-dialog input {
   flex: 1; min-height: 36px; padding: 0 10px; font: inherit; letter-spacing: inherit;
   color: var(--label); background: #000; border: 1px solid var(--edge); border-radius: 6px;

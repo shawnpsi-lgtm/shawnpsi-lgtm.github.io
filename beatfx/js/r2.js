@@ -86,6 +86,7 @@
         o.value = l.id; o.textContent = l.name.toUpperCase();
         return o.outerHTML;
       }).join('');
+      listSel.hidden = !lib.lists.length; // nothing to filter by until the user makes a list
       render();
     }).catch(fail);
   });
