@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#111111">
+  <title>XDJ-RX3</title>
+  <link rel="icon" type="image/svg+xml" href="./img/icon.svg">
+  <link rel="stylesheet" href="./css/rx3.css">
+  <script type="module" src="./js/main.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- the touch screen, built at the RX3's native 1280x800 and scaled to fit -->
+    <main id="screen-wrap">
+      <div id="screen" class="view-source">
+        <!-- header (SOURCE / BROWSE) -->
+        <header class="scr-head">
+          <div class="head-src"><span class="usb-ico"></span><span id="head-src"></span></div>
+          <div id="head-title" class="head-title">Please select a source</div>
+          <div class="head-right">
+            <span class="timer-ico"></span><span class="head-clock" id="clock-a">00:00:00</span>
+            <span class="rec-dot"></span><span class="head-clock dim">00:00:00</span>
+            <button class="info-btn" data-act="info"><span>&#9664;</span>INFO</button>
+          </div>
+        </header>
+
+        <!-- SOURCE -->
+        <section class="v-source">
+          <div class="col-head l">DEVICE NAME</div>
+          <div class="col-head r">INFO</div>
+          <ol id="devices" class="devices"></ol>
+          <dl id="device-info" class="device-info"></dl>
+          <button class="settings-btn" disabled>MY SETTINGS MENU</button>
+        </section>
+
+        <!-- BROWSE -->
+        <section class="v-browse">
+          <nav id="cats" class="cats"></nav>
+          <div class="col-head l" id="col-l">TRACK</div>
+          <div class="col-head r" id="col-r"></div>
+          <ol id="list-l" class="list l"></ol>
+          <ol id="list-r" class="list r"></ol>
+          <div id="search" class="search" hidden>
+            <input id="search-input" type="search" placeholder="SEARCH" autocomplete="off" spellcheck="false">
+          </div>
+        </section>
+
+        <!-- mini deck strips under SOURCE / BROWSE -->
+        <footer class="mini">
+          <div class="mini-deck" data-deck="0"></div>
+          <div class="mini-deck" data-deck="1"></div>
+        </footer>
+
+        <!-- PLAYING -->
+        <section class="v-playing">
+          <div class="top-left"><span class="timer-ico"></span>REMAIN<span class="rec-time">00:00:00</span><i></i></div>
+          <div class="top-right">
+            <span class="rec-dot"></span><span class="head-clock dim">00:00:00</span>
+            <button class="info-btn" data-act="info"><span>&#9664;</span>INFO</button>
+          </div>
+          <div class="deck-info" data-deck="0"></div>
+          <div class="deck-info" data-deck="1"></div>
+          <canvas class="zoom" data-deck="0" width="890" height="210"></canvas>
+          <canvas class="zoom" data-deck="1" width="890" height="200"></canvas>
+          <div class="playhead"></div>
+          <aside id="fx-panel" class="fx-panel"></aside>
+          <div class="zoom-grid"><button data-act="zoom-out">&minus;</button><button data-act="zoom" class="on">ZOOM</button>
+            <button data-act="grid">GRID</button></div>
+          <div class="tabs"><button data-act="tab-status">STATUS</button><button data-act="tab-fx" class="on">BEAT FX</button></div>
+          <div class="band">
+            <div class="bank-label">BEAT FX BANK</div>
+            <div id="bank" class="bank"></div>
+            <div class="xpad-label">X-PAD</div>
+            <div id="xpad" class="xpad"></div>
+          </div>
+          <div class="deck-panel" data-deck="0"></div>
+          <div class="deck-panel" data-deck="1"></div>
+        </section>
+
+        <div id="drop" class="drop" hidden>DROP AUDIO FILES TO ADD THEM TO USB2</div>
+        <div id="toast" class="toast" hidden></div>
+      </div>
+    </main>
+
+    <!-- the hardware buttons (same layout as the local viewer) -->
+    <aside id="panel" class="panel">
+      <button data-key="source">SOURCE</button>
+      <button data-key="browse">BROWSE</button>
+      <button data-key="taglist">TAG LIST</button>
+      <button data-key="playlist">PLAYLIST</button>
+      <button data-key="search">SEARCH</button>
+      <button data-key="menu">MENU</button>
+      <button data-key="info">INFO</button>
+      <button data-key="tag">TAG TRACK</button>
+      <button data-key="back">BACK</button>
+      <div class="gap"></div>
+      <button data-key="up">&#9650;&nbsp; browse</button>
+      <button data-key="push">PUSH (select)</button>
+      <button data-key="down">&#9660;&nbsp; browse</button>
+      <div class="gap">DECK 1</div>
+      <button data-key="load" data-deck="0">LOAD</button>
+      <button data-key="cue" data-deck="0">CUE</button>
+      <button data-key="play" data-deck="0">PLAY / PAUSE</button>
+      <div class="gap">DECK 2</div>
+      <button data-key="load" data-deck="1">LOAD</button>
+      <button data-key="cue" data-deck="1">CUE</button>
+      <button data-key="play" data-deck="1">PLAY / PAUSE</button>
+    </aside>
+
+    <!-- effects bar (as in the viewer) -->
+    <div id="fxbar" class="bar fxbar">
+      <label>BEAT FX</label>
+      <select id="fx-select"></select>
+      <button data-key="beat-down">&#9664; beat</button>
+      <button data-key="beat-up">beat &#9654;</button>
+      <select id="fx-ch"></select>
+      <label class="knob">LEVEL/DEPTH<input id="fx-level" type="range" min="0" max="1" step="0.001" value="0.5"></label>
+      <button id="fx-on" data-key="fx" class="fx-on">FX ON/OFF (E)</button>
+      <label>COLOR FX</label>
+      <select id="color-select"></select>
+      <label class="knob">CH1 COLOR<input data-color="0" type="range" min="-1" max="1" step="0.001" value="0"></label>
+      <label class="knob">CH2 COLOR<input data-color="1" type="range" min="-1" max="1" step="0.001" value="0"></label>
+    </div>
+
+    <!-- mixer: what the RX3's faders and knobs do -->
+    <div id="mixer" class="bar mixer">
+      <div class="strip" data-deck="0"></div>
+      <div class="center">
+        <label class="knob wide">CROSSFADER<input id="xfader" type="range" min="-1" max="1" step="0.001" value="0"></label>
+        <label class="knob">MASTER<input id="master" type="range" min="0" max="1" step="0.001" value="0.8"></label>
+        <div class="meter"><i id="meter"></i></div>
+      </div>
+      <div class="strip" data-deck="1"></div>
+    </div>
+
+    <div id="statusbar" class="statusbar"></div>
+  </div>
+
+  <input id="folder-input" type="file" webkitdirectory multiple hidden>
+  <input id="files-input" type="file" accept="audio/*,.mp3,.wav,.aif,.aiff,.m4a,.flac,.ogg" multiple hidden>
+</body>
+</html>
