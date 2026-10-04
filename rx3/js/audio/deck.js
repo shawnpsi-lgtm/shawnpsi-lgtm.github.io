@@ -18,6 +18,8 @@ export class Deck {
     this.cue = 0;
     this.cueHeld = false;
     this.hotHeld = null; // the hot cue being previewed from pause
+    this.loop = null; // the beat loop on: { beats, start, end } (s)
+    this.padFx = null; // the pad FX held: 'roll' or 'brake'
     this.tempo = 0; // -1..1 of the range
     this.range = 10;
     this.nudge = 1;
@@ -55,7 +57,10 @@ export class Deck {
   /** The playhead now, extrapolated from the worklet's last report. */
   position() {
     if (!this.playing) return this.pos;
-    return Math.min(this.duration, this.pos + (this.engine.ctx.currentTime - this.at) * this.rate);
+    let p = this.pos + (this.engine.ctx.currentTime - this.at) * this.rate;
+    const l = this.loop;
+    if (l && !this.padFx && this.pos < l.end && p >= l.end) p = l.start + (p - l.start) % (l.end - l.start);
+    return Math.min(this.duration, p);
   }
 
   send(m) {
@@ -71,7 +76,7 @@ export class Deck {
     this.error = null;
     this.cue = 0;
     this.pos = 0;
-    this.hotHeld = null;
+    this.hotHeld = this.loop = this.padFx = null;
     this.onChange();
     try {
       const [file] = await Promise.all([track.file(), track.prepare?.()]);
@@ -179,6 +184,51 @@ export class Deck {
     this.seek(c.time);
   }
 
+  /** The beat length in seconds of the track's grid (0 without one). */
+  get beat() {
+    return this.analysis?.bpm ? 60 / this.analysis.bpm : 0;
+  }
+
+  /**
+   * Beat loop: `beats` long from the playhead (from the nearest beat with QUANTIZE). The same length again exits it;
+   * another replaces it.
+   */
+  beatLoop(beats, quantize) {
+    if (!this.loaded || !this.beat) return;
+    if (this.loop?.beats === beats) this.loop = null;
+    else {
+      const t = this.position(), start = quantize ? this.snap(t) : t;
+      this.loop = { beats, start, end: start + beats * this.beat };
+    }
+    this.send({ type: 'loop', value: this.loop && { start: this.loop.start, end: this.loop.end } });
+    this.onChange();
+  }
+
+  /**
+   * Pad FX, as rekordbox's, while the pad is held and only while playing. ROLL repeats the last 1/4 beat (from the
+   * 1/4 beat it's in with QUANTIZE); VINYL BRAKE slows the deck to a stop over 2 beats. Both slip: on release the
+   * track carries on where it would have been.
+   */
+  padFxDown(name, quantize) {
+    if (!this.playing || this.padFx || !this.beat) return;
+    const value = {};
+    if (name === 'roll') {
+      const len = this.beat / 4, t = this.position(), a = this.analysis;
+      const start = quantize ? a.firstBeat + Math.floor((t - a.firstBeat) / len) * len : t;
+      value.roll = { start, end: start + len };
+    } else value.brake = 120 / this.bpm;
+    this.padFx = name;
+    this.send({ type: 'padFx', value });
+    this.onChange();
+  }
+
+  padFxUp() {
+    if (!this.padFx) return;
+    this.padFx = null;
+    this.send({ type: 'padFx', value: null });
+    this.onChange();
+  }
+
   /** Snap to the nearest beat (QUANTIZE) when there is a grid. */
   snap(t) {
     const a = this.analysis;
@@ -237,7 +287,7 @@ export class Deck {
 
   eject() {
     this.send({ type: 'unload' });
-    this.track = this.analysis = this.hotHeld = null;
+    this.track = this.analysis = this.hotHeld = this.loop = this.padFx = null;
     this.playing = false;
     this.onChange();
   }

@@ -58,11 +58,14 @@ The effects work as on the unit:
 On a phone (portrait) the bars are replaced by one panel that drives the deck tapped on the screen. Between BEAT FX
 and FILTER, **PADS / VOL** swaps between (VOL until PADS is picked; the choice is remembered):
 
-- **PADS**: the deck's eight HOT CUE pads (A-H), read from the track's rekordbox analysis (the `.EXT`'s PCO2, with
-  colours and comments, else the `.DAT`'s PCOB), lit in their rekordbox colour. Playing, a pad jumps there and plays
-  on; paused, it plays from the cue while held and goes back on release (PLAY while holding keeps it playing). An
-  empty pad stores the playhead (on the beat with QUANTIZE) until the page is closed. Loop cues jump to the loop's
-  start: loops aren't modelled.
+- **PADS**: the deck's eight pads. A, B, E and F are HOT CUE pads, read from the track's rekordbox analysis (the
+  `.EXT`'s PCO2, with colours and comments, else the `.DAT`'s PCOB), lit in their rekordbox colour. Playing, a pad
+  jumps there and plays on; paused, it plays from the cue while held and goes back on release (PLAY while holding
+  keeps it playing). An empty pad stores the playhead (on the beat with QUANTIZE) until the page is closed. Loop cues
+  jump to the loop's start. C and D are a 4-bar and a 2-bar beat loop (from the nearest beat with QUANTIZE; press
+  again to exit, lit orange while on). G and H are two of rekordbox's Pad FX, while held and only while playing:
+  ROLL repeats a 1/4 beat (from the 1/4 beat it's in with QUANTIZE) and VINYL BRAKE slows the deck to a stop over
+  2 beats. Both slip: on release the track carries on where it would have been.
 - **VOL**: both channel faders and a Beat FX VOLUME (not on the unit), drawn as a mixer's channel faders: how much of
   the effect's change to the signal gets through, top = the firmware's output as is, bottom = dry. Drag anywhere in
   the strip and the cap follows the finger; double-tap for the top.

@@ -92,6 +92,12 @@ class DeckProcessor extends AudioWorkletProcessor {
     this.stretch = new Stretch();
     this.srcRate = sampleRate; // the track's own sample rate
     this.playing = false;
+    // the deck's beat loop and ROLL's, in source frames ({ start, end }); the playhead wraps at the end only when it
+    // runs into it, so a jump out of the loop leaves it
+    this.loop = this.roll = null;
+    this.brake = null; // VINYL BRAKE: { len, done } in output frames, the speed falling from 1 to 0 over len
+    // where the track would be without the held pad FX (slip), back there on release; null when none is held
+    this.slip = null;
     this.report = 0;
     this.port.onmessage = (e) => this.message(e.data);
   }
@@ -104,11 +110,15 @@ class DeckProcessor extends AudioWorkletProcessor {
       this.srcRate = m.sampleRate;
       this.pos = 0;
       this.playing = false;
+      this.loop = this.roll = this.brake = null;
+      this.slip = null;
       this.stretch.reset();
     } else if (m.type === 'unload') {
       this.l = this.r = null;
       this.len = 0;
       this.playing = false;
+      this.loop = this.roll = this.brake = null;
+      this.slip = null;
     } else if (m.type === 'play') {
       if (!this.playing) this.stretch.reset();
       this.playing = m.value && this.len > 0;
@@ -120,6 +130,19 @@ class DeckProcessor extends AudioWorkletProcessor {
     } else if (m.type === 'masterTempo') {
       if (m.value !== this.masterTempo) this.stretch.reset();
       this.masterTempo = m.value;
+    } else if (m.type === 'loop') {
+      this.loop = m.value && { start: m.value.start * this.srcRate, end: m.value.end * this.srcRate };
+    } else if (m.type === 'padFx') {
+      const v = m.value;
+      if (v && this.slip == null) {
+        this.slip = this.pos;
+        if (v.roll) this.roll = { start: v.roll.start * this.srcRate, end: v.roll.end * this.srcRate };
+        if (v.brake) this.brake = { len: v.brake * sampleRate, done: 0 };
+      } else if (!v && this.slip != null) {
+        this.pos = this.slip;
+        this.slip = this.roll = this.brake = null;
+        this.stretch.reset();
+      }
     }
     this.send();
   }
@@ -128,12 +151,34 @@ class DeckProcessor extends AudioWorkletProcessor {
     this.port.postMessage({ pos: this.pos / this.srcRate, playing: this.playing });
   }
 
+  /** One frame on from p by step: across a loop's end it goes back to the loop's start. */
+  static wrap(p, step, loop) {
+    const q = p + step;
+    return loop && p < loop.end && q >= loop.end ? q - (loop.end - loop.start) : q;
+  }
+
+  /**
+   * The speed for the next output frame (VINYL BRAKE's slowdown, else 1) and its gain (the last quarter of the
+   * brake fades out), and the slip position carried on at the normal speed.
+   */
+  tick(step) {
+    if (this.slip != null) this.slip = Math.min(this.len - 1, DeckProcessor.wrap(this.slip, step, this.loop));
+    const b = this.brake;
+    if (!b) return 1;
+    const k = Math.max(0, 1 - b.done++ / b.len);
+    this.gain = Math.min(1, k * 4);
+    return k;
+  }
+
   process(_inputs, outputs) {
     const [oL, oR] = outputs[0];
+    const loop = this.roll || this.loop;
+    this.gain = 1;
+    // VINYL BRAKE drops the pitch with the speed, so it plays without MASTER TEMPO
     if (!this.playing || !this.l) {
       oL.fill(0);
       oR.fill(0);
-    } else if (this.masterTempo) {
+    } else if (this.masterTempo && !this.brake) {
       const ratio = this.srcRate / sampleRate, step = this.rate * ratio, s = this.stretch;
       for (let i = 0; i < oL.length; i++) {
         if (this.pos + 1 >= this.len) {
@@ -146,7 +191,8 @@ class DeckProcessor extends AudioWorkletProcessor {
         if (s.out >= HOP) s.grain(this, this.pos, ratio);
         oL[i] = s.L[s.out];
         oR[i] = s.R[s.out++];
-        this.pos += step;
+        this.tick(step);
+        this.pos = DeckProcessor.wrap(this.pos, step, loop);
       }
     } else {
       const step = this.rate * this.srcRate / sampleRate, { l, r, len } = this;
@@ -160,12 +206,13 @@ class DeckProcessor extends AudioWorkletProcessor {
           p = len - 1;
           break;
         }
-        const f = p - i0;
-        oL[i] = l[i0] + (l[i0 + 1] - l[i0]) * f;
-        oR[i] = r[i0] + (r[i0 + 1] - r[i0]) * f;
-        p += step;
+        const f = p - i0, k = this.tick(step), g = this.gain;
+        oL[i] = (l[i0] + (l[i0 + 1] - l[i0]) * f) * g;
+        oR[i] = (r[i0] + (r[i0 + 1] - r[i0]) * f) * g;
+        p = DeckProcessor.wrap(p, step * k, loop);
       }
       this.pos = p;
+      if (this.masterTempo) this.stretch.reset(); // so MASTER TEMPO picks up cleanly after the brake
     }
     if (++this.report >= 12) { // 12 x 128 frames at 44.1 kHz = ~29 reports a second
       this.report = 0;

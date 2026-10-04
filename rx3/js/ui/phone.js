@@ -2,14 +2,22 @@
 // by tapping it on the screen). No EQ, faders or crossfader: the FILTER X-PAD (the channel's own FILTER) brings a
 // deck in or takes it out, and the COLOR FX X-PAD is the channel's COLOR knob. On both, a tap or sweep springs back
 // to centre on release and a double-tap parks it there. Beat FX goes to the deck you switch it on from. Between BEAT FX
-// and FILTER, PADS / VOL swaps between the focused deck's HOT CUE pads (rekordbox's, A-H) and the volumes: both
-// channel faders and the Beat FX volume.
+// and FILTER, PADS / VOL swaps between the focused deck's pads and the volumes: both channel faders and the Beat FX
+// volume. The pads are HOT CUE A, B, E and F (rekordbox's), a 4-bar and a 2-bar loop on C and D, and the Pad FX ROLL
+// and VINYL BRAKE on G and H.
 import { BEAT_FX, COLOR_FX, pitchLabel } from '../audio/engine.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
 const DOUBLE_TAP = 350; // ms
 const PADS = 'ABCDEFGH';
+// the pads that aren't hot cues: C and D are 4- and 2-bar beat loops, G and H two of rekordbox's Pad FX
+const PAD_FN = {
+  2: { loop: 16, label: '4 BAR LOOP' },
+  3: { loop: 8, label: '2 BAR LOOP' },
+  6: { fx: 'roll', label: 'ROLL 1/4' },
+  7: { fx: 'brake', label: 'VINYL BRAKE' },
+};
 
 export class Phone {
   constructor(app) {
@@ -143,24 +151,27 @@ export class Phone {
         this.renderSwap();
       };
     });
-    // HOT CUE A-H of the focused deck: press and release (a pad pressed while paused plays until let go); the deck
-    // is fixed at press
+    // the focused deck's pads: press and release (a hot cue pressed while paused plays until let go, a Pad FX lasts
+    // while held, a loop pad switches its loop); the deck is fixed at press
     const box = $('#ph-cues');
     for (let i = 0; i < PADS.length; i++) {
-      const pad = document.createElement('button');
-      pad.className = 'ph-cue-pad';
-      pad.innerHTML = `<b>${PADS[i]}</b><small></small>`;
+      const pad = document.createElement('button'), fn = PAD_FN[i];
+      pad.className = 'ph-cue-pad' + (fn ? ' fn' : '');
+      pad.innerHTML = `<b>${PADS[i]}</b><small>${fn?.label ?? ''}</small>`;
       let deck = null;
       pad.addEventListener('pointerdown', (ev) => {
         ev.preventDefault();
         pad.setPointerCapture(ev.pointerId);
         e.resume();
         deck = app.decks[this.deck];
-        deck.hotCueDown(i, app.quantize);
+        if (fn?.loop) deck.beatLoop(fn.loop, app.quantize);
+        else if (fn) deck.padFxDown(fn.fx, app.quantize);
+        else deck.hotCueDown(i, app.quantize);
         pad.classList.add('down');
       });
       const up = () => {
-        deck?.hotCueUp();
+        if (fn?.fx) deck?.padFxUp();
+        else if (!fn) deck?.hotCueUp();
         deck = null;
         pad.classList.remove('down');
       };
@@ -250,8 +261,17 @@ export class Phone {
     });
     $('#ph-cues').hidden = this.tab !== 'pads';
     $('#ph-vol').hidden = this.tab !== 'vol';
-    // a stored cue lights its pad in its rekordbox colour (green when it has none, orange for a loop)
+    // a stored cue lights its pad in its rekordbox colour (green when it has none, orange for a loop); a loop pad is
+    // lit orange while its loop is on, a Pad FX blue while it plays
     $$('#ph-cues .ph-cue-pad').forEach((pad, i) => {
+      const fn = PAD_FN[i];
+      if (fn) {
+        const on = fn.loop ? d.loop?.beats === fn.loop : d.padFx === fn.fx;
+        pad.classList.toggle('set', on);
+        pad.disabled = !d.loaded;
+        pad.style.setProperty('--cue', on ? (fn.loop ? 'var(--orange)' : 'var(--blue)') : '');
+        return;
+      }
       const c = d.loaded ? d.hotCue(i) : null;
       pad.classList.toggle('set', !!c);
       pad.disabled = !d.loaded;

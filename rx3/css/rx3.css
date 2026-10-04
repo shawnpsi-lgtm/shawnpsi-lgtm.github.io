@@ -491,6 +491,7 @@ rx-select.open .rxs-btn .tri { transform: rotate(180deg); }
     position: absolute; left: 5px; right: 5px; bottom: 3px; font-size: 10px; color: inherit; text-align: left;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  .ph-cue-pad.fn { color: #888; } /* loop and Pad FX pads: always labelled */
   .ph-cue-pad.set { border: 2px solid var(--cue); color: var(--cue); background: color-mix(in srgb, var(--cue) 18%, #0c0c0c); }
   .ph-cue-pad.down { background: #555; }
   .ph-cue-pad.set.down { background: var(--cue); color: #000; }
