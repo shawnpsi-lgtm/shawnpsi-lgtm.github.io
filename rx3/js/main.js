@@ -31,7 +31,6 @@ class App {
     this.started = performance.now();
     this.screen = new Screen(this);
     this.buildControls();
-    this.bindMobile();
     this.bindKeys();
     this.bindFiles();
     this.screen.render();
@@ -391,32 +390,6 @@ class App {
     });
   }
 
-  /** Phones: the tabs pick which pane shows (upright: always one; on its side: a drawer, or none). */
-  bindMobile() {
-    const app = $('#app'), tabs = $$('#mtabs [data-pane]');
-    const upright = matchMedia('(orientation: portrait)');
-    const show = (pane) => {
-      app.dataset.pane = pane;
-      tabs.forEach((b) => b.classList.toggle('on', b.dataset.pane === pane));
-    };
-    tabs.forEach((b) => {
-      b.onclick = () => show(!upright.matches && app.dataset.pane === b.dataset.pane ? '' : b.dataset.pane);
-    });
-    $('#screen-wrap').addEventListener('pointerdown', () => { if (!upright.matches) show(''); });
-    const reset = () => show(upright.matches ? app.dataset.pane || 'panel' : '');
-    upright.addEventListener('change', reset);
-    reset();
-    const fs = $('#fullscreen');
-    fs.hidden = !document.fullscreenEnabled; // iPhone Safari has no fullscreen API; add to home screen instead
-    fs.onclick = async () => {
-      if (document.fullscreenElement) return document.exitFullscreen();
-      try {
-        await document.documentElement.requestFullscreen();
-        await window.screen.orientation.lock('landscape');
-      } catch { /* lock is Android-only */ }
-    };
-  }
-
   renderControls() {
     const e = this.engine;
     $('#fx-select').value = e.fx.name;
@@ -436,10 +409,8 @@ class App {
 
   status() {
     const ctx = this.engine.ctx;
-    const touch = matchMedia('(pointer: coarse)').matches;
-    const sound = ctx.state !== 'running' ? `sound: ${touch ? 'tap' : 'click'} anywhere to start` : this.muted ? 'sound muted (X)' : 'sound on (X to mute)';
+    const sound = ctx.state !== 'running' ? 'sound: click anywhere to start' : this.muted ? 'sound muted (X)' : 'sound on (X to mute)';
     const lat = ctx.baseLatency ? `   |   output ${Math.round((ctx.baseLatency + (ctx.outputLatency || 0)) * 1000)} ms` : '';
-    if (touch) return sound.replace(' (X to mute)', '') + lat;
     return `${sound}${lat}   |   H hides controls   |   1/2 load, Q/P play, W/O cue, E beat FX`;
   }
 
