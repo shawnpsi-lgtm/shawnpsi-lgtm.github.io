@@ -129,6 +129,7 @@ button { cursor: pointer; }
 .mini { position: absolute; left: 0; top: 700px; width: 1280px; height: 100px; }
 .mini-deck { position: absolute; top: 10px; width: 620px; height: 82px; border-top: 2px solid #1b3b80; }
 .mini-deck[data-deck="0"] { left: 10px; }
+.mini-deck.active { border-top-color: var(--blue); }
 .mini-deck[data-deck="1"] { left: 650px; }
 .mini-deck .lbl {
   position: absolute; left: 1px; top: 2px; width: 95px; height: 28px; background: #1e1e1e; text-align: center; line-height: 29px;
@@ -367,14 +368,13 @@ canvas.zoom[data-deck="1"] { top: 280px; }
       linear-gradient(#26282e, #101114 50%, #0b0c0f);
   }
   .ph-amber { color: #dfa32c; text-shadow: 0 0 6px rgba(223, 163, 44, .35); width: 100%; height: clamp(28px, 4dvh, 34px); font-size: 11px; }
-  .ph-deck { flex: 0 0 96px; }
-  .ph-row > [data-ph="sync"] { flex: 0 0 72px; }
   .ph-bpm { flex: 1; text-align: center; }
   .ph-bpm span {
     font: 700 clamp(22px, 3.6dvh, 30px) "DSEG7", ui-monospace, Menlo, monospace; color: #ff2c1e;
     text-shadow: 0 0 5px rgba(255, 44, 30, .85), 0 0 14px rgba(255, 44, 30, .4);
   }
   .ph-bpm small { display: inline; margin-left: 6px; color: #c1372a; }
+  .ph-bpm #ph-deck { display: block; margin: 0 0 2px; color: #8b8e96; }
 
   .ph-xpad-wrap { display: flex; flex-direction: column; gap: 6px; }
   .ph-xpad {
@@ -416,7 +416,9 @@ canvas.zoom[data-deck="1"] { top: 280px; }
       radial-gradient(circle at 50% 46%, #7da2ff 0 26%, #3a63e0 56%, #16357a 82%);
   }
 
-  .ph-nav .ph-btn { flex: 1; min-width: 0; padding: 0; }
+  .ph-nav .ph-btn { flex: 0 0 auto; padding: 0 12px; }
+  /* the focused deck, picked by tapping it on the screen: drawn thick enough to see at phone scale */
+  #screen .mini-deck.active, #screen .deck-info.active, #screen .deck-panel.active { box-shadow: inset 0 0 0 5px var(--blue); }
   .ph-transport { align-items: flex-end; margin-top: auto; } /* CUE / PLAY stay at the bottom, under the thumbs */
   .ph-cue, .ph-play { flex: 0 0 auto; width: clamp(64px, 10dvh, 84px); height: clamp(64px, 10dvh, 84px); border-radius: 50%; font-size: 14px; }
   .ph-cue.lit { color: #ffb02e; border-color: #ffb02e; box-shadow: 0 0 14px rgba(255, 176, 46, .55); }

@@ -1,7 +1,7 @@
-// The phone panel (portrait), after shawnsingh.me/beatfx: one set of controls that drives the focused deck. No EQ,
-// faders or crossfader: the X-PAD is the focused channel's COLOR knob, so FILTER brings a deck in or takes it out;
-// a tap or sweep springs back to centre on release, a double-tap parks it there. Beat FX goes to the deck you
-// switch it on from.
+// The phone panel (portrait), after shawnsingh.me/beatfx: one set of controls that drives the focused deck (picked
+// by tapping it on the screen). No EQ, faders or crossfader: the X-PAD is the focused channel's COLOR knob, so FILTER
+// brings a deck in or takes it out; a tap or sweep springs back to centre on release, a double-tap parks it there.
+// Beat FX goes to the deck you switch it on from.
 import { BEAT_FX, COLOR_FX } from '../audio/engine.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -41,10 +41,6 @@ export class Phone {
 
   buildButtons() {
     const app = this.app;
-    $('#ph-deck').onclick = () => {
-      app.focus = 1 - app.focus;
-      app.screen.render();
-    };
     // press and release, so CUE can be held and NUDGE bends while down; the deck is fixed at press
     $$('[data-ph]').forEach((btn) => {
       let deck = 0;

@@ -138,19 +138,14 @@
 
     <div id="statusbar" class="statusbar"></div>
 
-    <!-- phones (portrait): one beatfx-style panel that drives the focused deck. No EQ, faders or crossfader:
+    <!-- phones (portrait): one beatfx-style panel that drives the focused deck (tap a deck on the screen to pick it;
+         tap a track twice to load it there). No EQ, faders or crossfader:
          the X-PAD is that channel's COLOR knob (FILTER to bring a deck in or take it out), double-tap parks it -->
     <section id="phone" class="phone">
       <div class="ph-row ph-nav">
         <button data-ph="browse" class="ph-btn">BROWSE</button>
-        <button data-ph="up" class="ph-btn">&#9650;</button>
-        <button data-ph="down" class="ph-btn">&#9660;</button>
         <button data-ph="back" class="ph-btn">BACK</button>
-        <button data-ph="load" class="ph-btn">LOAD</button>
-      </div>
-      <div class="ph-row">
-        <button id="ph-deck" class="ph-btn ph-deck">DECK 1</button>
-        <div class="ph-bpm"><span id="ph-bpm">---.-</span><small>BPM</small></div>
+        <div class="ph-bpm"><small id="ph-deck">DECK 1</small><span id="ph-bpm">---.-</span><small>BPM</small></div>
         <button data-ph="sync" class="ph-btn">SYNC</button>
       </div>
       <div class="ph-xpad-wrap">

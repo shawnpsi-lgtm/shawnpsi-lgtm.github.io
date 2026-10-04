@@ -126,6 +126,11 @@ export class Screen {
       }
       this.render();
     }));
+    // the deck strips under SOURCE / BROWSE: tap one to focus it, so a track loads there
+    $$('.mini-deck').forEach((el) => el.addEventListener('pointerdown', () => {
+      app.focus = +el.dataset.deck;
+      this.render();
+    }));
     // drag the zoom waveform to scrub (like touching the jog's top while paused)
     $$('canvas.zoom').forEach((cv) => {
       let last = null;
@@ -378,6 +383,7 @@ export class Screen {
         el.innerHTML = `<span class="lbl"></span><span class="rem">REMAIN</span><span class="t"></span>` +
           `<canvas width="410" height="56"></canvas><span class="nl"></span><div class="bpmbox"></div>`;
       }
+      el.classList.toggle('active', app.focus === d.index);
       el.querySelector('.lbl').textContent = 'DECK' + (d.index + 1);
       el.querySelector('.lbl').classList.toggle('waves', !d.loaded && !d.loading);
       el.querySelector('.nl').textContent = d.loading ? 'Loading…' : d.loaded ? '' : d.error || 'Not Loaded.';
