@@ -1,7 +1,7 @@
 // The phone panel (portrait): one set of controls, in the screen's own style, that drives the focused deck (picked
 // by tapping it on the screen). No EQ, faders or crossfader: the FILTER X-PAD (the channel's own FILTER) brings a
 // deck in or takes it out, and the COLOR FX X-PAD is the channel's COLOR knob. On both, a tap or sweep springs back
-// to centre on release and a double-tap parks it there. Beat FX goes to the deck you switch it on from. Between BEAT FX
+// to centre on release and a double-tap parks it there (not for NOISE: it always springs back). Beat FX goes to the deck you switch it on from. Between BEAT FX
 // and FILTER, PADS / VOL swaps between the focused deck's pads and the volumes: both channel faders and the Beat FX
 // volume. The pads are HOT CUE A, B, E and F (rekordbox's), a 4-bar and a 2-bar loop on C and D, and the Pad FX ROLL
 // and VINYL BRAKE on G and H; beside them LOOP 1/2X and 2X resize the loop on.
@@ -39,7 +39,10 @@ export class Phone {
       if (e.color.name === name) return;
       e.selectColorFx(name);
       $('#color-select').value = name;
+      this.releaseNoise();
     };
+    // NOISE has no double-tap hold on the X-PAD: it always springs back
+    const canPark = () => this.colorName !== 'NOISE';
     const head = $('#ph-color');
     for (const name of this.colors) {
       const btn = document.createElement('button');
@@ -48,10 +51,20 @@ export class Phone {
       head.append(btn);
     }
     this.renderColors();
-    this.buildPad($('#ph-xpad'), () => pick(), (ch, x) => {
+    const setColor = (ch, x) => {
       e.setColor(ch, x);
       $(`[data-color="${ch}"]`).value = x;
-    });
+    };
+    const unpark = (ch) => {
+      xpad.parked[ch] = null;
+      setColor(ch, 0);
+      this.renderPad(xpad);
+    };
+    const xpad = this.buildPad($('#ph-xpad'), () => pick(), setColor, canPark);
+    // switching to NOISE (here or on the mixer) lets go of a parked X-PAD
+    this.releaseNoise = () => {
+      if (!canPark()) xpad.parked.forEach((x, ch) => x != null && unpark(ch));
+    };
     this.buildPad($('#ph-filter'), () => {}, (ch, x) => e.setFilter(ch, x));
     this.noDoubleTapZoom();
   }
@@ -200,8 +213,9 @@ export class Phone {
     });
   }
 
-  /** A touch strip for the focused deck: apply(ch, -1..1); a tap or sweep springs back, a double-tap parks. */
-  buildPad(el, before, apply) {
+  /** A touch strip for the focused deck: apply(ch, -1..1); a tap or sweep springs back, a double-tap parks (while
+   * canPark()). */
+  buildPad(el, before, apply, canPark = () => true) {
     const pad = { el, parked: [null, null], live: null };
     this.pads.push(pad);
     const at = (ev) => {
@@ -221,7 +235,7 @@ export class Phone {
       el.setPointerCapture(ev.pointerId);
       before();
       deck = this.deck;
-      latch = ev.timeStamp - lastTap < DOUBLE_TAP;
+      latch = ev.timeStamp - lastTap < DOUBLE_TAP && canPark();
       lastTap = ev.timeStamp;
       go(ev);
     });
@@ -238,6 +252,7 @@ export class Phone {
     };
     el.addEventListener('pointerup', up);
     el.addEventListener('pointercancel', up);
+    return pad;
   }
 
   // ---- state -> DOM
@@ -292,6 +307,7 @@ export class Phone {
     const e = this.app.engine, m = e.beatMeta();
     $('#ph-beatfx').value = e.fx.name;
     if (this.colors.includes(e.color.name)) this.colorName = e.color.name;
+    this.releaseNoise?.();
     this.renderColors();
     $('#ph-beat').textContent = m?.beats.find((b) => b.value === e.fx.beat)?.label ?? e.fx.beat ?? '';
     $('#ph-level-v').textContent = Math.round(e.fx.level * 100);
