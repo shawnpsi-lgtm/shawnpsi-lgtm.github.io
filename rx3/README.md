@@ -106,3 +106,5 @@ with QUANTIZE off); the Color FX run after the EQ, where NOISE and SWEEP sit bef
 FX from FILTER to SWEEP does not reset the EQ as the unit does; what the X-PAD strip does on release could not be
 fully settled from the firmware (here it springs back to rest); CRUSH uses powf, which the reference renders compute
 in double precision and round, as the port does, where the unit's libm may differ in the last bit.
+Color FX NOISE is louder than the unit's at low and middle PARAMETER settings (up to +9.5 dB, none at full); `npm
+test` checks it with the boost off.

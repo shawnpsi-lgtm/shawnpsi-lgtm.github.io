@@ -6,6 +6,9 @@
  * to the signal: out = in + bandpass(noise + y' x B) x level x (1 - A^2) x mix. Turning COLOR away from the centre
  * brings the noise in (left: the band moves down, right: up); PARAMETER is the noise level (0 .. 0.6, steeper in
  * its top half). The noise runs at every setting; at the centre mix is 0.
+ *
+ * Not on the unit: the level is boosted (NoiseCore.boost) by up to +9.5 dB, tapering to none at full PARAMETER, where
+ * the firmware's noise already peaks near full scale. `npm test` turns the boost off to compare against the firmware.
  */
 import { Biquad, ColorCore, f, hex } from '../dsp.js';
 
@@ -43,6 +46,8 @@ function bandpass(c, out) {
 }
 
 export class NoiseCore extends ColorCore {
+  static boost = true;
+
   constructor(sampleRate) {
     super(0);
     this.sr = sampleRate;
@@ -149,6 +154,7 @@ export class NoiseCore extends ColorCore {
       L = f(f(d * f(d * f(d * 32))) + f(f(p + p) * L));
     }
     L = f(L * hex(0x3e19999a));
+    if (NoiseCore.boost) L = f(L * (3 - L * (2 / 1.8))); // x3 at low levels .. x1 at the top (L = 1.8)
     let slew = f(f(L - this.level) * f(this.inv + this.inv));
     if (!(slew >= EPS) && slew > -EPS) slew = 0;
     const half = (n / 2) | 0;
