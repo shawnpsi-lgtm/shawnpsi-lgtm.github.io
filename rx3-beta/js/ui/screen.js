@@ -115,6 +115,7 @@ export class Screen {
         this.render();
       }, { passive: false });
     }
+    this.bindListSwipe();
     this.el.addEventListener('click', (e) => {
       const b = e.target.closest('[data-act]');
       if (b) app.action(b.dataset.act);
@@ -151,6 +152,61 @@ export class Screen {
       const b = e.target.closest('button');
       if (b) app.bank(b.dataset.slot);
     });
+  }
+
+  /** Touch: swipe the track list to scroll it a row at a time, flick to coast; a drag never selects a row. */
+  bindListSwipe() {
+    const el = $('#list-l'), b = this.app.browser;
+    let drag = null, coast = 0, swallow = false;
+    const step = (rows) => { // fractional rows in, whole rows scrolled; returns false at either end
+      drag.acc += rows;
+      const n = Math.trunc(drag.acc);
+      if (!n) return true;
+      drag.acc -= n;
+      const moved = b.scroll(n);
+      if (moved) this.render();
+      return moved;
+    };
+    el.addEventListener('pointerdown', (e) => {
+      cancelAnimationFrame(coast);
+      swallow = false;
+      drag = { id: e.pointerId, y: e.clientY, t: e.timeStamp, acc: 0, v: 0, moved: false };
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dy = drag.y - e.clientY;
+      if (!drag.moved) {
+        if (Math.abs(dy) < 8) return;
+        drag.moved = true;
+        el.setPointerCapture(e.pointerId); // only now: capturing at once would retarget the tap's click to the list
+      }
+      const rows = dy / (50 * this.scale), dt = Math.max(1, e.timeStamp - drag.t);
+      drag.v = 0.7 * (rows / dt) + 0.3 * drag.v; // rows per ms, smoothed
+      drag.y = e.clientY;
+      drag.t = e.timeStamp;
+      step(rows);
+    });
+    const up = () => {
+      if (!drag) return;
+      swallow = drag.moved;
+      if (drag.moved && Math.abs(drag.v) > 0.004) {
+        let last = performance.now();
+        const fly = (now) => {
+          const dt = now - last;
+          last = now;
+          drag.v *= Math.pow(0.995, dt);
+          if (Math.abs(drag.v) > 0.001 && step(drag.v * dt)) coast = requestAnimationFrame(fly);
+        };
+        coast = requestAnimationFrame(fly);
+      } else if (drag.moved && Math.abs(drag.acc) >= 0.5) step(Math.sign(drag.acc) * 0.5); // settle on the nearest row
+    };
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+    el.addEventListener('click', (e) => { // runs before the row handler (capture)
+      if (!swallow) return;
+      swallow = false;
+      e.stopImmediatePropagation();
+    }, true);
   }
 
   buildXpad() {

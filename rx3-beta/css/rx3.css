@@ -99,6 +99,7 @@ button { cursor: pointer; }
 .v-browse .col-head.l { left: 108px; width: 626px; }
 .v-browse .col-head.r { left: 735px; width: 545px; background: #353535; }
 .list { position: absolute; top: 100px; height: 600px; margin: 0; padding: 0; list-style: none; overflow: hidden; }
+.list.l { touch-action: none; } /* swiped to scroll (screen.js) */
 .list.l { left: 108px; width: 626px; }
 .list.r { left: 735px; width: 545px; border-left: 1px solid #555; }
 .list li {
@@ -335,7 +336,7 @@ canvas.zoom[data-deck="1"] { top: 280px; }
 @media (max-width: 600px) and (orientation: portrait) {
   html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; background: #0b0c0f; }
   #app, #app * { touch-action: manipulation; }
-  #app .ph-xpad, #app .ph-knob { touch-action: none; }
+  #app .ph-xpad, #app .ph-knob, #app .list.l { touch-action: none; }
   html, body { overflow: hidden; }
   #app {
     grid-template: "screen" auto "phone" 1fr / 1fr; height: 100vh; height: 100dvh; overflow: hidden;

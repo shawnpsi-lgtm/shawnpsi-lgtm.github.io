@@ -94,6 +94,16 @@ export class Browser {
     this.move(i - this.list.cursor);
   }
 
+  /** Swipe: move the visible window by n rows, leaving the cursor where it is. Returns whether it moved. */
+  scroll(n) {
+    const l = this.list;
+    if (!l) return false;
+    const top = Math.max(0, Math.min(l.items.length - ROWS, l.top + n));
+    if (top === l.top) return false;
+    l.top = top;
+    return true;
+  }
+
   /** PUSH: open the highlighted folder. Returns false if there is nothing to open (a track). */
   push() {
     const it = this.selected;
@@ -118,7 +128,7 @@ export class Browser {
     const cur = this.list.cursor, top = this.list.top;
     this.stack = [categoryList(this.source, this.category, masterBpm)];
     this.list.cursor = Math.min(cur, Math.max(0, this.list.items.length - 1));
-    this.list.top = Math.min(top, this.list.cursor);
+    this.list.top = Math.max(0, Math.min(top, this.list.items.length - ROWS)); // keep a swiped-away window
   }
 }
 
