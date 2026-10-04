@@ -378,6 +378,7 @@ rx-select.open .rxs-btn .tri { transform: rotate(180deg); }
   #app {
     grid-template: "nav" auto "screen" auto "phone" 1fr / 1fr; height: 100vh; height: 100dvh; overflow: hidden;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    container: app / size; /* so the short-phone rules below see the height inside the safe areas */
   }
   #app, #app * { touch-action: manipulation; }
   #app .ph-xpad, #app #ph-level, #app #ph-pitch, #app .ph-fader, #app .ph-cue-pad, #app .list.l { touch-action: none; }
@@ -550,8 +551,11 @@ rx-select.open .rxs-btn .tri { transform: rotate(180deg); }
   .ph-nudge .ph-btn { flex: 1; }
 }
 
-/* short phones (or Safari with its bars showing): everything a little tighter, so PADS / VOL fits with the rest */
-@media (max-width: 600px) and (orientation: portrait) and (max-height: 760px) {
+/* short phones, Safari with its bars showing, or a home-screen app once the notch and home bar are taken out:
+   everything a little tighter, so PADS / VOL fits with the rest. Measured inside the safe areas (#app's content box),
+   since the full-size panel needs ~840px there */
+@media (max-width: 600px) and (orientation: portrait) {
+@container app (max-height: 840px) {
   .phone { gap: 5px; padding: 6px 8px; }
   #ph-nav { padding-top: 6px; }
   .ph-head { height: 24px; }
@@ -565,4 +569,5 @@ rx-select.open .rxs-btn .tri { transform: rotate(180deg); }
   .ph-cue-pad b { top: 1px; font-size: 18px; }
   #app .ph-fader small { font-size: 15px; line-height: 15px; }
   .ph-track { --cap: 16px; margin-top: 1px; }
+}
 }

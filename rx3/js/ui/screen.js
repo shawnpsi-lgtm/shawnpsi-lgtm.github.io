@@ -115,13 +115,15 @@ export class Screen {
       const b = e.target.closest('[data-act]');
       if (b) app.action(b.dataset.act);
     });
-    // decks: tap the deck panel to focus it (LOAD from the screen goes to the focused deck); tap the overview to seek
+    // decks: tap the deck panel to focus it (LOAD from the screen goes to the focused deck); tap the overview to seek.
+    // The first tap on an unfocused deck only focuses it, so switching decks never jumps the track
     $$('.deck-panel, .deck-info').forEach((el) => el.addEventListener('pointerdown', (e) => {
       const d = +el.dataset.deck;
+      const focused = app.focus === d;
       app.focus = d;
       const cv = el.querySelector('canvas');
       const deck = app.decks[d];
-      if (cv && e.target === cv && deck.loaded) {
+      if (focused && cv && e.target === cv && deck.loaded) {
         const r = cv.getBoundingClientRect();
         deck.seek(((e.clientX - r.left) / r.width) * deck.duration);
       }
