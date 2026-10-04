@@ -416,7 +416,7 @@ export class Screen {
         `<div class="q ${app.quantize ? '' : 'off'}">QUANTIZE</div><div class="qv">1</div></div>` +
         `<div class="hc a">A.HOT CUE</div><div class="hc b">AUTO CUE</div>` +
         `<div class="tl">&bull; REMAIN <span class="dim">/ TIME</span></div><div class="time"></div>` +
-        `<div class="tempo-l">TEMPO</div><div class="range ${d.range >= 100 ? 'wide' : ''}">${range}</div><div class="tempo"></div>` +
+        `<div class="mt ${d.masterTempo ? '' : 'off'}">MT</div><div class="tempo-l">TEMPO</div><div class="range ${d.range >= 100 ? 'wide' : ''}">${range}</div><div class="tempo"></div>` +
         `<div class="bpmbox ${d.master ? '' : 'slave'}">${bpmHtml(d, d.master)}</div>` +
         (loaded ? '<canvas width="512" height="58"></canvas>' : d.loading ? '<div class="busy">Loading…</div>'
           : `<div class="nl">${esc(d.error || 'Not Loaded.')}</div>`));

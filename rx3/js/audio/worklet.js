@@ -7,6 +7,78 @@ import { BeatManager, ColorManager, beatIndex } from '../fx/dsp.js';
 const SILENCE = new Float32Array(128);
 const players = []; // the DeckProcessors by deck index, for the Beat FX section's beat clock
 
+/**
+ * MASTER TEMPO: tempo without the pitch change, by WSOLA. Grains of N output frames play the track at its own pitch,
+ * Hann-windowed and overlap-added every N/2 frames. Each grain starts at the playhead, moved by up to SEEK source frames
+ * to where it best continues the previous grain (normalised cross-correlation, coarse then fine). At rate 1 the best
+ * match is the exact continuation, so the output is the track itself.
+ */
+const N = 2048, HOP = N / 2;
+const WIN = Float32Array.from({ length: N }, (_, i) => 0.5 - 0.5 * Math.cos(2 * Math.PI * i / N)); // sums to 1 at N/2
+const SEEK = Math.round(0.012 * sampleRate), COARSE = 4;
+
+class Stretch {
+  constructor() {
+    this.L = new Float32Array(N);
+    this.R = new Float32Array(N);
+    this.reset();
+  }
+
+  reset() {
+    this.L.fill(0);
+    this.R.fill(0);
+    this.out = HOP; // frames of the current hop already output
+    this.prev = -1; // source frame where the last grain started
+  }
+
+  /** Similarity of the source at a to the source at b over the overlap, mono, every `step` frames. */
+  static match(l, r, len, a, b, n, step) {
+    let xy = 0, yy = 0;
+    for (let t = 0; t < n; t += step) {
+      const ia = a + t, ib = b + t;
+      if (ia < 0 || ib < 0 || ia >= len || ib >= len) continue;
+      const x = l[ia] + r[ia], y = l[ib] + r[ib];
+      xy += x * y;
+      yy += y * y;
+    }
+    return yy > 0 ? xy / Math.sqrt(yy) : 0;
+  }
+
+  /** Add the next grain, which starts near source frame `pos`, read `ratio` source frames per output frame. */
+  grain(p, pos, ratio) {
+    const { l, r, len } = p;
+    let start = pos;
+    if (this.prev >= 0) {
+      const nat = Math.round(this.prev + HOP * ratio), n = Math.round(HOP * ratio), b = Math.round(pos);
+      let best = -Infinity, at = 0;
+      for (let d = -SEEK; d <= SEEK; d += COARSE) {
+        const c = Stretch.match(l, r, len, nat, b + d, n, COARSE);
+        if (c > best) { best = c; at = d; }
+      }
+      best = -Infinity;
+      for (let d = at - COARSE + 1; d < at + COARSE; d++) {
+        const c = Stretch.match(l, r, len, nat, b + d, n, 1);
+        if (c > best) { best = c; start = pos + d; }
+      }
+    }
+    this.prev = start;
+    const { L, R } = this;
+    L.copyWithin(0, HOP);
+    R.copyWithin(0, HOP);
+    L.fill(0, HOP);
+    R.fill(0, HOP);
+    for (let j = 0; j < N; j++) {
+      const q = start + j * ratio, i0 = Math.floor(q);
+      if (i0 < 0) continue;
+      if (i0 + 1 >= len) break;
+      const f = q - i0, w = WIN[j];
+      L[j] += (l[i0] + (l[i0 + 1] - l[i0]) * f) * w;
+      R[j] += (r[i0] + (r[i0 + 1] - r[i0]) * f) * w;
+    }
+    this.out = 0;
+  }
+}
+
 /** Plays one track: variable rate (tempo, nudge), play/pause, seek. Reports its position ~30 times a second. */
 class DeckProcessor extends AudioWorkletProcessor {
   constructor(options) {
@@ -16,6 +88,8 @@ class DeckProcessor extends AudioWorkletProcessor {
     this.len = 0;
     this.pos = 0; // in source frames, fractional
     this.rate = 1; // tempo * nudge
+    this.masterTempo = false;
+    this.stretch = new Stretch();
     this.srcRate = sampleRate; // the track's own sample rate
     this.playing = false;
     this.report = 0;
@@ -30,16 +104,22 @@ class DeckProcessor extends AudioWorkletProcessor {
       this.srcRate = m.sampleRate;
       this.pos = 0;
       this.playing = false;
+      this.stretch.reset();
     } else if (m.type === 'unload') {
       this.l = this.r = null;
       this.len = 0;
       this.playing = false;
     } else if (m.type === 'play') {
+      if (!this.playing) this.stretch.reset();
       this.playing = m.value && this.len > 0;
     } else if (m.type === 'seek') {
       this.pos = Math.max(0, Math.min(this.len - 1, m.seconds * this.srcRate));
+      this.stretch.reset();
     } else if (m.type === 'rate') {
       this.rate = m.value;
+    } else if (m.type === 'masterTempo') {
+      if (m.value !== this.masterTempo) this.stretch.reset();
+      this.masterTempo = m.value;
     }
     this.send();
   }
@@ -53,6 +133,21 @@ class DeckProcessor extends AudioWorkletProcessor {
     if (!this.playing || !this.l) {
       oL.fill(0);
       oR.fill(0);
+    } else if (this.masterTempo) {
+      const ratio = this.srcRate / sampleRate, step = this.rate * ratio, s = this.stretch;
+      for (let i = 0; i < oL.length; i++) {
+        if (this.pos + 1 >= this.len) {
+          oL.fill(0, i);
+          oR.fill(0, i);
+          this.playing = false;
+          this.pos = this.len - 1;
+          break;
+        }
+        if (s.out >= HOP) s.grain(this, this.pos, ratio);
+        oL[i] = s.L[s.out];
+        oR[i] = s.R[s.out++];
+        this.pos += step;
+      }
     } else {
       const step = this.rate * this.srcRate / sampleRate, { l, r, len } = this;
       let p = this.pos;

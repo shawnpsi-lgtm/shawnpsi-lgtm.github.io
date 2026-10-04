@@ -21,6 +21,7 @@ export class Deck {
     this.tempo = 0; // -1..1 of the range
     this.range = 10;
     this.nudge = 1;
+    this.masterTempo = true; // MASTER TEMPO: tempo changes keep the key
     this.master = false;
     this.pos = 0; // seconds, as last reported
     this.at = 0; // context time of that report
@@ -32,6 +33,7 @@ export class Deck {
         this.onChange();
       }
     };
+    this.send({ type: 'masterTempo', value: this.masterTempo });
   }
 
   get loaded() {
@@ -188,6 +190,12 @@ export class Deck {
   setTempo(x) {
     this.tempo = Math.max(-1, Math.min(1, x));
     this.sendRate();
+    this.onChange();
+  }
+
+  setMasterTempo(on = !this.masterTempo) {
+    this.masterTempo = on;
+    this.send({ type: 'masterTempo', value: on });
     this.onChange();
   }
 

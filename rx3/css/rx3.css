@@ -258,6 +258,8 @@ canvas.zoom[data-deck="1"] { top: 280px; }
 .deck-panel .time { position: absolute; left: 190px; top: 82px; font-size: 50px; letter-spacing: 0; white-space: nowrap; }
 .deck-panel .time small { font-size: 24px; }
 .deck-panel .tempo-l { position: absolute; left: 386px; top: 72px; font-size: 12px; }
+.deck-panel .mt { position: absolute; left: 386px; top: 87px; font-size: 12px; font-weight: bold; color: #e8301e; }
+.deck-panel .mt.off { display: none; }
 .deck-panel .range { position: absolute; left: 450px; top: 64px; width: 50px; height: 21px; background: var(--orange); color: #fff;
   text-align: center; font-size: 14px; line-height: 21px; }
 .deck-panel .range.wide { background: #3a3a3a; }
@@ -417,7 +419,8 @@ rx-select.open .rxs-btn .tri { transform: rotate(180deg); }
   .ph-select.open .tri { color: #fff; }
 
   #ph-nav { grid-area: nav; display: flex; padding: 8px 8px 0; }
-  .ph-nav .ph-btn { flex: 0 0 auto; }
+  .ph-nav .ph-btn { flex: 0 0 auto; padding: 0 9px; }
+  @media (max-width: 375px) { .ph-nav .ph-btn { padding: 0 6px; font-size: 13px; } #ph-nav { gap: 4px; } }
   .ph-bpm { position: relative; flex: 1; border: 1px solid #ddd; }
   .ph-bpm small { position: absolute; top: 3px; }
   .ph-bpm #ph-deck { left: 5px; }
@@ -545,6 +548,7 @@ rx-select.open .rxs-btn .tri { transform: rotate(180deg); }
   .ph-pad:has(.filter) { margin-top: auto; } /* FILTER sits on NUDGE; both stay at the bottom, under the thumbs */
   .ph-cue, .ph-play { flex: 0 0 96px; height: clamp(52px, 8dvh, 64px); font: 500 22px var(--cond); }
   .ph-cue.lit { color: var(--orange); border-color: var(--orange); }
+  .ph-nav .ph-btn.lit { color: var(--blue); border-color: var(--blue); }
   .ph-play.lit { color: var(--green); border-color: var(--green); }
   .ph-nudge { flex: 1; text-align: center; }
   .ph-nudge div { display: flex; gap: 6px; margin-top: 4px; }

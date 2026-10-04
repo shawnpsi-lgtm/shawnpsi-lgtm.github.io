@@ -235,6 +235,7 @@ export class Phone {
     $('#ph-deck').textContent = 'DECK ' + (this.deck + 1);
     $('#ph-bpm').textContent = d.bpm ? d.bpm.toFixed(1) : '---.-';
     $('[data-ph="play"]').classList.toggle('lit', d.playing);
+    $('[data-ph="mt"]').classList.toggle('lit', d.masterTempo);
     $('[data-ph="cue"]').classList.toggle('lit', d.loaded && !d.playing);
     this.renderFx();
     this.renderSwap();

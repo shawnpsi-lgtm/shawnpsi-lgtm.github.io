@@ -118,6 +118,7 @@ class App {
       case 'cue': return this.decks[deck].cueDown();
       case 'nudge-': case 'nudge+': return this.decks[deck].setNudge(name === 'nudge+' ? 1 : -1);
       case 'sync': return this.decks[deck].sync(this.decks[1 - deck]);
+      case 'mt': return this.decks[deck].setMasterTempo();
       case 'fx': {
         e.setBeatFxOn(!e.fx.on);
         return s.render();
@@ -383,6 +384,7 @@ class App {
       el.innerHTML = `<span class="dname">DECK ${i + 1}</span>` +
         knob('TEMPO', 'data-f="tempo" min="-1" max="1" step="0.0005" value="0"') +
         `<button data-f="sync">BEAT SYNC</button>` +
+        `<button data-f="mt">MASTER TEMPO</button>` +
         `<button data-f="nudge-"><i class="tri l"></i></button><button data-f="nudge+"><i class="tri r"></i></button>` +
         knob('TRIM', 'data-f="trim" min="-1" max="1" step="0.01" value="0"') +
         knob('HI', 'data-f="high" min="-1" max="1" step="0.01" value="0"') +
@@ -407,6 +409,7 @@ class App {
         deck.sync(this.decks[1 - i]);
         el.querySelector('[data-f="tempo"]').value = -deck.tempo;
       };
+      el.querySelector('[data-f="mt"]').onclick = () => deck.setMasterTempo();
       for (const dir of ['-', '+']) {
         const b = el.querySelector(`[data-f="nudge${dir}"]`);
         b.onpointerdown = () => deck.setNudge(dir === '+' ? 1 : -1);
@@ -433,6 +436,7 @@ class App {
     $$('.strip').forEach((el) => {
       const d = this.decks[+el.dataset.deck], t = el.querySelector('[data-f="tempo"]');
       if (document.activeElement !== t) t.value = -d.tempo;
+      el.querySelector('[data-f="mt"]').classList.toggle('lit', d.masterTempo);
     });
     this.phone?.render();
   }
