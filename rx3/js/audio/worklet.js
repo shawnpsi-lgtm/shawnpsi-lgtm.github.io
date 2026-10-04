@@ -1,8 +1,8 @@
 // AudioWorklet processors: the deck player and the effect hosts. Loaded with audioWorklet.addModule().
 import beatFx from '../fx/beat/index.js';
 import colorFx from '../fx/color/index.js';
+import { BeatManager, ColorManager, beatIndex } from '../fx/dsp.js';
 
-const FX = { beat: beatFx, color: colorFx };
 const SILENCE = new Float32Array(128);
 
 /** Plays one track: variable rate (tempo, nudge), play/pause, seek. Reports its position ~30 times a second. */
@@ -78,43 +78,174 @@ class DeckProcessor extends AudioWorkletProcessor {
 }
 
 /**
- * Hosts one Beat FX or Sound Color FX slot (processorOptions.kind). The page selects an effect by name and sends
- * params; switching effects keeps the old one's settings out of the new one by building a fresh instance.
+ * The Beat FX section: the firmware's BeatEffectManager (fx/dsp.js) with every Beat FX in it. The page selects an
+ * effect, turns it on and off, routes it, and sends level / beat / bpm / xpad. Like the unit's, it is one instance
+ * that runs in place on whichever signal is selected: inside that channel's strip, at the current effect's position
+ * (MixerChannel::updateFilter), or on the master bus (MasterOutChannel::update). It runs at most once per 64-sample
+ * block, the first time it is asked (the firmware's "operated this block" flag, 0xef). A section that is off and
+ * silent stops running its effects (its output is then exactly its input) until the next message.
+ */
+class BeatSection {
+  constructor() {
+    this.metas = new Map(beatFx.map((m) => [m.meta.name, m.meta]));
+    this.m = new BeatManager(sampleRate, beatFx.map((m) => ({ name: m.meta.name, core: new m.Core(sampleRate) })));
+    this.route = 'CH1';
+    this.idle = true;
+    this.quiet = 0;
+    this.done = -1; // the block it last ran in
+    this.sL = new Float32Array(64);
+    this.sR = new Float32Array(64);
+  }
+
+  message(m) {
+    if (m.type === 'route') {
+      this.route = m.value;
+      return;
+    }
+    const s = this.m;
+    this.idle = false;
+    this.quiet = 0;
+    if (m.type === 'select') s.select(m.name);
+    else if (m.type === 'on') s.setOn(m.value);
+    else if (m.type === 'param') {
+      const v = m.value;
+      if (m.name === 'level') s.setLevel(v);
+      else if (m.name === 'bpm') { // the BPM manager reports 120 (DEFAULT_BPM) without one, and only changes notify
+        const bpm = v > 0 ? v : 120;
+        if (Math.round(bpm * 100) !== s.bpm100) s.setBpm(bpm);
+      }
+      else if (m.name === 'xpad') s.setXpad(v);
+      else if (m.name === 'beat') {
+        const meta = this.metas.get(s.selected);
+        if (meta?.unit === '%') s.setPercent(v);
+        else if (s.cur === s.off && s.prev !== s.cores.get(s.selected)) {
+          // OFF, and the selected effect is not the one the manager remembers: set it directly, so that it
+          // starts on the beat the panel shows (on the unit the BEAT would go to the remembered effect)
+          s.cores.get(s.selected).setBeatButton(beatIndex(v), true, s.bpm100);
+        } else s.setBeatButton(beatIndex(v));
+      }
+    }
+  }
+
+  /** Run on one 64-sample block of `route` in place, if the current effect sits at `position` (null: anywhere). */
+  operate(route, position, L, R, block) {
+    if (route !== this.route || this.done === block || this.idle) return;
+    const s = this.m;
+    if (position !== null && s.cur.position !== position) return;
+    this.done = block;
+    const n = L.length, { sL, sR } = this;
+    sL.set(L);
+    sR.set(R);
+    s.process(sL, sR, L, R, n);
+    if (s.cur === s.off ? s.state === 0 : s.state === 3 && s.B.done) {
+      let d = 0;
+      for (let i = 0; i < n; i++) d = Math.max(d, Math.abs(L[i] - sL[i]), Math.abs(R[i] - sR[i]));
+      this.quiet = d < 1e-6 ? this.quiet + n : 0;
+      if (this.quiet > sampleRate / 2) this.idle = true;
+    } else this.quiet = 0;
+  }
+}
+
+/**
+ * One channel's Sound Color FX and channel fader: the firmware's SoundColorFxManager (fx/dsp.js) with every Color FX
+ * in it. COLOR arrives as -1..1 (0 = centre), PARAMETER as 0..1.
+ */
+class ColorSection {
+  constructor() {
+    const cores = [];
+    for (const m of colorFx) cores[m.meta.type - 1] = new m.Core(sampleRate);
+    this.types = new Map(colorFx.map((m) => [m.meta.name, m.meta.type]));
+    this.m = new ColorManager(sampleRate, cores);
+    this.gain = this.target = 1;
+    this.position = [1, 1]; // the effect's position, read at the start of each block of the quantum
+    this.sL = new Float32Array(64);
+    this.sR = new Float32Array(64);
+  }
+
+  message(m) {
+    if (m.type === 'select') this.m.setType(this.types.get(m.name) || 0);
+    else if (m.type === 'param') {
+      if (m.name === 'color') this.m.setColor((m.value + 1) / 2);
+      else if (m.name === 'parameter') this.m.setParameter(m.value);
+      else if (m.name === 'fader') this.target = m.value;
+    }
+  }
+
+  /** The Color FX on a block in place. */
+  operate(L, R) {
+    const { sL, sR } = this;
+    sL.set(L);
+    sR.set(R);
+    this.m.process(sL, sR, L, R, L.length);
+  }
+
+  /** The fader over a block in place, ramped to its target. */
+  fade(L, R) {
+    const n = L.length, g0 = this.gain, step = (this.target - g0) / n;
+    for (let i = 0; i < n; i++) {
+      const g = g0 + step * (i + 1);
+      L[i] *= g;
+      R[i] *= g;
+    }
+    this.gain = this.target;
+  }
+}
+
+// Shared by every processor (one AudioWorkletGlobalScope per context), as the firmware's channels share the
+// BeatEffectManager: the Beat FX section and each channel's Color FX section.
+let beat = null;
+const colors = [];
+const beatSection = () => beat || (beat = new BeatSection());
+const colorSection = (ch) => colors[ch] || (colors[ch] = new ColorSection());
+
+/**
+ * The effect hosts, in place on 64-sample blocks. processorOptions.kind:
+ *   'pre'    a channel strip before its EQ: position 0 (NOISE, SWEEP; ROLL, HELIX, ...)
+ *   'post'   the strip after its EQ: position 1, the channel fader, position 2 (DUB ECHO, SPACE; REVERB, ECHO, ...)
+ *   'master' the master bus: the Beat FX when MASTER is selected; its port takes the Beat FX messages
+ * At each position the Color FX runs first, then the Beat FX, as in MixerChannel::updateFilter.
  */
 class FxProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
-    this.list = FX[options.processorOptions.kind];
-    this.fx = null;
-    this.on = false;
-    this.params = {};
-    this.port.onmessage = (e) => this.message(e.data);
+    const { kind, channel } = options.processorOptions;
+    this.kind = kind;
+    this.beat = beatSection();
+    if (kind === 'master') {
+      this.route = 'MASTER';
+      this.port.onmessage = (e) => this.beat.message(e.data);
+    } else {
+      this.route = 'CH' + (channel + 1);
+      this.color = colorSection(channel);
+      if (kind === 'post') this.port.onmessage = (e) => this.color.message(e.data);
+    }
   }
 
-  message(m) {
-    if (m.type === 'select') {
-      const mod = this.list.find((x) => x.meta.name === m.name);
-      this.fx = mod ? new mod.Effect(sampleRate) : null;
-      if (this.fx) {
-        for (const k in this.params) this.fx.set(k, this.params[k]);
-        this.fx.setOn?.(this.on);
-      }
-    } else if (m.type === 'param') {
-      this.params[m.name] = m.value;
-      this.fx?.set(m.name, m.value);
-    } else if (m.type === 'on') {
-      this.on = m.value;
-      this.fx?.setOn?.(m.value);
+  block(L, R, k, at) {
+    const { beat, color, route } = this;
+    if (this.kind === 'master') {
+      beat.operate(route, null, L, R, at);
+    } else if (this.kind === 'pre') {
+      const pos = color.position[k] = color.m.cfx.position;
+      if (pos === 0) color.operate(L, R);
+      beat.operate(route, 0, L, R, at);
+    } else {
+      const pos = color.position[k];
+      if (pos === 1) color.operate(L, R);
+      beat.operate(route, 1, L, R, at);
+      color.fade(L, R);
+      if (pos === 2) color.operate(L, R);
+      beat.operate(route, 2, L, R, at);
     }
   }
 
   process(inputs, outputs) {
-    const inp = inputs[0], [oL, oR] = outputs[0];
-    const iL = inp[0] || SILENCE, iR = inp[1] || iL;
-    if (this.fx) this.fx.process(iL, iR, oL, oR, oL.length);
-    else {
-      oL.set(iL);
-      oR.set(iR);
+    const inp = inputs[0], [oL, oR] = outputs[0], n = oL.length;
+    oL.set(inp[0] || SILENCE.subarray(0, n));
+    oR.set(inp[1] || inp[0] || SILENCE.subarray(0, n));
+    for (let o = 0, k = 0; o < n; o += 64, k++) {
+      const m = Math.min(64, n - o);
+      this.block(oL.subarray(o, o + m), oR.subarray(o, o + m), k, currentFrame + o);
     }
     return true;
   }

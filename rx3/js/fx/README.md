@@ -1,53 +1,70 @@
 # Effects
 
-Every effect is one ES module. The same file is imported in two places:
+Every effect is one ES module, a port of one `mixerengine` class from the XDJ-RX3 player. The modules are hosted
+by ports of the player's two effect managers, both in `dsp.js`:
 
-- the AudioWorklet (`js/audio/worklet.js`), which runs `Effect` on the audio thread, and
-- the page (`js/audio/engine.js`), which reads `meta` to build the menus, the BEAT FX panel and the X-PAD.
+- `BeatManager` (BeatEffectManager): the Beat FX section, one instance of every Beat FX. It does what the unit does
+  on ON / OFF / choosing another effect: crossfades between effects, lets ECHO and REVERB ring out after OFF, and
+  carries the beat, level and BPM across.
+- `ColorManager` (SoundColorFxManager): one channel's Sound Color FX, one instance of every Color FX. It switches
+  between them (crossfades), holds DUB ECHO and SPACE ringing after they are turned off, and runs SWEEP's level
+  detector every block.
 
-So keep effect modules free of DOM and worklet globals at module level. The sample rate arrives as a
-constructor argument (always 44100: the site runs its AudioContext at the firmware's rate).
-
-## Adding an effect
-
-1. Create `beat/<name>.js` (Beat FX) or `color/<name>.js` (Sound Color FX) exporting `meta` and `Effect`.
-2. Add one import line to `beat/index.js` or `color/index.js`.
-
-That's all: it appears in the menus, BEAT ◀ ▶ steps through its `beats`, the X-PAD shows its pads or strip,
-and LEVEL/DEPTH, the channel select and ON/OFF drive it.
+The audio thread (`js/audio/worklet.js`) builds them from the registries (`beat/index.js`, `color/index.js`) and
+runs them in the firmware's 64-sample blocks. The page (`js/audio/engine.js`) reads each module's `meta` for the
+menus, the BEAT FX panel and the X-PAD. So keep effect modules free of DOM and worklet globals at module level. The
+sample rate arrives as a constructor argument (always 44100: the site runs its AudioContext at the firmware's rate).
 
 ## The contract
 
+A Beat FX module:
+
 ```js
 export const meta = {
-  name: 'ECHO',                 // menu and BEAT FX panel
+  name: 'ECHO',                 // menu and BEAT FX panel (and how the manager decides whether OFF rings out)
   unit: 'beat',                 // 'beat': the panel shows BPM, msec and the beat; '%': it shows the percent
-  // the values BEAT ◀ ▶ steps through; `value` is sent as the 'beat' param, `label` is shown
-  beats: [{ label: '1/16', value: 1 / 16 }, ..., { label: '4', value: 4 }],
-  defaultBeat: 3,               // index into beats when the effect is selected
-  // X-PAD: omit for eight pads showing the first eight `beats`; or a touch strip that sends `param`
-  // while touched and springs back to `centre` on release:
-  xpad: { kind: 'strip', param: 'xpad', min: 0, max: 255, centre: 128, left: 'LPF', right: 'HPF' },
+  // the values BEAT ◀ ▶ steps through: beatButtons(first, last) gives the firmware's beat buttons (value = the
+  // beat factor, 1/16 .. 64); a '%' effect lists percents
+  beats: beatButtons(0, 9),
+  defaultBeat: 5,               // index into beats: the effect's own default button
+  // X-PAD: omit for eight pads showing the first eight `beats`; or a touch strip that sends 'xpad' while touched
+  // and springs back to `centre` on release:
+  xpad: { kind: 'strip', param: 'xpad', min: 0, max: 255, centre: 255, left: 'FAST', right: 'OFF' },
 };
 
-export class Effect {
-  constructor(sampleRate) {}
-  // Beat FX params: 'beat' (a beats[] value), 'level' (LEVEL/DEPTH 0..1), 'bpm' (the selected channel's
-  // BPM, for tempo-synced effects), 'xpad' (the strip). Color FX: 'color' (-1..1, 0 = centre = off).
-  set(param, value) {}
-  // Beat FX only. The effect decides what off means; most let the tail ring out, then pass dry.
-  setOn(on) {}
-  // Stereo, n = 128 frames. Write the full output (dry + wet) to outL/outR. Inputs and outputs never alias.
-  process(inL, inR, outL, outR, n) {}
-}
+// mixerengine::BeatEffect: extend BeatCore (dsp.js), which holds the fields the manager reads and writes (on,
+// level, ms and its range, button and its range, percent, tail, pressed) and implements adjustParameter and
+// checkBeatButtonRange. Pass the effect's position (+0x40): where it runs in the channel, 0 before the EQ, 1 before
+// the fader, 2 after it (read it from the firmware object, see ../../../re/README.md). Override the firmware's
+// hooks: changeLevelDepth, changeTime, changePercent, statusOn, statusOff, initialize, notifySelected,
+// keepEffectInit, setXpad, and execute(inL, inR, outL, outR, n), which writes the effect's whole output (dry + wet).
+// Inputs and outputs never alias.
+export class EchoCore extends BeatCore { ... }
+export const Core = EchoCore;
 ```
 
-Color FX are always running: the knob at centre must be a clean bypass.
+A Sound Color FX module:
 
-## Porting another RX3 effect
+```js
+export const meta = { name: 'SPACE', type: 5 }; // type: EnSoundColorFxType, 1 FILTER .. 6 CRUSH
+// mixerengine::SoundColorFx: extend ColorCore (dsp.js): color / param are 0..1 with 0.5 the centre; position is
+// where the effect sits in the channel (0 before the EQ, 1 before the fader, 2 after it; at a position the Color FX
+// runs before the Beat FX). Override changeColor, changeParameter, initialize,
+// statusOn / statusOff (return 1 to be held ringing when turned off), detect (called every block) and execute.
+export class SpaceCore extends ColorCore { ... }
+export const Core = SpaceCore;
+```
 
-`beat/reverb.js` came out of the firmware with the tools in `../../../re/` (see `re/README.md`): decompile the
-effect class with Ghidra, read its tables out of the binary, run the original ARM code under an emulator to
-render reference audio, and null-test the JavaScript against it (`npm test`). The player has every Beat FX
-and Color FX as its own class in the `mixerengine` namespace (`BeatEffectEcho`, `BeatEffectDelay`,
-`SoundColorFxSpace`, `SoundColorFxDubecho`, ...), so the next one follows the same path.
+`dsp.js` also has the pieces the ports share: `f` (Math.fround) and `hex` (a float32 constant from its bits), the
+firmware's parameter smoother (`Ramp`), its biquad (`Biquad`, which rounds differently in the first two samples of a
+block, as the original does), and the beat-time maths.
+
+## Adding an effect
+
+1. Port the class (see `../../../re/README.md`): a new `beat/<name>.js` or `color/<name>.js` with `meta` and `Core`.
+2. Add one import line to `beat/index.js` or `color/index.js`.
+3. Add its reference scenarios to `re/fx_refs.py`, render them, and add the core to `../../tests/cores.mjs`.
+   `npm test` must print PASS.
+
+That's all: it appears in the menus, BEAT ◀ ▶ steps through its `beats`, the X-PAD shows its pads or strip, and
+LEVEL/DEPTH, COLOR, PARAMETER, the channel select and ON/OFF drive it through the manager.

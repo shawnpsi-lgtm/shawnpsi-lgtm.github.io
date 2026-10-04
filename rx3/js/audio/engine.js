@@ -1,11 +1,14 @@
-// The audio side: two decks, the RX3's mixer path, one Beat FX slot and a Sound Color FX slot per channel.
+// The audio side: two decks, the RX3's mixer path, one Beat FX section and a Sound Color FX section per channel.
 //
-//   deck -> trim -> EQ (low/mid/high) -> COLOR FX -> channel fader -> crossfader -+-> master bus -> master -> out
-//                                                                    (CH1/CH2) -+-> BEAT FX -----^
-//                                                                 master bus (MASTER) -> BEAT FX -^
-// The Beat FX slot is a single instance (its tail survives channel changes), fed by whichever send is open.
+//   deck -> trim -> [0] -> EQ (low/mid/high) -> [1] -> channel fader -> [2] -> crossfader -> master bus -> [M] -> out
+//
+// As in the firmware (MixerChannel::updateFilter), each effect has a fixed position in the channel: [0] before the
+// EQ, [1] before the fader, [2] after it. At a position the Color FX runs first, then the Beat FX if it is on that
+// channel. The Beat FX section is a single instance that runs in place wherever it is routed (so its tail survives
+// channel changes); routed to MASTER, it runs on the master bus [M], after both channels' Color FX.
 import beatFx from '../fx/beat/index.js';
 import colorFx from '../fx/color/index.js';
+import { beatEffectMs } from '../fx/dsp.js';
 
 export const SAMPLE_RATE = 44100; // the firmware's rate: the ported effects' tables are tuned for it
 export const BEAT_FX = beatFx.map((m) => m.meta);
@@ -16,20 +19,18 @@ const db = (x) => Math.pow(10, x / 20);
 const RAMP = 0.005; // s, for gain changes that would otherwise click
 
 class Channel {
-  constructor(ctx, node) {
+  constructor(ctx, node, channel) {
     this.trim = new GainNode(ctx);
     this.low = new BiquadFilterNode(ctx, { type: 'lowshelf', frequency: 220 });
     this.mid = new BiquadFilterNode(ctx, { type: 'peaking', frequency: 1000, Q: 0.7 });
     this.high = new BiquadFilterNode(ctx, { type: 'highshelf', frequency: 3000 });
-    this.color = new AudioWorkletNode(ctx, 'rx3-fx', { outputChannelCount: [2], processorOptions: { kind: 'color' } });
-    this.fader = new GainNode(ctx);
+    const fx = (kind) =>
+      new AudioWorkletNode(ctx, 'rx3-fx', { outputChannelCount: [2], processorOptions: { kind, channel } });
+    this.pre = fx('pre'); // position 0
+    this.color = fx('post'); // position 1, the channel fader, position 2; takes the Color FX messages
     this.xfade = new GainNode(ctx);
-    this.dry = new GainNode(ctx); // to the master bus
-    this.send = new GainNode(ctx, { gain: 0 }); // to the Beat FX
-    node.connect(this.trim).connect(this.low).connect(this.mid).connect(this.high).connect(this.color)
-      .connect(this.fader).connect(this.xfade);
-    this.xfade.connect(this.dry);
-    this.xfade.connect(this.send);
+    node.connect(this.trim).connect(this.pre).connect(this.low).connect(this.mid).connect(this.high)
+      .connect(this.color).connect(this.xfade);
   }
 }
 
@@ -44,24 +45,19 @@ export class Engine {
     this.ctx = ctx;
     this.master = new GainNode(ctx, { gain: 0.8 });
     this.bus = new GainNode(ctx);
-    this.busDry = new GainNode(ctx);
-    this.busSend = new GainNode(ctx, { gain: 0 });
-    this.beat = new AudioWorkletNode(ctx, 'rx3-fx', { outputChannelCount: [2], processorOptions: { kind: 'beat' } });
+    // the master bus's Beat FX position; its port takes the Beat FX messages
+    this.beat =
+      new AudioWorkletNode(ctx, 'rx3-fx', { outputChannelCount: [2], processorOptions: { kind: 'master' } });
     this.meter = new AnalyserNode(ctx, { fftSize: 1024 });
     this.decks = [0, 1].map(() => new AudioWorkletNode(ctx, 'rx3-deck', { numberOfInputs: 0, outputChannelCount: [2] }));
-    this.channels = this.decks.map((d) => new Channel(ctx, d));
-    for (const ch of this.channels) {
-      ch.dry.connect(this.bus);
-      ch.send.connect(this.beat);
-    }
-    this.bus.connect(this.busDry).connect(this.master);
-    this.bus.connect(this.busSend).connect(this.beat);
-    this.beat.connect(this.master);
+    this.channels = this.decks.map((d, i) => new Channel(ctx, d, i));
+    for (const ch of this.channels) ch.xfade.connect(this.bus);
+    this.bus.connect(this.beat).connect(this.master);
     this.master.connect(this.meter);
     this.master.connect(ctx.destination);
 
-    this.fx = { name: null, channel: 'CH1', on: false, level: 0.5, beat: null, xpad: null };
-    this.color = { name: null, amount: [0, 0] };
+    this.fx = { name: null, channel: 'CH1', on: false, level: 0.5, beat: null, xpad: null, beats: {} };
+    this.color = { name: null, amount: [0, 0], parameter: 0.5 };
     this.xfader = 0;
     if (BEAT_FX.length) this.selectBeatFx(BEAT_FX[0].name);
     this.routeBeatFx('CH1');
@@ -87,7 +83,7 @@ export class Engine {
   }
 
   setFader(ch, x) { // 0..1, a slightly logarithmic curve
-    this.ramp(this.channels[ch].fader.gain, x <= 0 ? 0 : Math.pow(x, 1.6));
+    this.channels[ch].color.port.postMessage({ type: 'param', name: 'fader', value: x <= 0 ? 0 : Math.pow(x, 1.6) });
   }
 
   setCrossfader(x) { // -1 (deck 1) .. 1 (deck 2), constant power with a flat middle
@@ -117,19 +113,25 @@ export class Engine {
     return BEAT_FX.find((m) => m.name === name);
   }
 
+  /** BEAT FX SELECT. Each effect keeps its own beat (as the unit's effects do); while on, it crossfades over. */
   selectBeatFx(name) {
     const m = this.beatMeta(name);
     if (!m) return;
     this.fx.name = name;
     this.beat.port.postMessage({ type: 'select', name });
-    this.setBeat(m.beats[m.defaultBeat].value);
-    this.setLevel(this.fx.level);
-    if (m.xpad?.kind === 'strip') this.setXpad(m.xpad.centre);
+    this.fx.beat = this.fx.beats[name] ?? m.beats[m.defaultBeat].value;
+    this.fx.xpad = m.xpad?.kind === 'strip' ? m.xpad.centre : null;
   }
 
   setBeat(value) {
     this.fx.beat = value;
+    this.fx.beats[this.fx.name] = value;
     this.beat.port.postMessage({ type: 'param', name: 'beat', value });
+  }
+
+  /** The time the effect runs at for the selected beat (the firmware's own rounding), or null without a BPM. */
+  beatMs(bpm) {
+    return bpm ? beatEffectMs(bpm, this.fx.beat) : null;
   }
 
   /** BEAT ◀ / ▶: step through the effect's beat (or percent) values. */
@@ -159,27 +161,26 @@ export class Engine {
     this.beat.port.postMessage({ type: 'on', value: on });
   }
 
+  /** BEAT FX CH SELECT: CH1, CH2 or MASTER. The section moves there, tail and all. */
   routeBeatFx(channel) {
     this.fx.channel = channel;
-    this.channels.forEach((ch, i) => {
-      const sel = channel === 'CH' + (i + 1);
-      this.ramp(ch.dry.gain, sel ? 0 : 1);
-      this.ramp(ch.send.gain, sel ? 1 : 0);
-    });
-    const master = channel === 'MASTER';
-    this.ramp(this.busDry.gain, master ? 0 : 1);
-    this.ramp(this.busSend.gain, master ? 1 : 0);
+    this.beat.port.postMessage({ type: 'route', value: channel });
   }
 
-  // ---- Sound Color FX (one type for both channels, a COLOR knob each)
+  // ---- Sound Color FX (one type for both channels, a COLOR knob each, one PARAMETER knob)
 
   selectColorFx(name) {
     this.color.name = name;
     for (const ch of this.channels) ch.color.port.postMessage({ type: 'select', name });
   }
 
-  setColor(ch, x) {
+  setColor(ch, x) { // -1..1, 0 = centre
     this.color.amount[ch] = x;
     this.channels[ch].color.port.postMessage({ type: 'param', name: 'color', value: x });
+  }
+
+  setColorParameter(x) { // 0..1, 0.5 = centre
+    this.color.parameter = x;
+    for (const ch of this.channels) ch.color.port.postMessage({ type: 'param', name: 'parameter', value: x });
   }
 }

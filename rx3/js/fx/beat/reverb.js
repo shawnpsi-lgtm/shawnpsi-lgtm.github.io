@@ -12,6 +12,7 @@
  * 128) or HPF (above). Every operation is rounded to float32 like the firmware's NEON code, so ReverbCore nulls
  * against the original (tests/null-test.mjs).
  */
+import { BeatCore } from '../dsp.js';
 import { CHASE, DAMP_LPF, DELAY, FEEDBACK, POST_HPF, POST_LPF, PRE_HPF, PRE_LPF } from './reverb-tables.js';
 
 const f = Math.fround;
@@ -91,8 +92,9 @@ class Ramp {
 }
 
 /** The firmware effect, method for method. Process in blocks: the percent and the X-PAD move once per block. */
-export class ReverbCore {
+export class ReverbCore extends BeatCore {
   constructor(sampleRate, blockSize = 128) {
+    super({ ms: 50, minMs: 1, maxMs: 100, button: 5, minButton: 0, maxButton: 11, tail: true, position: 2 });
     const sr = f(sampleRate);
     this.sr = sr;
     const rampLen = Math.trunc(f(f(sr * f(3.3333333)) / 1000)) || 1; // 3.3 ms
@@ -160,6 +162,26 @@ export class ReverbCore {
 
   setXpad(v) {
     if (v >= 0 && v <= 255) this.xpadTarget = Math.trunc(v);
+  }
+
+  /** BeatEffectReverb::initialize: taps back to size 1, empty lines, then notifySelected. */
+  initialize() {
+    const sr = this.sr;
+    for (let i = 0; i < 7; i++) {
+      this.tA[i] = Math.trunc(f(sr * DELAY[i]));
+      this.tB[i] = Math.trunc(f(sr * DELAY[i + 7]));
+      this.posA[i] = this.tA[i];
+      this.posB[i] = this.tB[i];
+      this.stepA[i] = this.stepB[i] = 0;
+      this.lines[i].buf.fill(0);
+      this.lines[i].w = 0;
+    }
+    this.notifySelected();
+    this.pctCur = this.pctNext = this.percent;
+  }
+
+  keepEffectInit() {
+    this.keepInit = true;
   }
 
   toggle() {
@@ -427,66 +449,5 @@ export class ReverbCore {
   }
 }
 
-/**
- * The Beat FX slot's view of the reverb: beat = percent, level = LEVEL/DEPTH, xpad = filter strip.
- * It also plays the part of the firmware's BeatEffectManager around the effect: the effect only runs while it is
- * on or its tail is ringing (otherwise the slot is a clean bypass), the dry signal is crossfaded back in as it
- * turns off, and a percent chosen while off takes effect at the next ON (the core re-arms its input level on a
- * percent change, which the hardware never lets you hear while the effect is off).
- */
-export class Effect {
-  constructor(sampleRate) {
-    this.core = new ReverbCore(sampleRate);
-    this.bypass = new Float32Array(128);
-    this.idle = true; // not running: output = input
-    this.pending = null; // percent chosen while off
-    this.quiet = 0; // samples of silent tail so far
-    this.sr = sampleRate;
-  }
-
-  set(param, value) {
-    if (param === 'beat') {
-      if (this.core.on) this.core.setPercent(value);
-      else this.pending = value;
-    } else if (param === 'level') this.core.setLevel(value);
-    else if (param === 'xpad') this.core.setXpad(value);
-  }
-
-  setOn(on) {
-    if (on === this.core.on) return;
-    if (on && this.pending !== null) {
-      this.core.setPercent(this.pending);
-      this.pending = null;
-    }
-    this.core.toggle();
-    this.idle = false;
-    this.quiet = 0;
-  }
-
-  process(inL, inR, outL, outR, n) {
-    if (this.idle) {
-      outL.set(inL.subarray(0, n));
-      outR.set(inR.subarray(0, n));
-      return;
-    }
-    if (this.bypass.length < n) this.bypass = new Float32Array(n);
-    const by = this.bypass, core = this.core;
-    core.execute(inL, inR, outL, outR, n, by);
-    let tail = 0;
-    for (let i = 0; i < n; i++) {
-      if (by[i] !== 0) {
-        // what the effect added on top of the dry signal: its tail
-        tail = Math.max(tail, Math.abs(outL[i] - inL[i] * (1 - by[i])), Math.abs(outR[i] - inR[i] * (1 - by[i])));
-        outL[i] += inL[i] * by[i];
-        outR[i] += inR[i] * by[i];
-      }
-    }
-    if (!core.on && core.fade === 0) { // off and faded: stop once the tail has been inaudible for half a second
-      this.quiet = tail < 1e-5 ? this.quiet + n : 0;
-      if (this.quiet > this.sr / 2) {
-        this.idle = true;
-        if (this.pending === null) this.pending = core.percent;
-      }
-    }
-  }
-}
+/** What the Beat FX section (dsp.js BeatManager) hosts. */
+export const Core = ReverbCore;

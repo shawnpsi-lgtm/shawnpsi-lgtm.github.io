@@ -31,6 +31,7 @@ class App {
     this.started = performance.now();
     this.screen = new Screen(this);
     this.buildControls();
+    this.bindMobile();
     this.bindKeys();
     this.bindFiles();
     this.screen.render();
@@ -137,7 +138,7 @@ class App {
 
   async openSource(src) {
     const s = this.screen;
-    if (src.id === 'USB2' && src.status !== 'ready') return $('#folder-input').click();
+    if (src.id === 'USB2' && src.status !== 'ready') return this.pickFolder();
     if (src.status === 'signin') return location.assign(src.signInUrl);
     if (src.status === 'connect') return window.open('https://r2.shawnsingh.me', '_blank', 'noopener');
     if (src.status !== 'ready') {
@@ -283,7 +284,7 @@ class App {
       const v = +b.dataset.v, fn = b.dataset.fn;
       if (fn === 'r0' || fn === 'r1') this.decks[+fn[1]].setRange(TEMPO_RANGES[v]);
       if (fn === 'q') this.quantize = v === 0;
-      if (fn === 'usb2') return $(v ? '#files-input' : '#folder-input').click();
+      if (fn === 'usb2') return v ? $('#files-input').click() : this.pickFolder();
       this.closeOverlay();
       this.menu();
       this.screen.render();
@@ -337,10 +338,11 @@ class App {
       this.screen.renderFxPanel();
     };
     const colorSel = $('#color-select');
-    colorSel.innerHTML = COLOR_FX.length ? '<option value="">(none)</option>' + COLOR_FX.map((m) => `<option>${m.name}</option>`).join('')
-      : '<option value="">(none ported yet)</option>';
-    colorSel.disabled = !COLOR_FX.length;
+    colorSel.innerHTML = '<option value="">(off)</option>' + COLOR_FX.map((m) => `<option>${m.name}</option>`).join('');
     colorSel.onchange = () => e.selectColorFx(colorSel.value || null);
+    const param = $('#color-param');
+    param.oninput = () => e.setColorParameter(+param.value);
+    param.ondblclick = () => { param.value = 0.5; e.setColorParameter(0.5); };
     $$('[data-color]').forEach((inp) => {
       inp.oninput = () => e.setColor(+inp.dataset.color, +inp.value);
       inp.ondblclick = () => { inp.value = 0; e.setColor(+inp.dataset.color, 0); }; // back to centre = off
@@ -389,6 +391,32 @@ class App {
     });
   }
 
+  /** Phones: the tabs pick which pane shows (upright: always one; on its side: a drawer, or none). */
+  bindMobile() {
+    const app = $('#app'), tabs = $$('#mtabs [data-pane]');
+    const upright = matchMedia('(orientation: portrait)');
+    const show = (pane) => {
+      app.dataset.pane = pane;
+      tabs.forEach((b) => b.classList.toggle('on', b.dataset.pane === pane));
+    };
+    tabs.forEach((b) => {
+      b.onclick = () => show(!upright.matches && app.dataset.pane === b.dataset.pane ? '' : b.dataset.pane);
+    });
+    $('#screen-wrap').addEventListener('pointerdown', () => { if (!upright.matches) show(''); });
+    const reset = () => show(upright.matches ? app.dataset.pane || 'panel' : '');
+    upright.addEventListener('change', reset);
+    reset();
+    const fs = $('#fullscreen');
+    fs.hidden = !document.fullscreenEnabled; // iPhone Safari has no fullscreen API; add to home screen instead
+    fs.onclick = async () => {
+      if (document.fullscreenElement) return document.exitFullscreen();
+      try {
+        await document.documentElement.requestFullscreen();
+        await window.screen.orientation.lock('landscape');
+      } catch { /* lock is Android-only */ }
+    };
+  }
+
   renderControls() {
     const e = this.engine;
     $('#fx-select').value = e.fx.name;
@@ -408,8 +436,10 @@ class App {
 
   status() {
     const ctx = this.engine.ctx;
-    const sound = ctx.state !== 'running' ? 'sound: click anywhere to start' : this.muted ? 'sound muted (X)' : 'sound on (X to mute)';
+    const touch = matchMedia('(pointer: coarse)').matches;
+    const sound = ctx.state !== 'running' ? `sound: ${touch ? 'tap' : 'click'} anywhere to start` : this.muted ? 'sound muted (X)' : 'sound on (X to mute)';
     const lat = ctx.baseLatency ? `   |   output ${Math.round((ctx.baseLatency + (ctx.outputLatency || 0)) * 1000)} ms` : '';
+    if (touch) return sound.replace(' (X to mute)', '') + lat;
     return `${sound}${lat}   |   H hides controls   |   1/2 load, Q/P play, W/O cue, E beat FX`;
   }
 
@@ -441,15 +471,40 @@ class App {
     addEventListener('pointerdown', () => this.engine.resume(), { once: true });
   }
 
+  async pickFolder() {
+    if (!window.showDirectoryPicker) return $('#folder-input').click(); // e.g. Firefox/Safari
+    let n;
+    try {
+      n = await this.sources[1].pick((msg) => this.progress(msg));
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+      console.error('USB2 folder pick failed', e);
+      this.screen.toast('COULD NOT OPEN FOLDER (' + e.name + ')');
+      return;
+    }
+    this.closeOverlay();
+    this.usb2Opened(n);
+  }
+
+  usb2Opened(n) {
+    const usb2 = this.sources[1];
+    if (!n) return this.screen.toast('NO AUDIO FILES');
+    this.screen.toast(n + ' TRACKS' + (usb2.playlists.length ? ', ' + usb2.playlists.length + ' PLAYLISTS' : '') + ' ON USB2');
+    this.browser.root(usb2, 'TRACK', () => this.masterBpm());
+    this.screen.setView('browse');
+  }
+
+  progress(msg) { // throttled: called per file while scanning
+    const now = performance.now();
+    if (now - (this.lastProgress || 0) < 150) return;
+    this.lastProgress = now;
+    this.screen.toast(msg, 60000);
+    this.screen.render();
+  }
+
   bindFiles() {
     const usb2 = this.sources[1];
-    const add = async (files) => {
-      const n = await usb2.add(files);
-      if (!n) return this.screen.toast('NO AUDIO FILES');
-      this.screen.toast(n + ' TRACKS ON USB2');
-      this.browser.root(usb2, 'TRACK', () => this.masterBpm());
-      this.screen.setView('browse');
-    };
+    const add = async (files) => this.usb2Opened(await usb2.add(files, (msg) => this.progress(msg)));
     for (const id of ['#folder-input', '#files-input']) {
       $(id).onchange = (ev) => {
         this.closeOverlay();
@@ -496,6 +551,11 @@ class App {
 Engine.create().then((engine) => {
   window.rx3 = new App(engine);
 }).catch((err) => {
+  if (!window.isSecureContext) { // AudioWorklet only exists on https:// or localhost
+    document.body.innerHTML = `<p style="padding:24px;font:16px sans-serif">The RX3 audio engine needs a secure page. ` +
+      `Open it over https:// (or on this computer at http://localhost:${location.port || 80}/).</p>`;
+    return;
+  }
   document.body.innerHTML = `<p style="padding:24px;font:16px sans-serif">This browser can't run the RX3 audio engine ` +
     `(${String(err.message || err).replace(/</g, '&lt;')}). Try a current Chrome, Edge, Firefox or Safari.</p>`;
 });

@@ -161,8 +161,28 @@ export class Screen {
       const r = el.getBoundingClientRect(), x = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
       return Math.round(m.min + x * (m.max - m.min));
     };
+    let momentary = false; // touching the X-PAD with Beat FX off turns it on while held, as on the unit
+    const hold = () => {
+      const eng = this.app.engine;
+      if (!eng.fx.on) {
+        momentary = true;
+        eng.setBeatFxOn(true);
+        this.renderFxPanel();
+      }
+    };
+    const unhold = () => {
+      if (!momentary) return;
+      momentary = false;
+      this.app.engine.setBeatFxOn(false);
+      this.renderFxPanel();
+    };
     el.addEventListener('pointerdown', (e) => {
       const m = this.app.engine.beatMeta();
+      if (m?.xpad?.kind === 'strip') hold();
+      else if (e.target.closest('button[data-i]')) {
+        hold();
+        el.setPointerCapture(e.pointerId);
+      }
       if (m?.xpad?.kind === 'strip') {
         dragging = true;
         el.setPointerCapture(e.pointerId);
@@ -182,6 +202,7 @@ export class Screen {
       this.renderXpad();
     });
     const up = () => {
+      unhold();
       if (!dragging) return;
       dragging = false;
       const m = this.app.engine.beatMeta().xpad;
@@ -326,7 +347,7 @@ export class Screen {
     } else {
       const bpm = app.fxBpm();
       const beat = m?.beats.find((b) => b.value === e.fx.beat)?.label || e.fx.beat;
-      const ms = bpm ? Math.round((60000 / bpm) * e.fx.beat) : '---';
+      const ms = e.beatMs(bpm) ?? '---';
       vals = `<div style="top:14px">${bpm ? bpm.toFixed(1) : '---.-'}<small>BPM</small></div>` +
         `<div style="top:46px">${ms}<small>msec</small></div><div style="top:76px">${beat}<small>BEAT</small></div>`;
     }

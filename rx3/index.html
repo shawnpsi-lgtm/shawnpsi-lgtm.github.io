@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#111111">
   <title>XDJ-RX3</title>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/svg+xml" href="./img/icon.svg">
   <link rel="stylesheet" href="./css/rx3.css">
   <script type="module" src="./js/main.js"></script>
@@ -108,6 +112,14 @@
       <button data-key="play" data-deck="1">PLAY / PAUSE</button>
     </aside>
 
+    <!-- phones: one of the panel / effects bar / mixer at a time -->
+    <nav id="mtabs" class="mtabs">
+      <button data-pane="panel">KEYS</button>
+      <button data-pane="fx">FX</button>
+      <button data-pane="mixer">MIXER</button>
+      <button id="fullscreen" title="Full screen" hidden>&#x26F6;</button>
+    </nav>
+
     <!-- effects bar (as in the viewer) -->
     <div id="fxbar" class="bar fxbar">
       <label>BEAT FX</label>
@@ -121,6 +133,7 @@
       <select id="color-select"></select>
       <label class="knob">CH1 COLOR<input data-color="0" type="range" min="-1" max="1" step="0.001" value="0"></label>
       <label class="knob">CH2 COLOR<input data-color="1" type="range" min="-1" max="1" step="0.001" value="0"></label>
+      <label class="knob">PARAMETER<input id="color-param" type="range" min="0" max="1" step="0.001" value="0.5"></label>
     </div>
 
     <!-- mixer: what the RX3's faders and knobs do -->

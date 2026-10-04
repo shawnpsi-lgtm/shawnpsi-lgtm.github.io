@@ -2,6 +2,7 @@
 // USB2 is a folder on this computer. Both produce the same track objects:
 //   { id, title, artist, album, genre, bpm, key, duration, file(): Promise<File>, prepare?(): Promise }
 // prepare() fetches the rekordbox beat grid when there is one (sets track.grid).
+import { readPdb } from './pdb.js';
 import { readId3, readPqtz, splitName } from './tags.js';
 
 const R2 = 'https://r2.shawnsingh.me';
@@ -88,30 +89,120 @@ export class R2Source extends Source {
   }
 }
 
+/** The file at a drive-root path ("/Contents/…") under a picked directory, one handle per folder level. */
+async function fileAt(dir, path) {
+  const parts = path.split('/').filter(Boolean);
+  for (const p of parts.slice(0, -1)) dir = await dir.getDirectoryHandle(p);
+  return dir.getFileHandle(parts.at(-1));
+}
+
+/** Runs fn over items, at most n at a time, so a big library doesn't open thousands of reads at once. */
+async function pool(items, fn, n = 16) {
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) await fn(items[next++]);
+  };
+  await Promise.all(Array.from({ length: n }, worker));
+}
+
 export class FolderSource extends Source {
   constructor() {
     super('USB2', 'THIS COMPUTER');
   }
 
-  /** files: a FileList / File[] from a folder picker or a drop. */
-  async add(files) {
-    const audio = [...files].filter((f) => AUDIO.test(f.name));
-    if (!audio.length) return 0;
+  /**
+   * Picks a folder via the File System Access API, avoiding Chrome's "upload N files" prompt. Throws AbortError on cancel.
+   * A rekordbox USB (PIONEER/rekordbox/export.pdb at the top) is read like a CDJ reads it; anything else is scanned.
+   * Resolves to the number of tracks.
+   */
+  async pick(onProgress) {
+    const dir = await showDirectoryPicker({ id: 'rx3-usb2', mode: 'read' });
     this.status = 'loading';
-    const folders = new Map();
-    const added = await Promise.all(audio.map(async (f) => {
+    const pdb = await fileAt(dir, '/PIONEER/rekordbox/export.pdb').catch(() => null);
+    if (pdb) return this.openExport(dir, await (await pdb.getFile()).arrayBuffer());
+    const handles = [];
+    const walk = async (d, path) => { // sibling folders in parallel: a USB stick is slow per call, not per byte
+      const subs = [];
+      try {
+        for await (const h of d.values()) {
+          if (h.name.startsWith('.')) continue; // ._ AppleDouble files, .Trashes, …
+          const p = path + '/' + h.name;
+          if (h.kind === 'directory') subs.push(walk(h, p));
+          else if (AUDIO.test(h.name)) {
+            handles.push({ h, path: p });
+            onProgress?.('SCANNING… ' + handles.length);
+          }
+        }
+      } catch (e) {
+        console.warn('USB2: could not list', path, e);
+      }
+      await Promise.all(subs);
+    };
+    await walk(dir, dir.name);
+    const out = [];
+    await pool(handles, async ({ h, path }) => {
+      try {
+        out.push({ file: await h.getFile(), path });
+      } catch (e) { // unreadable (cloud placeholder, broken alias…): skip it rather than lose the whole folder
+        console.warn('USB2: skipped', path, e);
+      }
+    });
+    return this.add(out, onProgress);
+  }
+
+  /** A rekordbox export: its tracks (opened from the drive on load, with their beat grids) and its playlists. */
+  openExport(dir, buf) {
+    const db = readPdb(buf), byId = new Map();
+    this.tracks = db.tracks.filter((t) => t.path).map((t) => {
+      const name = t.path.split('/').pop(), named = splitName(name);
+      const track = {
+        id: 'usb:' + t.path, title: t.title || named.title, artist: t.artist || named.artist || '', album: t.album,
+        genre: t.genre, bpm: t.bpm, key: t.key, duration: t.duration,
+        folder: t.path.split('/').slice(1, -1).join('/') || 'FILES', source: this.id,
+        file: async () => (await fileAt(dir, t.path)).getFile(),
+        prepare: async () => {
+          if (track.grid || !t.anlz) return;
+          try {
+            track.grid = readPqtz(await (await (await fileAt(dir, t.anlz)).getFile()).arrayBuffer());
+          } catch (e) {
+            console.warn('no beat grid for', t.path, e);
+          }
+        },
+      };
+      byId.set(t.id, track);
+      return track;
+    }).sort((a, b) => a.title.localeCompare(b.title));
+    const lists = new Map(db.lists.map((l) => [l.id, l]));
+    const fullName = (l) => (lists.has(l.parent) ? fullName(lists.get(l.parent)) + ' / ' : '') + l.name; // folders flattened
+    this.playlists = db.lists.filter((l) => !l.folder).sort((a, b) => a.seq - b.seq).map((l) => ({
+      name: fullName(l),
+      tracks: db.entries.filter((e) => e.list === l.id).sort((a, b) => a.seq - b.seq).map((e) => byId.get(e.track)).filter(Boolean),
+    }));
+    this.status = this.tracks.length ? 'ready' : 'empty';
+    return this.tracks.length;
+  }
+
+  /** files: a FileList / File[] from a folder picker or a drop, or {file, path} entries from pick(). */
+  async add(files, onProgress) {
+    const audio = [...files]
+      .map((f) => (f instanceof File ? { file: f, path: f.webkitRelativePath || f.name } : f))
+      .filter(({ file }) => AUDIO.test(file.name) && !file.name.startsWith('.'));
+    if (!audio.length) {
+      this.status = this.tracks.length ? 'ready' : 'empty';
+      return 0;
+    }
+    this.status = 'loading';
+    const added = [];
+    await pool(audio, async ({ file: f, path }) => {
       const tags = await readId3(f).catch(() => ({}));
       const named = splitName(f.name);
-      const folder = (f.webkitRelativePath || f.name).split('/').slice(0, -1).join('/') || 'FILES';
-      const t = {
+      added.push({
         id: 'file:' + f.name + ':' + f.size, title: tags.title || named.title, artist: tags.artist || named.artist || '',
         album: tags.album || '', genre: tags.genre || '', bpm: tags.bpm || 0, key: tags.key || '', duration: 0,
-        folder, source: this.id, file: async () => f,
-      };
-      if (!folders.has(folder)) folders.set(folder, []);
-      folders.get(folder).push(t);
-      return t;
-    }));
+        folder: path.split('/').slice(0, -1).join('/') || 'FILES', source: this.id, file: async () => f,
+      });
+      if (added.length % 100 === 0) onProgress?.('READING TAGS… ' + added.length + '/' + audio.length);
+    });
     const known = new Set(this.tracks.map((t) => t.id));
     this.tracks.push(...added.filter((t) => !known.has(t.id)));
     this.tracks.sort((a, b) => a.title.localeCompare(b.title));
