@@ -177,7 +177,12 @@
         <div id="ph-tabs" class="ph-tabs" role="tablist" aria-label="Pads or volume">
           <button data-tab="pads" role="tab">PADS</button><button data-tab="vol" role="tab">VOL</button>
         </div>
-        <div id="ph-cues" class="ph-cues" role="tabpanel" aria-label="Hot cues"></div>
+        <div id="ph-cues" class="ph-cues" role="tabpanel" aria-label="Hot cues">
+          <div class="ph-loop" role="group" aria-label="Loop length">
+            <button data-ph="loop-half" class="ph-btn" aria-label="Halve loop">1/2X</button>
+            <button data-ph="loop-double" class="ph-btn" aria-label="Double loop">2X</button>
+          </div>
+        </div>
         <div id="ph-vol" class="ph-vol" role="tabpanel" aria-label="Volume">
           <div class="ph-fader" data-vol="0" role="slider" aria-label="DECK 1" aria-valuemin="0" aria-valuemax="100"><small>1</small><div class="ph-track"><i></i></div></div>
           <div class="ph-fader" data-vol="1" role="slider" aria-label="DECK 2" aria-valuemin="0" aria-valuemax="100"><small>2</small><div class="ph-track"><i></i></div></div>

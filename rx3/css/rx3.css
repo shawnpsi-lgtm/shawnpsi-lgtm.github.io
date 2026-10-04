@@ -486,7 +486,11 @@ rx-select.open .rxs-btn .tri { transform: rotate(180deg); }
     letter-spacing: .3px;
   }
   .ph-tabs button.lit { background: var(--blue); color: #fff; }
-  .ph-cues { flex: 1; min-width: 0; display: grid; grid-template: repeat(2, 1fr) / repeat(4, 1fr); gap: 6px; }
+  .ph-cues { flex: 1; min-width: 0; display: grid; grid-template: repeat(2, 1fr) / repeat(4, 1fr) .8fr; gap: 6px; }
+  /* LOOP 1/2X and 2X: a column after the pads, usable while a loop is on */
+  .ph-loop { grid-area: 1 / 5 / 3 / 6; display: flex; flex-direction: column; gap: inherit; min-width: 0; }
+  .ph-loop .ph-btn { flex: 1; height: auto; padding: 0; font: 500 16px var(--cond); }
+  .ph-loop .ph-btn:disabled { opacity: .4; }
   /* a pad with a hot cue is lit in its colour, as the unit's pads; held, it fills */
   .ph-cue-pad {
     position: relative; min-width: 0; padding: 0; border: 1px solid #3a3a3a; border-radius: 0; background: #0c0c0c;

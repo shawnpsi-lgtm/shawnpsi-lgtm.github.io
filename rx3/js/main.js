@@ -117,6 +117,7 @@ class App {
       case 'play': return this.decks[deck].play();
       case 'cue': return this.decks[deck].cueDown(this.quantize);
       case 'nudge-': case 'nudge+': return this.decks[deck].setNudge(name === 'nudge+' ? 1 : -1);
+      case 'loop-half': case 'loop-double': return this.decks[deck].resizeLoop(name === 'loop-double' ? 2 : 0.5);
       case 'sync': return this.decks[deck].sync(this.decks[1 - deck]);
       case 'mt': return this.decks[deck].setMasterTempo();
       case 'fx': {

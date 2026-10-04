@@ -4,7 +4,7 @@
 // to centre on release and a double-tap parks it there. Beat FX goes to the deck you switch it on from. Between BEAT FX
 // and FILTER, PADS / VOL swaps between the focused deck's pads and the volumes: both channel faders and the Beat FX
 // volume. The pads are HOT CUE A, B, E and F (rekordbox's), a 4-bar and a 2-bar loop on C and D, and the Pad FX ROLL
-// and VINYL BRAKE on G and H.
+// and VINYL BRAKE on G and H; beside them LOOP 1/2X and 2X resize the loop on.
 import { BEAT_FX, COLOR_FX, pitchLabel } from '../audio/engine.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -18,6 +18,8 @@ const PAD_FN = {
   6: { fx: 'roll', label: 'ROLL 1/4' },
   7: { fx: 'brake', label: 'VINYL BRAKE' },
 };
+const loopLabel = (beats) =>
+  (beats >= 4 ? beats / 4 + ' BAR' : beats >= 1 ? beats + ' BEAT' : '1/' + 1 / beats + ' BEAT') + ' LOOP';
 
 export class Phone {
   constructor(app) {
@@ -261,14 +263,16 @@ export class Phone {
     $('#ph-cues').hidden = this.tab !== 'pads';
     $('#ph-vol').hidden = this.tab !== 'vol';
     // a stored cue lights its pad in its rekordbox colour (green when it has none, orange for a loop); a loop pad is
-    // lit orange while its loop is on, a Pad FX blue while it plays
+    // lit orange while its loop is on (showing its length after 1/2X or 2X), a Pad FX blue while it plays
+    $$('.ph-loop button').forEach((b) => { b.disabled = !d.loop; });
     $$('#ph-cues .ph-cue-pad').forEach((pad, i) => {
       const fn = PAD_FN[i];
       if (fn) {
-        const on = fn.loop ? d.loop?.beats === fn.loop : d.padFx === fn.fx;
+        const on = fn.loop ? d.loop?.pad === fn.loop : d.padFx === fn.fx;
         pad.classList.toggle('set', on);
         pad.disabled = !d.loaded;
         pad.style.setProperty('--cue', on ? (fn.loop ? 'var(--orange)' : 'var(--blue)') : '');
+        if (fn.loop) pad.querySelector('small').textContent = on ? loopLabel(d.loop.beats) : fn.label;
         return;
       }
       const c = d.loaded ? d.hotCue(i) : null;

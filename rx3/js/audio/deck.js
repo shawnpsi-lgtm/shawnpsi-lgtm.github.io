@@ -17,7 +17,7 @@ export class Deck {
     this.playing = false;
     this.cue = 0;
     this.cueHeld = false;
-    this.loop = null; // the beat loop on: { beats, start, end } (s)
+    this.loop = null; // the beat loop on: { pad (the length it was set at), beats, start, end } (s)
     this.padFx = null; // the pad FX held: 'roll' or 'brake'
     this.tempo = 0; // -1..1 of the range
     this.range = 10;
@@ -177,16 +177,34 @@ export class Deck {
   }
 
   /**
-   * Beat loop: `beats` long from the playhead (from the nearest beat with QUANTIZE). The same length again exits it;
-   * another replaces it.
+   * Beat loop: `beats` long from the playhead (from the nearest beat with QUANTIZE). The same length again exits it,
+   * even after 1/2X or 2X; another replaces it.
    */
   beatLoop(beats, quantize) {
     if (!this.loaded || !this.beat) return;
-    if (this.loop?.beats === beats) this.loop = null;
+    if (this.loop?.pad === beats) this.loop = null;
     else {
       const t = this.position(), start = quantize ? this.snap(t) : t;
-      this.loop = { beats, start, end: start + beats * this.beat };
+      this.loop = { pad: beats, beats, start, end: start + beats * this.beat };
     }
+    this.sendLoop();
+  }
+
+  /**
+   * LOOP 1/2X and 2X: the loop on, half or twice as long from the same start (1/32 to 512 beats). A playhead left
+   * past a halved loop's end goes back into it, as if it had been looping at the new length.
+   */
+  resizeLoop(factor) {
+    const l = this.loop, beats = l?.beats * factor;
+    if (!l || !(beats >= 1 / 32 && beats <= 512)) return;
+    const t = this.position();
+    l.beats = beats;
+    l.end = l.start + beats * this.beat;
+    if (t >= l.end) this.seek(l.start + (t - l.start) % (l.end - l.start));
+    this.sendLoop();
+  }
+
+  sendLoop() {
     this.send({ type: 'loop', value: this.loop && { start: this.loop.start, end: this.loop.end } });
     this.onChange();
   }
