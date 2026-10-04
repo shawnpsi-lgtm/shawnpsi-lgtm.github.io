@@ -246,7 +246,7 @@ canvas.zoom[data-deck="1"] { top: 280px; }
 .deck-panel .title.none::before { content: none; }
 .deck-panel .trk { position: absolute; left: 0; top: 64px; width: 95px; text-align: center; font-size: 13px; }
 .deck-panel .trk b { display: block; font-size: 26px; font-weight: normal; margin: 4px 0 8px; }
-.deck-panel .trk .q { color: var(--orange); margin-top: 10px; }
+.deck-panel .trk .q { color: var(--orange); margin-top: 10px; cursor: pointer; }
 .deck-panel .trk .q.off { color: #555; }
 .deck-panel .trk .qv { font-size: 26px; color: var(--orange); border-bottom: 2px solid var(--orange); width: 40px; margin: 0 auto; }
 .deck-panel .trk .q.off + .qv { color: #555; border-color: transparent; }

@@ -413,7 +413,7 @@ export class Screen {
       this.set(el, `<div class="dk">DECK<b>${d.index + 1}</b></div>` +
         `<div class="title ${d.track ? '' : 'none'}">${esc(d.track ? d.track.title : '')}</div>` +
         `<div class="trk">TRACK<b>${loaded ? String(d.index + 1).padStart(2, '0') : '00'}</b>SINGLE` +
-        `<div class="q ${app.quantize ? '' : 'off'}">QUANTIZE</div><div class="qv">1</div></div>` +
+        `<div class="q ${app.quantize ? '' : 'off'}" data-act="quantize" title="Tap: quantize on/off">QUANTIZE</div><div class="qv">1</div></div>` +
         `<div class="hc a">A.HOT CUE</div><div class="hc b">AUTO CUE</div>` +
         `<div class="tl">&bull; REMAIN <span class="dim">/ TIME</span></div><div class="time"></div>` +
         `<div class="mt ${d.masterTempo ? '' : 'off'}">MT</div><div class="tempo-l">TEMPO</div><div class="range ${d.range >= 100 ? 'wide' : ''}">${range}</div><div class="tempo"></div>` +

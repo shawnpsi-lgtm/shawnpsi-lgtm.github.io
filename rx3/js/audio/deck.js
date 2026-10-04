@@ -123,8 +123,11 @@ export class Deck {
     this.onChange();
   }
 
-  /** CDJ CUE: while playing, back to the cue and pause; while paused, set the cue here, or (held at the cue) play. */
-  cueDown() {
+  /**
+   * CDJ CUE: while playing, back to the cue and pause; while paused, set the cue here (on the nearest beat with
+   * QUANTIZE), or (held at the cue) play.
+   */
+  cueDown(quantize) {
     if (!this.loaded) return;
     if (this.playing) {
       this.play(false);
@@ -133,7 +136,7 @@ export class Deck {
       this.cueHeld = true;
       this.play(true);
     } else {
-      this.cue = this.snap(this.position());
+      this.cue = quantize ? this.snap(this.position()) : this.position();
       this.seek(this.cue);
     }
     this.onChange();

@@ -115,7 +115,7 @@ class App {
       case 'push': return this.push();
       case 'load': return this.load(deck);
       case 'play': return this.decks[deck].play();
-      case 'cue': return this.decks[deck].cueDown();
+      case 'cue': return this.decks[deck].cueDown(this.quantize);
       case 'nudge-': case 'nudge+': return this.decks[deck].setNudge(name === 'nudge+' ? 1 : -1);
       case 'sync': return this.decks[deck].sync(this.decks[1 - deck]);
       case 'mt': return this.decks[deck].setMasterTempo();
@@ -223,6 +223,7 @@ class App {
       case 'zoom': s.pxPerSec = s.pxPerSec >= 300 ? 150 : 300; break;
       case 'zoom-out': s.pxPerSec = s.pxPerSec > 75 ? s.pxPerSec / 2 : 300; break;
       case 'grid': s.grid = !s.grid; break;
+      case 'quantize': this.quantize = !this.quantize; break;
       case 'tab-status': s.tab = 'status'; break;
       case 'tab-fx': s.tab = 'fx'; break;
     }
