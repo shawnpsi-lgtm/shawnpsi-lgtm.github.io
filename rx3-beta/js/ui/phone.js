@@ -16,6 +16,23 @@ export class Phone {
     this.buildButtons();
     this.buildFx();
     this.buildXpad();
+    this.noDoubleTapZoom();
+  }
+
+  /**
+   * iOS Safari ignores user-scalable=no, so a quick second tap (resetting the knob, parking the X-PAD, tapping a
+   * list row twice) zooms the page. Swallow the second touchend and click the target ourselves instead.
+   */
+  noDoubleTapZoom() {
+    const phone = matchMedia('(max-width: 600px) and (orientation: portrait)');
+    let last = 0;
+    document.addEventListener('touchend', (ev) => {
+      const quick = ev.timeStamp - last < 350;
+      last = ev.timeStamp;
+      if (!phone.matches || !quick || ev.touches.length || ev.target.closest('input, select, textarea')) return;
+      ev.preventDefault();
+      ev.target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    }, { passive: false });
   }
 
   get deck() {
@@ -62,11 +79,17 @@ export class Phone {
       }
       app.changed();
     };
-    // LEVEL/DEPTH knob: drag up to turn it up, double-tap for the middle
+    // LEVEL/DEPTH knob: drag up to turn it up, double-tap for the middle (counted here: no dblclick on touch)
     const knob = $('#ph-level');
-    let drag = null;
+    let drag = null, lastTap = -1e9;
     knob.addEventListener('pointerdown', (ev) => {
       knob.setPointerCapture(ev.pointerId);
+      if (ev.timeStamp - lastTap < 350) {
+        e.setLevel(0.5);
+        this.renderFx();
+        app.screen.renderFxPanel();
+      }
+      lastTap = ev.timeStamp;
       drag = { y: ev.clientY, v: e.fx.level };
     });
     knob.addEventListener('pointermove', (ev) => {
@@ -77,11 +100,6 @@ export class Phone {
     });
     knob.addEventListener('pointerup', () => { drag = null; });
     knob.addEventListener('pointercancel', () => { drag = null; });
-    knob.ondblclick = () => {
-      e.setLevel(0.5);
-      this.renderFx();
-      app.screen.renderFxPanel();
-    };
   }
 
   buildXpad() {
@@ -104,14 +122,14 @@ export class Phone {
       const r = pad.getBoundingClientRect();
       return Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
     };
-    let deck = null, x = 0.5, lastTap = 0, latch = false;
+    let deck = null, x = 0.5, lastTap = -1e9, latch = false;
     pad.addEventListener('pointerdown', (ev) => {
       if (deck != null) return; // one finger at a time
       e.resume();
       pad.setPointerCapture(ev.pointerId);
       pick();
       deck = this.deck;
-      latch = ev.timeStamp - lastTap < 300; // double-tap parks the knob where it lands
+      latch = ev.timeStamp - lastTap < 350; // double-tap parks the knob where it lands
       lastTap = ev.timeStamp;
       x = at(ev);
       set(deck, x);

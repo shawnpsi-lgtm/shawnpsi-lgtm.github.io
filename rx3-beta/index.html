@@ -141,6 +141,13 @@
     <!-- phones (portrait): one beatfx-style panel that drives the focused deck. No EQ, faders or crossfader:
          the X-PAD is that channel's COLOR knob (FILTER to bring a deck in or take it out), double-tap parks it -->
     <section id="phone" class="phone">
+      <div class="ph-row ph-nav">
+        <button data-ph="browse" class="ph-btn">BROWSE</button>
+        <button data-ph="up" class="ph-btn">&#9650;</button>
+        <button data-ph="down" class="ph-btn">&#9660;</button>
+        <button data-ph="back" class="ph-btn">BACK</button>
+        <button data-ph="load" class="ph-btn">LOAD</button>
+      </div>
       <div class="ph-row">
         <button id="ph-deck" class="ph-btn ph-deck">DECK 1</button>
         <div class="ph-bpm"><span id="ph-bpm">---.-</span><small>BPM</small></div>
@@ -161,13 +168,6 @@
         </div>
         <div class="ph-knob-cell"><small>LEVEL/DEPTH</small><div id="ph-level" class="ph-knob"><i></i></div></div>
         <div class="ph-knob-cell"><small>ON/OFF</small><button id="ph-on" class="ph-on" aria-label="Beat FX on/off"></button></div>
-      </div>
-      <div class="ph-row ph-nav">
-        <button data-ph="browse" class="ph-btn">BROWSE</button>
-        <button data-ph="up" class="ph-btn">&#9650;</button>
-        <button data-ph="down" class="ph-btn">&#9660;</button>
-        <button data-ph="back" class="ph-btn">BACK</button>
-        <button data-ph="load" class="ph-btn">LOAD</button>
       </div>
       <div class="ph-row ph-transport">
         <button data-ph="cue" class="ph-btn ph-cue">CUE</button>
