@@ -1,5 +1,6 @@
-// Just enough tag and analysis parsing for the browser: ID3v2 text frames, and the beat grid (PQTZ) from a
-// rekordbox ANLZ0000.DAT.
+// Just enough tag and analysis parsing for the browser: ID3v2 text frames, and from rekordbox's ANLZ0000 files the
+// beat grid (PQTZ, in the .DAT) and the hot cues (PCOB in the .DAT, PCO2 with colours and comments in the .EXT).
+// Layouts: https://djl-analysis.deepsymmetry.org/rekordbox-export-analysis/anlz.html
 
 const TEXT = { TIT2: 'title', TPE1: 'artist', TALB: 'album', TCON: 'genre', TBPM: 'bpm', TKEY: 'key' };
 
@@ -34,24 +35,72 @@ export async function readId3(file) {
   return tags;
 }
 
-/** Beat grid from an ANLZ0000.DAT: [{ beat (1-4 in the bar), bpm, time (s) }]. */
-export function readPqtz(buf) {
-  const v = new DataView(buf);
-  if (v.getUint32(0) !== 0x504d4149) return []; // 'PMAI'
+/** The tagged sections of an ANLZ file: [{ tag, o, lenHeader, lenTag }] ('PMAI' header, big-endian). */
+function sections(buf) {
+  const v = new DataView(buf), out = [];
+  if (buf.byteLength < 8 || v.getUint32(0) !== 0x504d4149) return out; // 'PMAI'
   let o = v.getUint32(4);
   while (o + 12 <= buf.byteLength) {
-    const tag = v.getUint32(o), lenHeader = v.getUint32(o + 4), lenTag = v.getUint32(o + 8);
-    if (tag === 0x5051545a) { // 'PQTZ'
-      const n = v.getUint32(o + 20), grid = [];
-      for (let i = 0, p = o + lenHeader; i < n && p + 8 <= o + lenTag; i++, p += 8) {
-        grid.push({ beat: v.getUint16(p), bpm: v.getUint16(p + 2) / 100, time: v.getUint32(p + 4) / 1000 });
-      }
-      return grid;
-    }
+    const lenTag = v.getUint32(o + 8);
+    out.push({ tag: v.getUint32(o), o, lenHeader: v.getUint32(o + 4), lenTag });
     if (!lenTag) break;
     o += lenTag;
   }
-  return [];
+  return out;
+}
+
+/** Beat grid from an ANLZ0000.DAT: [{ beat (1-4 in the bar), bpm, time (s) }]. */
+export function readPqtz(buf) {
+  const v = new DataView(buf);
+  const s = sections(buf).find((x) => x.tag === 0x5051545a); // 'PQTZ'
+  if (!s) return [];
+  const { o, lenHeader, lenTag } = s, n = v.getUint32(o + 20), grid = [];
+  for (let i = 0, p = o + lenHeader; i < n && p + 8 <= o + lenTag; i++, p += 8) {
+    grid.push({ beat: v.getUint16(p), bpm: v.getUint16(p + 2) / 100, time: v.getUint32(p + 4) / 1000 });
+  }
+  return grid;
+}
+
+const utf16be = new TextDecoder('utf-16be');
+
+/**
+ * Hot cues from an ANLZ0000.DAT (PCOB/PCPT) or .EXT (PCO2/PCP2, which adds the colour and comment):
+ * [{ pad (0-7 = A-H), time (s), loop, color ('rgb(…)' or null for the default), comment }]. Memory cues are skipped.
+ * Newer .EXT files carry a copy of the PCOB too: their PCO2 is used when there is one.
+ */
+export function readCues(buf) {
+  const v = new DataView(buf), found = { pcob: [], pco2: [] };
+  for (const { tag, o, lenHeader, lenTag } of sections(buf)) {
+    const ext = tag === 0x50434f32; // 'PCO2'
+    if (!ext && tag !== 0x50434f42) continue; // 'PCOB'
+    if (v.getUint32(o + 12) !== 1) continue; // 0 = memory cues, 1 = hot cues
+    const cues = ext ? found.pco2 : found.pcob;
+    for (let p = o + lenHeader; p + 12 <= o + lenTag;) {
+      const len = v.getUint32(p + 8);
+      if (len < 12 || p + len > o + lenTag) break;
+      const hot = v.getUint32(p + 12);
+      if (hot >= 1 && hot <= 8 && len >= (ext ? 44 : 40) && !cues.some((c) => c.pad === hot - 1)) {
+        const cue = { pad: hot - 1, loop: false, time: 0, color: null, comment: '' };
+        if (ext) { // PCP2
+          cue.loop = v.getUint8(p + 16) === 2;
+          cue.time = v.getUint32(p + 20) / 1000;
+          const colorId = v.getUint8(p + 28), lenComment = v.getUint32(p + 40), c = p + 44 + lenComment;
+          if (lenComment >= 2 && c <= p + len) {
+            cue.comment = utf16be.decode(new Uint8Array(buf, p + 44, lenComment)).replace(/\0.*$/s, '').trim();
+          }
+          if (colorId && c + 4 <= p + len) { // after the comment: colour code, then red, green, blue
+            cue.color = `rgb(${v.getUint8(c + 1)}, ${v.getUint8(c + 2)}, ${v.getUint8(c + 3)})`;
+          }
+        } else { // PCPT
+          cue.loop = v.getUint8(p + 28) === 2;
+          cue.time = v.getUint32(p + 32) / 1000;
+        }
+        cues.push(cue);
+      }
+      p += len;
+    }
+  }
+  return found.pco2.length ? found.pco2 : found.pcob;
 }
 
 /** "Artist - Title" file names, the common case when there are no tags. */

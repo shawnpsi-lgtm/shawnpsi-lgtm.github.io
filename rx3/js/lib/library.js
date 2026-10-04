@@ -1,12 +1,32 @@
 // The "USB sticks": USB1 is the signed-in user's r2music library (r2.shawnsingh.me, the same API beatfx uses),
 // USB2 is a folder on this computer. Both produce the same track objects:
 //   { id, title, artist, album, genre, bpm, key, duration, file(): Promise<File>, prepare?(): Promise }
-// prepare() fetches the rekordbox beat grid when there is one (sets track.grid).
+// prepare() fetches the rekordbox analysis when there is one: the beat grid (track.grid) and hot cues (track.cues).
 import { readPdb } from './pdb.js';
-import { readId3, readPqtz, splitName } from './tags.js';
+import { readCues, readId3, readPqtz, splitName } from './tags.js';
 
 const R2 = 'https://r2.shawnsingh.me';
 const AUDIO = /\.(mp3|wav|aiff?|m4a|aac|flac|ogg|opus)$/i;
+
+/**
+ * A track's rekordbox analysis: the beat grid and hot cues from its .DAT, and the hot cues again from its .EXT, which
+ * adds their colours and comments. read('DAT' | 'EXT') resolves to the file's bytes or throws.
+ */
+async function readAnlz(track, read) {
+  try {
+    const dat = await read('DAT');
+    track.grid = readPqtz(dat);
+    track.cues = readCues(dat);
+  } catch (e) {
+    console.warn('no beat grid for', track.title, e);
+  }
+  try {
+    const cues = readCues(await read('EXT'));
+    if (cues.length) track.cues = cues;
+  } catch {
+    // no .EXT (older rekordbox): the .DAT's cues stand
+  }
+}
 
 class Source {
   constructor(id, label) {
@@ -50,7 +70,8 @@ export class R2Source extends Source {
     try {
       const me = await this.api('/api/me');
       if (!me.connected) throw new Error('connect');
-      const r = await fetch(await this.sign('lists.json'), { cache: 'no-store' });
+      // A network error here (not an HTTP status) means the bucket's CORS policy doesn't allow this site.
+      const r = await fetch(await this.sign('lists.json'), { cache: 'no-store' }).catch(() => { throw new Error('cors'); });
       const lib = r.status === 404 ? { tracks: {}, lists: [] } : await r.json();
       const byId = {};
       this.tracks = Object.entries(lib.tracks).map(([sha, t]) => {
@@ -67,12 +88,12 @@ export class R2Source extends Source {
         if (t.anlz?.files?.includes('DAT')) {
           track.prepare = async () => {
             if (track.grid) return;
-            try {
-              const res = await fetch(await this.sign('anlz/' + sha + '.DAT'));
-              if (res.ok) track.grid = readPqtz(await res.arrayBuffer());
-            } catch (e) {
-              console.warn('no beat grid for', t.name, e);
-            }
+            await readAnlz(track, async (ext) => {
+              if (!t.anlz.files.includes(ext)) throw new Error('no ' + ext);
+              const res = await fetch(await this.sign('anlz/' + sha + '.' + ext));
+              if (!res.ok) throw new Error('anlz');
+              return res.arrayBuffer();
+            });
           };
         }
         byId[sha] = track;
@@ -84,6 +105,7 @@ export class R2Source extends Source {
       this.status = ['signin', 'connect'].includes(e.message) ? e.message : 'error';
       this.message = e.message === 'signin' ? 'SIGN IN TO R2MUSIC'
         : e.message === 'connect' ? 'CONNECT YOUR BUCKET IN R2MUSIC'
+          : e.message === 'cors' ? 'ADD ' + location.origin.toUpperCase().replace('HTTPS://', '') + ' TO BUCKET CORS'
           : location.hostname.endsWith('shawnsingh.me') ? 'COULD NOT LOAD LIBRARY' : 'OPENS ON shawnsingh.me';
     }
   }
@@ -162,11 +184,8 @@ export class FolderSource extends Source {
         file: async () => (await fileAt(dir, t.path)).getFile(),
         prepare: async () => {
           if (track.grid || !t.anlz) return;
-          try {
-            track.grid = readPqtz(await (await (await fileAt(dir, t.anlz)).getFile()).arrayBuffer());
-          } catch (e) {
-            console.warn('no beat grid for', t.path, e);
-          }
+          await readAnlz(track, async (ext) =>
+            (await (await fileAt(dir, t.anlz.replace(/DAT$/i, ext))).getFile()).arrayBuffer());
         },
       };
       byId.set(t.id, track);

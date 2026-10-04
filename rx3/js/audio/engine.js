@@ -1,14 +1,16 @@
 // The audio side: two decks, the RX3's mixer path, one Beat FX section and a Sound Color FX section per channel.
 //
-//   deck -> trim -> [0] -> EQ (low/mid/high) -> [1] -> channel fader -> [2] -> crossfader -> master bus -> [M] -> out
+//   deck -> trim -> [0] -> EQ (low/mid/high) -> [1] -> channel fader -> [2] -> FILTER -> crossfader -> master bus -> [M] -> out
 //
 // As in the firmware (MixerChannel::updateFilter), each effect has a fixed position in the channel: [0] before the
 // EQ, [1] before the fader, [2] after it. At a position the Color FX runs first, then the Beat FX if it is on that
 // channel. The Beat FX section is a single instance that runs in place wherever it is routed (so its tail survives
-// channel changes); routed to MASTER, it runs on the master bus [M], after both channels' Color FX.
+// channel changes); routed to MASTER, it runs on the master bus [M], after both channels' Color FX. FILTER is a second
+// copy of the Color FX FILTER per channel, for the phone panel's FILTER X-PAD; at centre it passes the signal untouched.
 import beatFx from '../fx/beat/index.js';
 import colorFx from '../fx/color/index.js';
 import { beatEffectMs } from '../fx/dsp.js';
+export { pitchLabel } from '../fx/beat/drum.js';
 
 export const SAMPLE_RATE = 44100; // the firmware's rate: the ported effects' tables are tuned for it
 export const BEAT_FX = beatFx.map((m) => m.meta);
@@ -28,9 +30,10 @@ class Channel {
       new AudioWorkletNode(ctx, 'rx3-fx', { outputChannelCount: [2], processorOptions: { kind, channel } });
     this.pre = fx('pre'); // position 0
     this.color = fx('post'); // position 1, the channel fader, position 2; takes the Color FX messages
+    this.filter = fx('filter');
     this.xfade = new GainNode(ctx);
     node.connect(this.trim).connect(this.pre).connect(this.low).connect(this.mid).connect(this.high)
-      .connect(this.color).connect(this.xfade);
+      .connect(this.color).connect(this.filter).connect(this.xfade);
   }
 }
 
@@ -49,19 +52,37 @@ export class Engine {
     this.beat =
       new AudioWorkletNode(ctx, 'rx3-fx', { outputChannelCount: [2], processorOptions: { kind: 'master' } });
     this.meter = new AnalyserNode(ctx, { fftSize: 1024 });
-    this.decks = [0, 1].map(() => new AudioWorkletNode(ctx, 'rx3-deck', { numberOfInputs: 0, outputChannelCount: [2] }));
+    this.decks = [0, 1].map((index) =>
+      new AudioWorkletNode(ctx, 'rx3-deck', { numberOfInputs: 0, outputChannelCount: [2], processorOptions: { index } }));
     this.channels = this.decks.map((d, i) => new Channel(ctx, d, i));
     for (const ch of this.channels) ch.xfade.connect(this.bus);
     this.bus.connect(this.beat).connect(this.master);
     this.master.connect(this.meter);
     this.master.connect(ctx.destination);
 
-    this.fx = { name: null, channel: 'CH1', on: false, level: 0.5, beat: null, xpad: null, beats: {} };
+    this.fx = { name: null, channel: 'CH1', on: false, level: 0.5, pitch: 0.5, volume: 1, beat: null, xpad: null,
+      beats: {}, bands: [true, true, true] };
     this.color = { name: null, amount: [0, 0], parameter: 0.5 };
     this.xfader = 0;
+    this.faders = [1, 1];
     if (BEAT_FX.length) this.selectBeatFx(BEAT_FX[0].name);
     this.routeBeatFx('CH1');
+    this.setLevel(this.fx.level); // the worklet's manager starts at 0; give it the knob's position
     this.setCrossfader(0);
+    this.loadSamples();
+  }
+
+  /** The Beat FX that play samples (DRUM): fetch and decode them here, and hand them to the worklet. */
+  loadSamples() {
+    for (const m of BEAT_FX.filter((x) => x.samples)) {
+      Promise.all(m.samples.map((file) =>
+        fetch(new URL('../../drum/' + file, import.meta.url))
+          .then((r) => r.arrayBuffer())
+          .then((b) => this.ctx.decodeAudioData(b))
+          .then((a) => ({ l: a.getChannelData(0), r: a.getChannelData(a.numberOfChannels > 1 ? 1 : 0) }))
+          .catch(() => null))) // a missing sample just leaves its slot silent
+        .then((value) => this.beat.port.postMessage({ type: 'data', name: m.name, value }));
+    }
   }
 
   resume() {
@@ -83,6 +104,7 @@ export class Engine {
   }
 
   setFader(ch, x) { // 0..1, a slightly logarithmic curve
+    this.faders[ch] = x;
     this.channels[ch].color.port.postMessage({ type: 'param', name: 'fader', value: x <= 0 ? 0 : Math.pow(x, 1.6) });
   }
 
@@ -121,6 +143,7 @@ export class Engine {
     this.beat.port.postMessage({ type: 'select', name });
     this.fx.beat = this.fx.beats[name] ?? m.beats[m.defaultBeat].value;
     this.fx.xpad = m.xpad?.kind === 'strip' ? m.xpad.centre : null;
+    if (m.pitch) this.setPitch(0.5);
   }
 
   setBeat(value) {
@@ -134,7 +157,7 @@ export class Engine {
     return bpm ? beatEffectMs(bpm, this.fx.beat) : null;
   }
 
-  /** BEAT ◀ / ▶: step through the effect's beat (or percent) values. */
+  /** BEAT left / right: step through the effect's beat (or percent) values. */
   stepBeat(dir) {
     const vals = this.beatMeta().beats.map((b) => b.value);
     let i = 0;
@@ -147,6 +170,18 @@ export class Engine {
     this.beat.port.postMessage({ type: 'param', name: 'level', value: x });
   }
 
+  /** PITCH, for the effects that have one (DRUM): 0..1, centre = as recorded. */
+  setPitch(x) {
+    this.fx.pitch = x;
+    this.beat.port.postMessage({ type: 'param', name: 'pitch', value: x });
+  }
+
+  /** Beat FX VOLUME (the phone panel's; not on the unit): 0..1 of the effect's change to the signal, 1 = as is. */
+  setBeatVolume(x) {
+    this.fx.volume = x;
+    this.beat.port.postMessage({ type: 'param', name: 'volume', value: x });
+  }
+
   setXpad(v) {
     this.fx.xpad = v;
     this.beat.port.postMessage({ type: 'param', name: 'xpad', value: v });
@@ -154,6 +189,17 @@ export class Engine {
 
   setBpm(bpm) {
     this.beat.port.postMessage({ type: 'param', name: 'bpm', value: bpm });
+  }
+
+  /** The beat grid of the deck the Beat FX follows (DRUM locks to it): its track's own BPM and first beat. */
+  setGrid(deck, firstBeat, bpm) {
+    this.beat.port.postMessage({ type: 'grid', deck, firstBeat, bpm });
+  }
+
+  /** Beat FX frequency band (0 LOW, 1 MID, 2 HI) on or off: a band that is off skips the effect, dry. */
+  setBand(band, on) {
+    this.fx.bands[band] = on;
+    this.beat.port.postMessage({ type: 'band', band, value: on });
   }
 
   setBeatFxOn(on) {
@@ -177,6 +223,11 @@ export class Engine {
   setColor(ch, x) { // -1..1, 0 = centre
     this.color.amount[ch] = x;
     this.channels[ch].color.port.postMessage({ type: 'param', name: 'color', value: x });
+  }
+
+  /** The channel's own FILTER (the phone's FILTER X-PAD): -1 low-pass .. 0 off .. 1 high-pass. */
+  setFilter(ch, x) {
+    this.channels[ch].filter.port.postMessage({ value: x });
   }
 
   setColorParameter(x) { // 0..1, 0.5 = centre

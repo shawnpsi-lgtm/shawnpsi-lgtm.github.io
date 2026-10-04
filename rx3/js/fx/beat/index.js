@@ -5,5 +5,8 @@ import * as flanger from './flanger.js';
 import * as phaser from './phaser.js';
 import * as filter from './filter.js';
 import * as trans from './trans.js';
+// not on the RX3: from shawnsingh.me/beatfx
+import * as drum from './drum.js';
+import * as noise from './noise.js';
 
-export default [echo, reverb, flanger, phaser, filter, trans];
+export default [echo, reverb, flanger, phaser, filter, trans, drum, noise];

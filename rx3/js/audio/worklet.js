@@ -1,14 +1,17 @@
 // AudioWorklet processors: the deck player and the effect hosts. Loaded with audioWorklet.addModule().
 import beatFx from '../fx/beat/index.js';
 import colorFx from '../fx/color/index.js';
+import { BandSplit } from '../fx/bands.js';
 import { BeatManager, ColorManager, beatIndex } from '../fx/dsp.js';
 
 const SILENCE = new Float32Array(128);
+const players = []; // the DeckProcessors by deck index, for the Beat FX section's beat clock
 
 /** Plays one track: variable rate (tempo, nudge), play/pause, seek. Reports its position ~30 times a second. */
 class DeckProcessor extends AudioWorkletProcessor {
-  constructor() {
+  constructor(options) {
     super();
+    players[options.processorOptions?.index ?? players.length] = this;
     this.l = this.r = null;
     this.len = 0;
     this.pos = 0; // in source frames, fractional
@@ -93,6 +96,13 @@ class BeatSection {
     this.idle = true;
     this.quiet = 0;
     this.done = -1; // the block it last ran in
+    // the beat grid of the deck the effects follow ({ deck, firstBeat, bpm }), and where it is each block, for the
+    // effects that read it (DRUM)
+    this.grid = null;
+    this.clock = { playing: false, beat: 0, perSample: 0 };
+    for (const core of this.m.cores.values()) core.clock = this.clock;
+    this.bands = new BandSplit(sampleRate); // LOW / MID / HI: the bands switched off go around the effect
+    this.volume = 1; // VOLUME: how much of the effect's change to the signal gets through (1 = all, as on the unit)
     this.sL = new Float32Array(64);
     this.sR = new Float32Array(64);
   }
@@ -102,19 +112,30 @@ class BeatSection {
       this.route = m.value;
       return;
     }
+    if (m.type === 'grid') {
+      this.grid = m;
+      return;
+    }
+    if (m.type === 'data') { // an effect's assets, decoded on the page (DRUM's samples)
+      this.m.cores.get(m.name)?.setData?.(m.value);
+      return;
+    }
     const s = this.m;
     this.idle = false;
     this.quiet = 0;
-    if (m.type === 'select') s.select(m.name);
+    if (m.type === 'band') this.bands.set(m.band, m.value);
+    else if (m.type === 'select') s.select(m.name);
     else if (m.type === 'on') s.setOn(m.value);
     else if (m.type === 'param') {
       const v = m.value;
       if (m.name === 'level') s.setLevel(v);
+      else if (m.name === 'volume') this.volume = v;
       else if (m.name === 'bpm') { // the BPM manager reports 120 (DEFAULT_BPM) without one, and only changes notify
         const bpm = v > 0 ? v : 120;
         if (Math.round(bpm * 100) !== s.bpm100) s.setBpm(bpm);
       }
       else if (m.name === 'xpad') s.setXpad(v);
+      else if (m.name === 'pitch') for (const core of s.cores.values()) core.setPitch?.(v); // DRUM's own control
       else if (m.name === 'beat') {
         const meta = this.metas.get(s.selected);
         if (meta?.unit === '%') s.setPercent(v);
@@ -133,16 +154,39 @@ class BeatSection {
     const s = this.m;
     if (position !== null && s.cur.position !== position) return;
     this.done = block;
+    this.tick(block);
     const n = L.length, { sL, sR } = this;
     sL.set(L);
     sR.set(R);
+    const split = this.bands.remove(sL, sR);
     s.process(sL, sR, L, R, n);
+    if (split) {
+      this.bands.restore(L, R);
+      this.bands.restore(sL, sR); // the block as it came in, for the silence check
+    }
     if (s.cur === s.off ? s.state === 0 : s.state === 3 && s.B.done) {
       let d = 0;
       for (let i = 0; i < n; i++) d = Math.max(d, Math.abs(L[i] - sL[i]), Math.abs(R[i] - sR[i]));
       this.quiet = d < 1e-6 ? this.quiet + n : 0;
       if (this.quiet > sampleRate / 2) this.idle = true;
     } else this.quiet = 0;
+    const g = this.volume;
+    if (g !== 1) {
+      for (let i = 0; i < n; i++) {
+        L[i] = sL[i] + (L[i] - sL[i]) * g;
+        R[i] = sR[i] + (R[i] - sR[i]) * g;
+      }
+    }
+  }
+
+  /** The followed deck's beat position at this block's first frame. The deck has already rendered this quantum. */
+  tick(block) {
+    const g = this.grid, p = g && players[g.deck], c = this.clock;
+    c.playing = !!(p?.playing && g.bpm > 0);
+    if (!c.playing) return;
+    const bps = g.bpm / 60, ahead = currentFrame + 128 - block; // frames from here to the end of the quantum
+    c.perSample = (p.rate * bps) / sampleRate;
+    c.beat = (p.pos / p.srcRate - g.firstBeat) * bps - ahead * c.perSample;
   }
 }
 
@@ -203,6 +247,7 @@ const colorSection = (ch) => colors[ch] || (colors[ch] = new ColorSection());
  *   'pre'    a channel strip before its EQ: position 0 (NOISE, SWEEP; ROLL, HELIX, ...)
  *   'post'   the strip after its EQ: position 1, the channel fader, position 2 (DUB ECHO, SPACE; REVERB, ECHO, ...)
  *   'master' the master bus: the Beat FX when MASTER is selected; its port takes the Beat FX messages
+ *   'filter' a channel's own FILTER after the strip (the phone's FILTER X-PAD), apart from its Color FX
  * At each position the Color FX runs first, then the Beat FX, as in MixerChannel::updateFilter.
  */
 class FxProcessor extends AudioWorkletProcessor {
@@ -210,6 +255,13 @@ class FxProcessor extends AudioWorkletProcessor {
     super();
     const { kind, channel } = options.processorOptions;
     this.kind = kind;
+    if (kind === 'filter') { // the phone's FILTER X-PAD: its own FILTER, after the channel's Color FX
+      this.filter = new (colorFx.find((m) => m.meta.name === 'FILTER').Core)(sampleRate);
+      this.sL = new Float32Array(64);
+      this.sR = new Float32Array(64);
+      this.port.onmessage = (e) => this.filter.setColor((e.data.value + 1) / 2);
+      return;
+    }
     this.beat = beatSection();
     if (kind === 'master') {
       this.route = 'MASTER';
@@ -223,7 +275,12 @@ class FxProcessor extends AudioWorkletProcessor {
 
   block(L, R, k, at) {
     const { beat, color, route } = this;
-    if (this.kind === 'master') {
+    if (this.kind === 'filter') {
+      const { sL, sR } = this;
+      sL.set(L);
+      sR.set(R);
+      this.filter.execute(sL, sR, L, R, L.length);
+    } else if (this.kind === 'master') {
       beat.operate(route, null, L, R, at);
     } else if (this.kind === 'pre') {
       const pos = color.position[k] = color.m.cfx.position;

@@ -1,8 +1,10 @@
 // Wires the engine, the decks, the library and the screen to the buttons, knobs and keyboard.
 import { Deck, TEMPO_RANGES } from './audio/deck.js';
-import { BEAT_FX, COLOR_FX, Engine, FX_CHANNELS } from './audio/engine.js';
+import { BEAT_FX, COLOR_FX, Engine, FX_CHANNELS, pitchLabel } from './audio/engine.js';
 import { FolderSource, memory, R2Source } from './lib/library.js';
 import { Browser } from './ui/browser.js';
+import './ui/dropdown.js';
+import { Phone } from './ui/phone.js';
 import { Screen } from './ui/screen.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -31,9 +33,11 @@ class App {
     this.started = performance.now();
     this.screen = new Screen(this);
     this.buildControls();
+    this.phone = new Phone(this);
     this.bindKeys();
     this.bindFiles();
     this.screen.render();
+    this.renderControls();
     this.loop();
     this.sources[0].open().then(() => this.screen.render());
   }
@@ -41,6 +45,8 @@ class App {
   changed() {
     this.pickMaster();
     this.engine.setBpm(this.fxBpm());
+    const d = this.fxDeck();
+    this.engine.setGrid(d?.index ?? -1, d?.analysis?.firstBeat || 0, d?.analysis?.bpm || 0);
     this.browser.refresh(() => this.masterBpm());
     this.screen.render();
   }
@@ -56,11 +62,15 @@ class App {
     return this.decks.find((d) => d.master)?.bpm || 0;
   }
 
-  /** Beat FX tempo: the selected channel's deck, or the master deck for MASTER. */
-  fxBpm() {
+  /** The deck the Beat FX follows: the selected channel's, or the master deck for MASTER. */
+  fxDeck() {
     const ch = this.engine.fx.channel;
-    const d = ch === 'MASTER' ? this.decks.find((x) => x.master) : this.decks[+ch.slice(2) - 1];
-    return d?.bpm || this.masterBpm() || 0;
+    return ch === 'MASTER' ? this.decks.find((x) => x.master) : this.decks[+ch.slice(2) - 1];
+  }
+
+  /** Beat FX tempo: the followed deck's, else the master deck's. */
+  fxBpm() {
+    return this.fxDeck()?.bpm || this.masterBpm() || 0;
   }
 
   // ---- the buttons
@@ -233,7 +243,7 @@ class App {
       this.bankArmed = false;
     } else if (!slots[slot]) {
       const m = e.beatMeta();
-      slots[slot] = { name: e.fx.name, beat: e.fx.beat, level: e.fx.level, channel: e.fx.channel,
+      slots[slot] = { name: e.fx.name, beat: e.fx.beat, level: e.fx.level, channel: e.fx.channel, bands: [...e.fx.bands],
         label: m.beats.find((b) => b.value === e.fx.beat)?.label || '' };
       this.screen.toast('STORED IN BANK ' + (+slot + 1));
     } else {
@@ -242,6 +252,7 @@ class App {
       e.setBeat(x.beat);
       e.setLevel(x.level);
       e.routeBeatFx(x.channel);
+      (x.bands || [true, true, true]).forEach((on, b) => e.setBand(b, on));
     }
     localStorage.setItem('rx3.bank', JSON.stringify(slots));
     this.screen.render();
@@ -322,22 +333,36 @@ class App {
       btn.addEventListener('pointercancel', up);
     });
     const fxSel = $('#fx-select');
-    fxSel.innerHTML = BEAT_FX.map((m) => `<option>${m.name}</option>`).join('');
+    fxSel.setOptions(BEAT_FX.map((m) => m.name));
     fxSel.onchange = () => {
       e.selectBeatFx(fxSel.value);
       this.changed();
     };
-    $('#fx-ch').innerHTML = FX_CHANNELS.map((c) => `<option>${c}</option>`).join('');
+    $('#fx-ch').setOptions(FX_CHANNELS);
     $('#fx-ch').onchange = (ev) => {
       e.routeBeatFx(ev.target.value);
       this.changed();
     };
+    // LOW / MID / HI: which bands the Beat FX acts on (desktop bar and phone panel)
+    $$('[data-band]').forEach((btn) => {
+      btn.onclick = () => {
+        const b = +btn.dataset.band;
+        e.setBand(b, !e.fx.bands[b]);
+        this.renderControls();
+      };
+    });
     $('#fx-level').oninput = (ev) => {
       e.setLevel(+ev.target.value);
       this.screen.renderFxPanel();
     };
+    const pitch = $('#fx-pitch');
+    pitch.oninput = () => {
+      e.setPitch(+pitch.value);
+      this.renderControls();
+    };
+    pitch.ondblclick = () => { pitch.value = 0.5; pitch.oninput(); };
     const colorSel = $('#color-select');
-    colorSel.innerHTML = '<option value="">(off)</option>' + COLOR_FX.map((m) => `<option>${m.name}</option>`).join('');
+    colorSel.setOptions([{ value: '', label: '(off)' }, ...COLOR_FX.map((m) => m.name)]);
     colorSel.onchange = () => e.selectColorFx(colorSel.value || null);
     const param = $('#color-param');
     param.oninput = () => e.setColorParameter(+param.value);
@@ -358,7 +383,7 @@ class App {
       el.innerHTML = `<span class="dname">DECK ${i + 1}</span>` +
         knob('TEMPO', 'data-f="tempo" min="-1" max="1" step="0.0005" value="0"') +
         `<button data-f="sync">BEAT SYNC</button>` +
-        `<button data-f="nudge-">&#9664;</button><button data-f="nudge+">&#9654;</button>` +
+        `<button data-f="nudge-"><i class="tri l"></i></button><button data-f="nudge+"><i class="tri r"></i></button>` +
         knob('TRIM', 'data-f="trim" min="-1" max="1" step="0.01" value="0"') +
         knob('HI', 'data-f="high" min="-1" max="1" step="0.01" value="0"') +
         knob('MID', 'data-f="mid" min="-1" max="1" step="0.01" value="0"') +
@@ -395,7 +420,11 @@ class App {
     $('#fx-select').value = e.fx.name;
     $('#fx-ch').value = e.fx.channel;
     $('#fx-level').value = e.fx.level;
+    $('#fx-pitch-k').hidden = !e.beatMeta()?.pitch;
+    $('#fx-pitch').value = e.fx.pitch;
+    $('#fx-pitch-v').textContent = pitchLabel(e.fx.pitch);
     $('#fx-on').classList.toggle('lit', e.fx.on);
+    $$('[data-band]').forEach((b) => b.classList.toggle('lit', e.fx.bands[+b.dataset.band]));
     $$('.panel [data-key="play"]').forEach((b) => b.classList.toggle('lit', this.decks[+b.dataset.deck].playing));
     $$('.panel [data-key="cue"]').forEach((b) => {
       const d = this.decks[+b.dataset.deck];
@@ -405,6 +434,7 @@ class App {
       const d = this.decks[+el.dataset.deck], t = el.querySelector('[data-f="tempo"]');
       if (document.activeElement !== t) t.value = -d.tempo;
     });
+    this.phone?.render();
   }
 
   status() {

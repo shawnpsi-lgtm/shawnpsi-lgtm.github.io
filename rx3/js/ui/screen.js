@@ -53,6 +53,7 @@ export class Screen {
     const w = this.wrap.clientWidth, h = this.wrap.clientHeight;
     const s = Math.min(w / 1280, h / 800);
     this.scale = s;
+    this.el.style.setProperty('--s', s); // the frame (#screen::after) stays the same width at any size
     this.el.style.transform = `translate(${(w - 1280 * s) / 2}px, ${(h - 800 * s) / 2}px) scale(${s})`;
   }
 
@@ -108,13 +109,8 @@ export class Screen {
         else app.browser.select(i);
         this.render();
       });
-      $('#list-' + side).addEventListener('wheel', (e) => {
-        if (side !== 'l') return;
-        e.preventDefault();
-        app.browser.move(Math.sign(e.deltaY));
-        this.render();
-      }, { passive: false });
     }
+    this.bindListSwipe();
     this.el.addEventListener('click', (e) => {
       const b = e.target.closest('[data-act]');
       if (b) app.action(b.dataset.act);
@@ -129,6 +125,11 @@ export class Screen {
         const r = cv.getBoundingClientRect();
         deck.seek(((e.clientX - r.left) / r.width) * deck.duration);
       }
+      this.render();
+    }));
+    // the deck strips under SOURCE / BROWSE: tap one to focus it, so a track loads there
+    $$('.mini-deck').forEach((el) => el.addEventListener('pointerdown', () => {
+      app.focus = +el.dataset.deck;
       this.render();
     }));
     // drag the zoom waveform to scrub (like touching the jog's top while paused)
@@ -151,6 +152,96 @@ export class Screen {
       const b = e.target.closest('button');
       if (b) app.bank(b.dataset.slot);
     });
+  }
+
+  /**
+   * Scrolling the track list moves its 12-row window, 1:1 with the finger or the wheel: swipe (flick to coast), or
+   * trackpad / mouse wheel. The highlighted row stays put, and a drag never selects a row. iPhones get raw touch
+   * events with touchmove cancelled, since Safari can take a pointer drag over for its own panning.
+   */
+  bindListSwipe() {
+    const el = $('#list-l'), b = this.app.browser;
+    const rowPx = () => 50 * this.scale; // a row's height on screen
+    let drag = null, coast = 0, swallow = false, wheel = 0;
+    const scroll = (rows, acc) => { // fractional rows in; scrolls whole rows, keeps the rest; false at either end
+      acc.n += rows;
+      const n = Math.trunc(acc.n);
+      if (!n) return true;
+      acc.n -= n;
+      const moved = b.scroll(n);
+      if (moved) this.render();
+      return moved;
+    };
+    const start = (y, t) => {
+      cancelAnimationFrame(coast);
+      swallow = false;
+      drag = { y, t, n: 0, v: 0, moved: false };
+    };
+    const move = (y, t) => { // returns true once it's a drag
+      if (!drag) return false;
+      const dy = drag.y - y;
+      if (!drag.moved && Math.abs(dy) < 8) return false;
+      drag.moved = true;
+      const rows = dy / rowPx(), dt = Math.max(1, t - drag.t);
+      drag.v = 0.7 * Math.max(-0.04, Math.min(0.04, rows / dt)) + 0.3 * drag.v; // rows per ms, smoothed and capped
+      drag.y = y;
+      drag.t = t;
+      scroll(rows, drag);
+      return true;
+    };
+    const end = () => {
+      if (!drag) return;
+      const d = drag;
+      drag = null;
+      swallow = d.moved;
+      if (!d.moved) return;
+      if (Math.abs(d.v) > 0.004) {
+        let last = performance.now();
+        const fly = (now) => {
+          const dt = now - last;
+          last = now;
+          d.v *= Math.pow(0.994, dt);
+          if (Math.abs(d.v) > 0.001 && scroll(d.v * dt, d)) coast = requestAnimationFrame(fly);
+        };
+        coast = requestAnimationFrame(fly);
+      } else if (Math.abs(d.n) >= 0.5) scroll(Math.sign(d.n) * 0.5, d); // settle on the nearest row
+    };
+    // touch
+    el.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) start(e.touches[0].clientY, e.timeStamp);
+      else drag = null;
+    }, { passive: true });
+    el.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // the list isn't natively scrollable: never let Safari pan or zoom from here
+      if (e.touches.length === 1) move(e.touches[0].clientY, e.timeStamp);
+    }, { passive: false });
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+    // mouse / pen drag
+    el.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch') start(e.clientY, e.timeStamp);
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'touch' || !drag) return;
+      const was = drag.moved;
+      if (move(e.clientY, e.timeStamp) && !was) el.setPointerCapture(e.pointerId); // not before: it retargets the click
+    });
+    el.addEventListener('pointerup', (e) => { if (e.pointerType !== 'touch') end(); });
+    el.addEventListener('pointercancel', (e) => { if (e.pointerType !== 'touch') end(); });
+    // trackpad / mouse wheel: pixels (or lines, or pages) to rows
+    el.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      cancelAnimationFrame(coast);
+      const rows = e.deltaMode === 1 ? e.deltaY : e.deltaMode === 2 ? e.deltaY * 12 : e.deltaY / rowPx();
+      const acc = { n: wheel };
+      scroll(rows, acc);
+      wheel = acc.n;
+    }, { passive: false });
+    el.addEventListener('click', (e) => { // runs before the row handler (capture)
+      if (!swallow) return;
+      swallow = false;
+      e.stopImmediatePropagation();
+    }, true);
   }
 
   buildXpad() {
@@ -247,15 +338,26 @@ export class Screen {
     $$('#cats button').forEach((btn) => btn.classList.toggle('sel', btn.dataset.cat === b.category));
     $('#col-l').textContent = l?.head || '';
     const loaded = new Set(app.decks.map((d) => d.track?.id));
-    const row = (it, i, sel) => {
-      const cls = [i === sel ? 'sel' : '', it.track && loaded.has(it.track.id) ? 'loaded' : '',
-        it.track && memory.tags.has(it.track.id) ? 'tagged' : '', it.act ? 'action' : ''].join(' ');
-      const meta = it.meta !== undefined && it.meta !== '' ? `<span class="meta">${esc(it.meta)}</span>` : '';
-      return `<li data-i="${i}" class="${cls}">${meta}${esc(it.label)}</li>`;
-    };
-    const items = l ? l.items.slice(l.top, l.top + ROWS) : [];
-    this.set($('#list-l'), items.map((it, k) => row(it, l.top + k, l.cursor)).join('') +
-      '<li></li>'.repeat(ROWS - items.length));
+    const cls = (it, i, sel) => [i === sel ? 'sel' : '', it.track && loaded.has(it.track.id) ? 'loaded' : '',
+      it.track && memory.tags.has(it.track.id) ? 'tagged' : '', it.act ? 'action' : ''].join(' ');
+    const inner = (it) => (it.meta !== undefined && it.meta !== '' ? `<span class="meta">${esc(it.meta)}</span>` : '') +
+      esc(it.label);
+    const row = (it, i, sel) => `<li data-i="${i}" class="${cls(it, i, sel)}">${inner(it)}</li>`;
+    // the left list keeps its ROWS <li>s and rewrites what's in them: replacing the row under a finger mid-swipe
+    // would send the rest of that touch to a detached node (iOS), and the swipe would stop
+    const ul = $('#list-l');
+    if (ul.children.length !== ROWS) ul.innerHTML = '<li></li>'.repeat(ROWS);
+    for (let k = 0; k < ROWS; k++) {
+      const li = ul.children[k], i = l ? l.top + k : -1, it = l?.items[i];
+      if (it) li.dataset.i = i;
+      else delete li.dataset.i;
+      li.className = it ? cls(it, i, l.cursor) : '';
+      const html = it ? inner(it) : '';
+      if (this.cache.get(li) !== html) {
+        this.cache.set(li, html);
+        li.innerHTML = html;
+      }
+    }
     // right column: the next level of the highlighted folder, or the highlighted track's details
     const it = b.selected;
     let right = '', head = '';
@@ -282,6 +384,7 @@ export class Screen {
         el.innerHTML = `<span class="lbl"></span><span class="rem">REMAIN</span><span class="t"></span>` +
           `<canvas width="410" height="56"></canvas><span class="nl"></span><div class="bpmbox"></div>`;
       }
+      el.classList.toggle('active', app.focus === d.index);
       el.querySelector('.lbl').textContent = 'DECK' + (d.index + 1);
       el.querySelector('.lbl').classList.toggle('waves', !d.loaded && !d.loading);
       el.querySelector('.nl').textContent = d.loading ? 'Loading…' : d.loaded ? '' : d.error || 'Not Loaded.';
@@ -336,7 +439,7 @@ export class Screen {
         `<div class="chl">MASTER BPM</div><div class="ch">${md?.bpm ? md.bpm.toFixed(1) : '---.-'}</div>` +
         `<div class="vals"><div style="top:14px">${app.decks[0].tempo ? (app.decks[0].tempo * app.decks[0].range).toFixed(2) : '0.00'}<small>% D1</small></div>` +
         `<div style="top:54px">${app.decks[1].tempo ? (app.decks[1].tempo * app.decks[1].range).toFixed(2) : '0.00'}<small>% D2</small></div>` +
-        `<div class="q">X-FADER ${e.xfader < -0.05 ? '◀' : e.xfader > 0.05 ? '▶' : '●'}</div></div>`);
+        `<div class="q">X-FADER ${e.xfader < -0.05 ? '<i class="tri l"></i>' : e.xfader > 0.05 ? '<i class="tri r"></i>' : '●'}</div></div>`);
       return;
     }
     const ch = e.fx.channel === 'MASTER' ? 'MASTER' : e.fx.channel.slice(2);
@@ -361,8 +464,8 @@ export class Screen {
     if (m.xpad?.kind === 'strip') {
       const x = ((e.fx.xpad - m.xpad.min) / (m.xpad.max - m.xpad.min)) * 100;
       el.className = 'xpad touch';
-      el.innerHTML = `<span class="lo">◀ ${m.xpad.left}</span><span class="mid">${e.fx.xpad === m.xpad.centre ? '' : e.fx.xpad}</span>` +
-        `<span class="hi">${m.xpad.right} ▶</span><i style="left:${x}%"></i>`;
+      el.innerHTML = `<span class="lo"><i class="tri l"></i> ${m.xpad.left}</span><span class="mid">${e.fx.xpad === m.xpad.centre ? '' : e.fx.xpad}</span>` +
+        `<span class="hi">${m.xpad.right} <i class="tri r"></i></span><i style="left:${x}%"></i>`;
     } else {
       el.className = 'xpad';
       this.set(el, m.beats.slice(0, 8).map((b, i) =>
@@ -374,7 +477,7 @@ export class Screen {
     const slots = this.app.bankSlots();
     this.set($('#bank'), slots.map((s, i) =>
       `<button data-slot="${i}" class="${this.app.bankArmed ? 'armed' : ''}">${s ? esc(s.name) + ' ' + s.label : ''}</button>`).join('') +
-      '<button class="trash" data-slot="trash" title="Hold a slot to store; trash clears">&#128465;</button>');
+      '<button class="trash" data-slot="trash" title="Hold a slot to store; CLR clears">CLR</button>');
   }
 
   // ---- every frame

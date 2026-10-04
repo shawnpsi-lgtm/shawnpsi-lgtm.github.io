@@ -22,7 +22,7 @@ const ALLPASS = f(0.7);
 export const meta = {
   name: 'REVERB',
   unit: '%',
-  // BEAT ◀ ▶ steps through these (BeatFxBeatButton in the player's UI)
+  // BEAT left/right steps through these (BeatFxBeatButton in the player's UI)
   beats: [1, 10, 25, 50, 75, 90, 100].map((v) => ({ label: v + '%', value: v })),
   defaultBeat: 3,
   // the X-PAD is a touch strip for the post filter: left closes the LPF, right opens the HPF, release = centre

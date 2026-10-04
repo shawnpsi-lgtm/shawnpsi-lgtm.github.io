@@ -11,6 +11,13 @@
 </head>
 <body>
   <div id="app">
+    <!-- phones: BROWSE / BACK / BPM / SYNC sit above the screen -->
+    <div id="ph-nav" class="ph-row ph-nav">
+      <button data-ph="browse" class="ph-btn">BROWSE</button>
+      <button data-ph="back" class="ph-btn">BACK</button>
+      <div class="ph-bpm"><small id="ph-deck">DECK 1</small><small class="u">BPM</small><b id="ph-bpm">---.-</b></div>
+      <button data-ph="sync" class="ph-btn">SYNC</button>
+    </div>
     <!-- the touch screen, built at the RX3's native 1280x800 and scaled to fit -->
     <main id="screen-wrap">
       <div id="screen" class="view-source">
@@ -21,7 +28,7 @@
           <div class="head-right">
             <span class="timer-ico"></span><span class="head-clock" id="clock-a">00:00:00</span>
             <span class="rec-dot"></span><span class="head-clock dim">00:00:00</span>
-            <button class="info-btn" data-act="info"><span>&#9664;</span>INFO</button>
+            <button class="info-btn" data-act="info"><span><i class="tri l"></i></span>INFO</button>
           </div>
         </header>
 
@@ -57,7 +64,7 @@
           <div class="top-left"><span class="timer-ico"></span>REMAIN<span class="rec-time">00:00:00</span><i></i></div>
           <div class="top-right">
             <span class="rec-dot"></span><span class="head-clock dim">00:00:00</span>
-            <button class="info-btn" data-act="info"><span>&#9664;</span>INFO</button>
+            <button class="info-btn" data-act="info"><span><i class="tri l"></i></span>INFO</button>
           </div>
           <div class="deck-info" data-deck="0"></div>
           <div class="deck-info" data-deck="1"></div>
@@ -95,9 +102,9 @@
       <button data-key="tag">TAG TRACK</button>
       <button data-key="back">BACK</button>
       <div class="gap"></div>
-      <button data-key="up">&#9650;&nbsp; browse</button>
+      <button data-key="up"><i class="tri u"></i>&nbsp; browse</button>
       <button data-key="push">PUSH (select)</button>
-      <button data-key="down">&#9660;&nbsp; browse</button>
+      <button data-key="down"><i class="tri d"></i>&nbsp; browse</button>
       <div class="gap">DECK 1</div>
       <button data-key="load" data-deck="0">LOAD</button>
       <button data-key="cue" data-deck="0">CUE</button>
@@ -111,14 +118,16 @@
     <!-- effects bar (as in the viewer) -->
     <div id="fxbar" class="bar fxbar">
       <label>BEAT FX</label>
-      <select id="fx-select"></select>
-      <button data-key="beat-down">&#9664; beat</button>
-      <button data-key="beat-up">beat &#9654;</button>
-      <select id="fx-ch"></select>
+      <rx-select id="fx-select" aria-label="Beat FX"></rx-select>
+      <button data-key="beat-down"><i class="tri l"></i> beat</button>
+      <button data-key="beat-up">beat <i class="tri r"></i></button>
+      <rx-select id="fx-ch" aria-label="Beat FX channel"></rx-select>
+      <span class="fx-bands" role="group" aria-label="Beat FX frequency"><button data-band="0">LOW</button><button data-band="1">MID</button><button data-band="2">HI</button></span>
       <label class="knob">LEVEL/DEPTH<input id="fx-level" type="range" min="0" max="1" step="0.001" value="0.5"></label>
+      <label id="fx-pitch-k" class="knob" hidden><span>PITCH <span id="fx-pitch-v">0</span></span><input id="fx-pitch" type="range" min="0" max="1" step="0.001" value="0.5" title="Double-click: back to 0"></label>
       <button id="fx-on" data-key="fx" class="fx-on">FX ON/OFF (E)</button>
       <label>COLOR FX</label>
-      <select id="color-select"></select>
+      <rx-select id="color-select" aria-label="Color FX"></rx-select>
       <label class="knob">CH1 COLOR<input data-color="0" type="range" min="-1" max="1" step="0.001" value="0"></label>
       <label class="knob">CH2 COLOR<input data-color="1" type="range" min="-1" max="1" step="0.001" value="0"></label>
       <label class="knob">PARAMETER<input id="color-param" type="range" min="0" max="1" step="0.001" value="0.5"></label>
@@ -136,6 +145,57 @@
     </div>
 
     <div id="statusbar" class="statusbar"></div>
+
+    <!-- phones (portrait): one panel, in the screen's own style, that drives the focused deck (tap a deck on the
+         screen to pick it; tap a track twice to load it there). No EQ, faders or crossfader: the FILTER X-PAD brings a
+         deck in or takes it out, the COLOR FX X-PAD plays the Color FX. A tap or sweep springs back, a double-tap parks.
+         Between BEAT FX and FILTER, PADS / VOL swaps the hot cue pads for the two channel faders and a Beat FX volume -->
+    <section id="phone" class="phone">
+      <div class="ph-pad">
+        <div id="ph-color" class="ph-head ph-colors" role="group" aria-label="Color FX"></div>
+        <div id="ph-xpad" class="ph-xpad color"><b></b><i></i></div>
+      </div>
+      <div class="ph-row ph-fx">
+        <div class="ph-col">
+          <div class="ph-head"><span>BEAT FX</span><rx-select id="ph-beatfx" class="ph-select" aria-label="Beat FX"></rx-select></div>
+          <div class="ph-beat">
+            <button data-ph="beat-down" class="ph-btn" aria-label="Beat down"><i class="tri l"></i></button>
+            <div class="ph-val"><small>BEAT</small><b id="ph-beat">1</b></div>
+            <button data-ph="beat-up" class="ph-btn" aria-label="Beat up"><i class="tri r"></i></button>
+          </div>
+          <div class="ph-bands" role="group" aria-label="Beat FX frequency">
+            <button data-band="0" class="ph-btn">LOW</button><button data-band="1" class="ph-btn">MID</button><button data-band="2" class="ph-btn">HI</button>
+          </div>
+        </div>
+        <div class="ph-level"><small>LEVEL/DEPTH</small><div id="ph-level" class="ph-val"><b id="ph-level-v">50</b><i></i></div>
+          <small class="ph-pitch">PITCH</small><div id="ph-pitch" class="ph-val ph-pitch"><b id="ph-pitch-v">0</b><i></i></div></div>
+        <button id="ph-on" class="ph-on" aria-label="Beat FX on/off">ON/OFF</button>
+      </div>
+      <!-- the swappable section: the focused deck's HOT CUE pads (from rekordbox), or the volumes -->
+      <div class="ph-row ph-swap">
+        <div id="ph-tabs" class="ph-tabs" role="tablist" aria-label="Pads or volume">
+          <button data-tab="pads" role="tab">PADS</button><button data-tab="vol" role="tab">VOL</button>
+        </div>
+        <div id="ph-cues" class="ph-cues" role="tabpanel" aria-label="Hot cues"></div>
+        <div id="ph-vol" class="ph-vol" role="tabpanel" aria-label="Volume">
+          <div class="ph-fader" data-vol="0" role="slider" aria-label="DECK 1" aria-valuemin="0" aria-valuemax="100"><small>1</small><div class="ph-track"><i></i></div></div>
+          <div class="ph-fader" data-vol="1" role="slider" aria-label="DECK 2" aria-valuemin="0" aria-valuemax="100"><small>2</small><div class="ph-track"><i></i></div></div>
+          <div class="ph-fader fx" data-vol="fx" role="slider" aria-label="BEAT FX" aria-valuemin="0" aria-valuemax="100"><small>FX</small><div class="ph-track"><i></i></div></div>
+        </div>
+      </div>
+      <div class="ph-pad">
+        <div class="ph-head"><span>FILTER</span></div>
+        <div id="ph-filter" class="ph-xpad filter"><span class="lo">LPF</span><span class="hi">HPF</span><i></i></div>
+      </div>
+      <div class="ph-row ph-transport">
+        <button data-ph="cue" class="ph-btn ph-cue">CUE</button>
+        <div class="ph-nudge"><small>NUDGE</small><div>
+          <button data-ph="nudge-" class="ph-btn" aria-label="Nudge back"><i class="tri l"></i></button>
+          <button data-ph="nudge+" class="ph-btn" aria-label="Nudge forward"><i class="tri r"></i></button>
+        </div></div>
+        <button data-ph="play" class="ph-btn ph-play" aria-label="Play / pause"><i class="tri r"></i><i class="pause"></i></button>
+      </div>
+    </section>
   </div>
 
   <input id="folder-input" type="file" webkitdirectory multiple hidden>

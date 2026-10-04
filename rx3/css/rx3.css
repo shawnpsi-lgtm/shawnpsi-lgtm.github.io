@@ -13,7 +13,7 @@
 [hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; background: #111; color: #fff; overflow: hidden; }
 body { font: 13px var(--sans); -webkit-user-select: none; user-select: none; touch-action: manipulation; }
-button, select, input { font: inherit; color: inherit; }
+button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 
 #app {
@@ -29,6 +29,11 @@ button { cursor: pointer; }
 #screen {
   position: absolute; left: 0; top: 0; width: 1280px; height: 800px; transform-origin: 0 0;
   background: #000; overflow: hidden; font-family: var(--sans);
+}
+/* a thin frame round the screen, as the unit's bezel; drawn over it so the 1280x800 layout doesn't move */
+#screen::after {
+  content: ""; position: absolute; inset: 0; z-index: 20; pointer-events: none;
+  border: calc(2px / var(--s, 1)) solid #000;
 }
 #screen section, #screen .scr-head, #screen .mini { display: none; }
 #screen.view-source .v-source, #screen.view-browse .v-browse, #screen.view-playing .v-playing { display: block; }
@@ -99,6 +104,8 @@ button { cursor: pointer; }
 .v-browse .col-head.l { left: 108px; width: 626px; }
 .v-browse .col-head.r { left: 735px; width: 545px; background: #353535; }
 .list { position: absolute; top: 100px; height: 600px; margin: 0; padding: 0; list-style: none; overflow: hidden; }
+.list.l { touch-action: none; } /* swiped to scroll (screen.js) */
+.list.l li * { pointer-events: none; } /* touches land on the <li>, which stays put while the list scrolls */
 .list.l { left: 108px; width: 626px; }
 .list.r { left: 735px; width: 545px; border-left: 1px solid #555; }
 .list li {
@@ -109,7 +116,9 @@ button { cursor: pointer; }
 .list.r li:nth-child(odd) { background: #474747; }
 .list li.sel { background: var(--blue) !important; }
 .list li.loaded { color: var(--green); }
-.list li.loaded::before { content: "\25B6"; position: absolute; left: 18px; font-size: 15px; }
+.list li.loaded::before { /* the loaded-track arrow, drawn: the glyph can come out as an emoji on iOS */
+  content: ""; position: absolute; left: 20px; top: 18px; border: solid transparent; border-width: 8px 0 8px 12px; border-left-color: currentColor;
+}
 .list li.tagged::after { content: ""; position: absolute; right: 12px; top: 20px; width: 10px; height: 10px; background: #f0c000; border-radius: 50%; }
 .list li .ico { position: absolute; left: 10px; top: 13px; width: 26px; height: 26px; }
 .list li .meta { float: right; font: 16px var(--sans); color: #aaa; margin-left: 12px; }
@@ -127,6 +136,7 @@ button { cursor: pointer; }
 .mini { position: absolute; left: 0; top: 700px; width: 1280px; height: 100px; }
 .mini-deck { position: absolute; top: 10px; width: 620px; height: 82px; border-top: 2px solid #1b3b80; }
 .mini-deck[data-deck="0"] { left: 10px; }
+.mini-deck.active { border-top-color: var(--blue); }
 .mini-deck[data-deck="1"] { left: 650px; }
 .mini-deck .lbl {
   position: absolute; left: 1px; top: 2px; width: 95px; height: 28px; background: #1e1e1e; text-align: center; line-height: 29px;
@@ -206,7 +216,7 @@ canvas.zoom[data-deck="1"] { top: 280px; }
 .xpad-label { left: 965px; }
 .bank { position: absolute; left: 10px; top: 23px; display: flex; gap: 10px; }
 .bank button { width: 130px; height: 40px; background: #000; border: 0; font-size: 15px; color: #ccc; }
-.bank button.trash { width: 36px; background: none; color: #666; font-size: 20px; }
+.bank button.trash { width: 44px; background: none; color: #666; font-size: 13px; }
 .bank button.armed { outline: 2px solid var(--orange); }
 .xpad { position: absolute; left: 648px; top: 20px; width: 610px; height: 46px; display: flex; border: 1px solid #555; }
 .xpad button { flex: 1; border: 0; border-right: 1px solid #555; background: #0c0c0c; font-size: 20px; padding: 0; }
@@ -283,7 +293,7 @@ canvas.zoom[data-deck="1"] { top: 280px; }
   grid-area: panel; display: flex; flex-direction: column; gap: 2px; padding: 6px; background: #111; width: 132px;
   overflow-y: auto;
 }
-.panel button, .bar button, .bar select {
+.panel button, .bar button, .bar .rxs-btn {
   background: linear-gradient(#f4f4f4, #dcdcdc); color: #111; border: 1px solid #888; border-radius: 4px; height: 24px;
   font-size: 12px; padding: 0 6px;
 }
@@ -301,12 +311,17 @@ canvas.zoom[data-deck="1"] { top: 280px; }
 .mixer .strip[data-deck="1"] { justify-content: flex-end; }
 .mixer .center { justify-content: center; }
 .bar > label:not(.knob) { color: #888; font-weight: bold; font-size: 11px; margin-left: 8px; }
-.bar select { width: 118px; }
+.bar rx-select { width: 118px; }
+.bar .rxs-btn { padding: 0 6px 0 8px; }
+.bar rx-select.open .rxs-btn { background: linear-gradient(#cfcfcf, #e8e8e8); }
 .knob { display: flex; flex-direction: column; color: #aaa; font-size: 9px; letter-spacing: .3px; }
 .knob input { width: 104px; margin: 0; accent-color: #bbb; }
 .knob.wide input { width: 180px; }
 .knob.tall { align-items: center; }
 .fx-on.lit { background: linear-gradient(#ff9a7a, #e8441e); color: #fff; }
+.fx-bands { display: flex; }
+.fx-bands button { min-width: 38px; }
+.fx-bands button.lit { background: linear-gradient(#9fd0ff, #4a9fe8); }
 .strip, .center { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .strip .dname { color: #888; font-weight: bold; font-size: 11px; width: 44px; }
 .strip button { height: 22px; font-size: 11px; }
@@ -323,4 +338,231 @@ canvas.zoom[data-deck="1"] { top: 280px; }
   #screen-wrap { height: 62.5vw; }
   .panel { flex-direction: row; flex-wrap: wrap; width: auto; }
   .panel .gap { width: 100%; }
+}
+
+/* ---------- <rx-select>: the effect pickers (js/ui/dropdown.js), a list in the screen's own style ---------- */
+
+rx-select { display: inline-flex; vertical-align: middle; }
+.rxs-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; text-align: left; }
+.rxs-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rxs-btn .tri { flex: none; font-size: 10px; transition: transform .12s; }
+rx-select.open .rxs-btn .tri { transform: rotate(180deg); }
+.rxs-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.rxs-list {
+  position: fixed; z-index: 100; margin: 2px 0; padding: 0; list-style: none; overflow-y: auto; overscroll-behavior: contain;
+  background: #0c0c0c; border: 1px solid #555; box-shadow: 0 6px 18px rgba(0, 0, 0, .6);
+  font: 500 15px var(--cond); letter-spacing: .5px; color: #ddd;
+}
+.rxs-list li { height: 28px; line-height: 28px; padding: 0 28px 0 10px; border-bottom: 1px solid #1e1e1e; white-space: nowrap; cursor: pointer; position: relative; }
+.rxs-list li:last-child { border-bottom: 0; }
+.rxs-list li.hi { background: #333; color: #fff; }
+.rxs-list li.sel { background: var(--blue); color: #fff; } /* as the screen's lists */
+.rxs-list li.sel::after { content: ""; position: absolute; right: 10px; top: 50%; width: 4px; height: 8px; margin-top: -6px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.rxs-list.big { font-size: 20px; }
+.rxs-list.big li { height: 44px; line-height: 44px; padding-left: 14px; }
+
+/* arrows drawn with borders, not glyphs: iOS can turn the arrow characters into emoji */
+.tri { display: inline-block; width: 0; height: 0; border: 0 solid transparent; vertical-align: middle; }
+.tri.l { border-width: .4em .6em .4em 0; border-right-color: currentColor; }
+.tri.r { border-width: .4em 0 .4em .6em; border-left-color: currentColor; }
+.tri.u { border-width: 0 .4em .6em; border-bottom-color: currentColor; }
+.tri.d { border-width: .6em .4em 0; border-top-color: currentColor; }
+.pause { display: inline-block; width: .55em; height: .8em; border: solid currentColor; border-width: 0 .2em; margin-left: .35em; vertical-align: middle; }
+
+/* ---------- phone (portrait): the RX3 screen on top, a panel in the screen's own style below ---------- */
+
+.phone, #ph-nav { display: none; }
+
+@media (max-width: 600px) and (orientation: portrait) {
+  html, body { overflow: hidden; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+  #app {
+    grid-template: "nav" auto "screen" auto "phone" 1fr / 1fr; height: 100vh; height: 100dvh; overflow: hidden;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  #app, #app * { touch-action: manipulation; }
+  #app .ph-xpad, #app #ph-level, #app #ph-pitch, #app .ph-fader, #app .ph-cue-pad, #app .list.l { touch-action: none; }
+  #app .panel, #app .bar, #app .statusbar { display: none; }
+  #screen-wrap { height: auto; aspect-ratio: 16 / 10; min-height: 0; }
+  #search-input { -webkit-user-select: text; user-select: text; }
+  /* the focused deck, picked by tapping it on the screen: drawn thick enough to see at phone scale */
+  #screen .mini-deck.active, #screen .deck-info.active, #screen .deck-panel.active { box-shadow: inset 0 0 0 5px var(--blue); }
+
+  .phone { grid-area: phone; display: flex; flex-direction: column; gap: clamp(6px, 1.2dvh, 10px); min-height: 0; padding: 8px; }
+  .phone small, #ph-nav small { display: block; font-size: 11px; color: #aaa; letter-spacing: .5px; }
+  .ph-row { display: flex; gap: 6px; }
+  .ph-btn {
+    height: clamp(40px, 5.6dvh, 48px); padding: 0 12px; border: 1px solid #3a3a3a; border-radius: 0; background: #1c1c1c;
+    color: #ddd; font-size: 15px; letter-spacing: .5px;
+  }
+  .ph-btn:active { background: #6c6c6c; }
+
+  /* a section's head: grey label left, the effect picker (a black name box, as in the screen's FX panel) right */
+  .ph-head { display: flex; align-items: center; justify-content: space-between; height: 32px; padding-left: 10px; background: #2e2e2e; }
+  .ph-head span { font-size: 13px; color: #bbb; letter-spacing: .5px; }
+  .ph-select { align-self: stretch; min-width: 0; }
+  .ph-select .rxs-btn {
+    height: 100%; padding: 0 12px; gap: 12px; border: 0; border-radius: 0; background: #000; color: #fff;
+    font: 500 19px var(--cond); letter-spacing: .5px;
+  }
+  .ph-select .tri { color: #aaa; }
+  /* the COLOR FX pad's head: every Color FX by name (FILTER has its own pad), the picked one in blue */
+  .ph-colors { padding: 0; gap: 1px; }
+  .ph-colors button {
+    flex: 1; align-self: stretch; min-width: 0; padding: 0; border: 0; border-radius: 0; background: #000; color: #aaa;
+    font: 500 16px var(--cond); letter-spacing: .3px; white-space: nowrap;
+  }
+  .ph-colors button.lit { background: var(--blue); color: #fff; }
+  .ph-select.open .rxs-btn { background: var(--blue); }
+  .ph-select.open .tri { color: #fff; }
+
+  #ph-nav { grid-area: nav; display: flex; padding: 8px 8px 0; }
+  .ph-nav .ph-btn { flex: 0 0 auto; }
+  .ph-bpm { position: relative; flex: 1; border: 1px solid #ddd; }
+  .ph-bpm small { position: absolute; top: 3px; }
+  .ph-bpm #ph-deck { left: 5px; }
+  .ph-bpm .u { right: 5px; }
+  .ph-bpm b { position: absolute; right: 6px; bottom: 0; color: var(--orange); font: normal 28px var(--sans); letter-spacing: .5px; }
+
+  /* X-PADs: the screen's touch strip; a white marker at the finger, blue where a deck is parked */
+  .ph-pad { display: flex; flex-direction: column; }
+  .ph-xpad {
+    position: relative; height: clamp(44px, 6.5dvh, 56px); border: 1px solid #555;
+    background: linear-gradient(90deg, transparent calc(50% - 1px), #333 0 calc(50% + 1px), transparent 0), #0c0c0c;
+  }
+  .ph-xpad.filter {
+    background: linear-gradient(90deg, transparent calc(50% - 1px), #333 0 calc(50% + 1px), transparent 0),
+      linear-gradient(90deg, #102a50, #0c0c0c 45%, #0c0c0c 55%, #4a1a10);
+  }
+  .ph-xpad span { position: absolute; top: 50%; transform: translateY(-50%); font-size: 14px; color: #aaa; pointer-events: none; }
+  .ph-xpad .lo { left: 12px; }
+  .ph-xpad .hi { right: 12px; }
+  .ph-xpad i { display: none; position: absolute; top: 0; bottom: 0; width: 4px; margin-left: -2px; background: #fff; pointer-events: none; }
+  .ph-xpad.held i { display: block; }
+  .ph-xpad.color b {
+    position: absolute; bottom: 0; height: 4px; left: var(--c0, 50%); right: var(--c1, 50%); background: var(--blue);
+    pointer-events: none;
+  }
+  .ph-xpad.parked i { background: var(--blue); box-shadow: 0 0 0 1px #000; }
+
+  .ph-fx { align-items: stretch; }
+  .ph-col { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .ph-beat { display: flex; gap: 6px; }
+  .ph-beat .ph-btn { flex: 0 0 48px; padding: 0; }
+  .ph-bands { display: flex; gap: 6px; }
+  .ph-bands .ph-btn { flex: 1; padding: 0; height: 36px; font: 500 16px var(--cond); }
+  .ph-bands .ph-btn.lit { color: var(--blue); border-color: var(--blue); }
+  .ph-val { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; }
+  .ph-val b { font: 500 24px var(--cond); color: #fff; font-weight: 500; letter-spacing: .5px; }
+  .ph-level { flex: 0 0 92px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+  #ph-level { position: relative; border: 1px solid #3a3a3a; cursor: ns-resize; }
+  #ph-level b { font-size: 32px; }
+  #ph-level i { position: absolute; left: 0; bottom: 0; height: 4px; width: var(--lv, 50%); background: var(--blue); }
+  /* PITCH (DRUM only) stacks under LEVEL/DEPTH, both shrunk to fit the row */
+  .ph-level:not(.pitch) .ph-pitch { display: none; }
+  .ph-level.pitch #ph-level b, #ph-pitch b { font-size: 22px; }
+  #ph-pitch { position: relative; border: 1px solid #3a3a3a; cursor: ns-resize; }
+  #ph-pitch i { position: absolute; bottom: 0; height: 4px; width: 4px; margin-left: -2px; left: var(--pv, 50%); background: var(--blue); }
+  .ph-on {
+    flex: 0 0 84px; border: 1px solid #555; border-radius: 0; background: #000; color: #aaa; font: 500 20px var(--cond);
+    letter-spacing: .5px;
+  }
+  .ph-on.lit { background: #ddd; color: #000; border-color: #ddd; } /* as the screen's FX panel when on */
+
+  /* PADS / VOL: grows into the free space between BEAT FX and FILTER; the switch is a column at its left */
+  .ph-swap { flex: 1 1 auto; min-height: 88px; max-height: 180px; }
+  .ph-tabs { flex: 0 0 52px; display: flex; flex-direction: column; gap: 1px; background: #2e2e2e; }
+  .ph-tabs button {
+    flex: 1; padding: 0; border: 0; border-radius: 0; background: #000; color: #aaa; font: 500 16px var(--cond);
+    letter-spacing: .3px;
+  }
+  .ph-tabs button.lit { background: var(--blue); color: #fff; }
+  .ph-cues { flex: 1; min-width: 0; display: grid; grid-template: repeat(2, 1fr) / repeat(4, 1fr); gap: 6px; }
+  /* a pad with a hot cue is lit in its colour, as the unit's pads; held, it fills */
+  .ph-cue-pad {
+    position: relative; min-width: 0; padding: 0; border: 1px solid #3a3a3a; border-radius: 0; background: #0c0c0c;
+    color: #555; overflow: hidden;
+  }
+  .ph-cue-pad b { position: absolute; left: 7px; top: 3px; font: 500 20px var(--cond); }
+  .ph-cue-pad small {
+    position: absolute; left: 5px; right: 5px; bottom: 3px; font-size: 10px; color: inherit; text-align: left;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ph-cue-pad.set { border: 2px solid var(--cue); color: var(--cue); background: color-mix(in srgb, var(--cue) 18%, #0c0c0c); }
+  .ph-cue-pad.down { background: #555; }
+  .ph-cue-pad.set.down { background: var(--cue); color: #000; }
+  .ph-cue-pad:disabled { opacity: .4; }
+  /* the fader bank, as a DJM's: channels split by thin lines, each a big number over a 0-10 scale, a slot and a cap */
+  .ph-vol { flex: 1; min-width: 0; display: flex; background: #1c1c1c; border: 1px solid #333; }
+  .ph-fader {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; padding: 4px 0 5px;
+    cursor: ns-resize;
+  }
+  .ph-fader + .ph-fader { border-left: 1px solid #5c5c5c; }
+  #app .ph-fader small { flex: none; font: 700 19px/20px var(--sans); color: #eee; letter-spacing: 0; }
+  .ph-track {
+    --cap: 20px; --x: calc(50% + 10px); /* the cap's height, and where the slot runs */
+    position: relative; flex: 1; width: 100%; margin-top: 3px; container-type: size;
+  }
+  .ph-track::before { /* the slot */
+    content: ""; position: absolute; left: var(--x); width: 7px; margin-left: -3.5px;
+    top: calc(var(--cap) / 2 - 5px); bottom: calc(var(--cap) / 2 - 5px); background: #0b0b0b;
+    background-image: repeating-linear-gradient(#141414 0 1px, transparent 1px 3px); box-shadow: inset 0 0 0 1px #000;
+  }
+  /* the scale: a tick per step, its number left of it, a dot at each half step; k = 0..10 from the bottom */
+  .ph-track span, .ph-track b {
+    position: absolute; right: calc(100% - var(--x) + 8px); bottom: calc(var(--cap) / 2 + var(--k) / 10 * (100% - var(--cap)));
+    transform: translateY(50%); background: #d8d8d8; pointer-events: none;
+  }
+  .ph-track span { width: 14px; height: 1px; }
+  .ph-track b { width: 2px; height: 2px; border-radius: 50%; }
+  .ph-track em {
+    position: absolute; right: calc(100% + 4px); top: 50%; transform: translateY(-50%); font: 600 9px/1 var(--sans);
+    font-style: normal; color: #ddd;
+  }
+  /* the cap: dark, bevelled, a white line across */
+  .ph-track i {
+    position: absolute; z-index: 1; left: var(--x); width: 48px; height: var(--cap); margin-left: -24px;
+    bottom: calc(var(--v, 1) * (100% - var(--cap))); border-radius: 2px; pointer-events: none;
+    background: linear-gradient(#3a3a3a, #262626 30%, #1a1a1a 70%, #2c2c2c); border: 1px solid #0a0a0a;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, .8), inset 0 1px #555, inset 0 -1px #111;
+  }
+  .ph-track i::after {
+    content: ""; position: absolute; left: 3px; right: 3px; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 1px;
+    background: #f4f4f4; box-shadow: 0 0 2px rgba(255, 255, 255, .5);
+  }
+  /* a short strip: fewer marks, so they stay apart */
+  @container (max-height: 96px) { /* even numbers */
+    .ph-track b, .ph-track .odd em { display: none; }
+  }
+  @container (max-height: 60px) { /* 0, 5 and 10 */
+    .ph-track .odd:not(.major) { display: none; }
+    .ph-track span:not(.major) em { display: none; }
+    .ph-track .major em { display: block; }
+  }
+
+  .ph-transport { align-items: flex-end; }
+  .ph-pad:has(.filter) { margin-top: auto; } /* FILTER sits on NUDGE; both stay at the bottom, under the thumbs */
+  .ph-cue, .ph-play { flex: 0 0 96px; height: clamp(52px, 8dvh, 64px); font: 500 22px var(--cond); }
+  .ph-cue.lit { color: var(--orange); border-color: var(--orange); }
+  .ph-play.lit { color: var(--green); border-color: var(--green); }
+  .ph-nudge { flex: 1; text-align: center; }
+  .ph-nudge div { display: flex; gap: 6px; margin-top: 4px; }
+  .ph-nudge .ph-btn { flex: 1; }
+}
+
+/* short phones (or Safari with its bars showing): everything a little tighter, so PADS / VOL fits with the rest */
+@media (max-width: 600px) and (orientation: portrait) and (max-height: 760px) {
+  .phone { gap: 5px; padding: 6px 8px; }
+  #ph-nav { padding-top: 6px; }
+  .ph-head { height: 24px; }
+  .ph-btn { height: 36px; }
+  .ph-xpad { height: 34px; }
+  .ph-bands .ph-btn { height: 30px; }
+  .ph-cue, .ph-play { height: 44px; }
+  .ph-nudge div { margin-top: 2px; }
+  .ph-swap { min-height: 76px; }
+  .ph-cues { gap: 5px; }
+  .ph-cue-pad b { top: 1px; font-size: 18px; }
+  #app .ph-fader small { font-size: 15px; line-height: 15px; }
+  .ph-track { --cap: 16px; margin-top: 1px; }
 }

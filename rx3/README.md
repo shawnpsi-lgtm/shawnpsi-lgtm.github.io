@@ -3,7 +3,7 @@
 An XDJ-RX3 for the browser: the unit's touch screen (SOURCE, BROWSE and the playing view), its buttons, two
 decks, the mixer, and effects ported from the RX3's own firmware: Beat FX ECHO, REVERB, FLANGER, PHASER, FILTER and
 TRANS, and all six Sound Color FX (SPACE, DUB ECHO, SWEEP, NOISE, CRUSH, FILTER), together with the firmware's own
-Beat FX and Color FX managers that switch them. Everything runs on the device in Web Audio, so there is no server in
+Beat FX and Color FX managers that switch them. Two extra Beat FX, DRUM and NOISE, come from shawnsingh.me/beatfx. Everything runs on the device in Web Audio, so there is no server in
 the audio path and no added latency.
 
 Static files only: no build step, no dependencies.
@@ -31,20 +31,41 @@ the effects section, and the strip under that is the mixer.
 | W / O | CUE deck 1 / 2 (hold at the cue to preview) | A D / K ; | nudge deck 1 / 2 |
 | S B T L F | SOURCE, BROWSE, TAG LIST, PLAYLIST, SEARCH | M / I | MENU / INFO |
 | G | tag the track | E | Beat FX on/off |
-| [ ] | BEAT ◀ ▶ | X / H | mute / hide the controls |
+| [ ] | BEAT left/right | X / H | mute / hide the controls |
 
 The effects work as on the unit:
 
-- **BEAT FX**: pick the effect, BEAT ◀ ▶ (or an X-PAD pad) sets the beat (1/16 .. 16 or 64 beats of the selected
+- **BEAT FX**: pick the effect, BEAT left/right (or an X-PAD pad) sets the beat (1/16 .. 16 or 64 beats of the selected
   channel's BPM; REVERB: 1 .. 100 %), LEVEL/DEPTH the depth, FX ON/OFF switches it. ON crossfades into the effect;
   OFF lets ECHO and REVERB ring out and crossfades the others back to the dry signal; choosing another effect while
   on crossfades over to it. Each effect keeps its own beat. FLANGER, PHASER and FILTER sweep once per beat time
   (a BEAT press restarts the sweep), and their X-PAD strip adds a faster second LFO (left = fastest). REVERB's
   X-PAD closes a low-pass (left) or opens a high-pass (right). Touching the X-PAD with the effect off turns it on
   while held.
+- **LOW / MID / HI** (not on the RX3; the DJM-900NXS2's Beat FX frequency buttons): pick which bands (crossovers at
+  300 Hz and 3 kHz, Linkwitz-Riley) the Beat FX acts on; a band that is off goes around the effect dry. All on (the
+  default) is the RX3's Beat FX exactly. The bank stores them with each setup. `js/fx/bands.js`.
+- **DRUM** and **NOISE** (not on the unit; from shawnsingh.me/beatfx) are layered over the untouched track. DRUM rolls
+  a TR-909 snare at the beat: LEVEL/DEPTH is its volume, PITCH tunes it in semitones (-12 .. +12;
+  double-click / double-tap for 0), the X-PAD strip bends it further while held, and while the
+  selected channel's deck plays the hits land on its beat grid (stopped, it free-runs). NOISE is white noise through
+  a high-pass and the REVERB, with a tremolo at the beat time: LEVEL/DEPTH is the tremolo depth, the X-PAD sweeps the
+  high-pass. Both ring out after OFF. DRUM's sample is in `drum/`.
 - **COLOR FX**: one effect for both channels, a COLOR knob per channel (centre = off) and a PARAMETER knob. DUB ECHO
   and SPACE sit after the channel fader, so they keep ringing when it closes, and keep ringing after the effect is
   turned off; picking the same effect again carries on with the tail.
+
+On a phone (portrait) the bars are replaced by one panel that drives the deck tapped on the screen. Between BEAT FX
+and FILTER, **PADS / VOL** swaps between (VOL until PADS is picked; the choice is remembered):
+
+- **PADS**: the deck's eight HOT CUE pads (A-H), read from the track's rekordbox analysis (the `.EXT`'s PCO2, with
+  colours and comments, else the `.DAT`'s PCOB), lit in their rekordbox colour. Playing, a pad jumps there and plays
+  on; paused, it plays from the cue while held and goes back on release (PLAY while holding keeps it playing). An
+  empty pad stores the playhead (on the beat with QUANTIZE) until the page is closed. Loop cues jump to the loop's
+  start: loops aren't modelled.
+- **VOL**: both channel faders and a Beat FX VOLUME (not on the unit), drawn as a mixer's channel faders: how much of
+  the effect's change to the signal gets through, top = the firmware's output as is, bottom = dry. Drag anywhere in
+  the strip and the cap follows the finger; double-tap for the top.
 
 ## Layout
 
@@ -57,7 +78,7 @@ The effects work as on the unit:
 | `js/audio/deck.js`, `analyze.js` | Players (CUE, tempo, sync, nudge); waveform, BPM and beat detection |
 | `js/audio/worklet.js` | The audio-thread processors: deck playback, the Beat FX section, each channel's Color FX + fader |
 | `js/fx/` | The effects, the firmware's two effect managers (`dsp.js`) and the registries; see `js/fx/README.md` |
-| `js/lib/` | The library sources (r2music, local files), ID3 and rekordbox beat-grid parsing |
+| `js/lib/` | The library sources (r2music, local files), ID3, and rekordbox beat-grid and hot cue parsing |
 | `tests/` | `null-test.mjs`, `cores.mjs` (what it tests and how) and the firmware's reference renders (`ref/`) |
 
 ## The ports
@@ -74,6 +95,8 @@ ON/OFF, tails, switching effects, BEAT presses, BPM changes), and a channel's wh
 (SoundColorFxManager with all six: switching, the held tails of DUB ECHO and SPACE). They all match sample for
 sample; the only differences anywhere are a handful of denormals (around 1e-37, from NEON flushing them to zero),
 more than 700 dB down. How it was done, and how to port the next effect, is in `../re/README.md`.
+
+DRUM and NOISE are not firmware ports (the unit has no such effects), so `npm test` doesn't cover them.
 
 Known differences from the unit: Beat FX quantize (snapping to the beat grid) is not modelled (the effects run as
 with QUANTIZE off); the Color FX run after the EQ, where NOISE and SWEEP sit before it on the unit; switching Color
