@@ -151,8 +151,8 @@ export class Phone {
         this.renderSwap();
       };
     });
-    // the focused deck's pads: press and release (a hot cue pressed while paused plays until let go, a Pad FX lasts
-    // while held, a loop pad switches its loop); the deck is fixed at press
+    // the focused deck's pads: a hot cue jumps there and plays, a Pad FX lasts while held, a loop pad switches its
+    // loop; the deck is fixed at press
     const box = $('#ph-cues');
     for (let i = 0; i < PADS.length; i++) {
       const pad = document.createElement('button'), fn = PAD_FN[i];
@@ -171,7 +171,6 @@ export class Phone {
       });
       const up = () => {
         if (fn?.fx) deck?.padFxUp();
-        else if (!fn) deck?.hotCueUp();
         deck = null;
         pad.classList.remove('down');
       };

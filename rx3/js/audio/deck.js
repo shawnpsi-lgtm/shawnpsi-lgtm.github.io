@@ -17,7 +17,6 @@ export class Deck {
     this.playing = false;
     this.cue = 0;
     this.cueHeld = false;
-    this.hotHeld = null; // the hot cue being previewed from pause
     this.loop = null; // the beat loop on: { beats, start, end } (s)
     this.padFx = null; // the pad FX held: 'roll' or 'brake'
     this.tempo = 0; // -1..1 of the range
@@ -76,7 +75,7 @@ export class Deck {
     this.error = null;
     this.cue = 0;
     this.pos = 0;
-    this.hotHeld = this.loop = this.padFx = null;
+    this.loop = this.padFx = null;
     this.onChange();
     try {
       const [file] = await Promise.all([track.file(), track.prepare?.()]);
@@ -116,10 +115,6 @@ export class Deck {
 
   play(on = !this.playing) {
     if (!this.loaded) return;
-    if (this.hotHeld) { // PLAY while previewing a hot cue: keep playing when the pad is let go
-      this.hotHeld = null;
-      return this.onChange();
-    }
     this.engine.resume();
     this.pos = this.position();
     this.at = this.engine.ctx.currentTime;
@@ -157,8 +152,8 @@ export class Deck {
   }
 
   /**
-   * HOT CUE pad: playing, jump to the cue and play on; paused, play from it while the pad is held. An empty pad
-   * stores the playhead (on the beat with QUANTIZE). Loop cues jump to the loop's start (loops aren't modelled).
+   * HOT CUE pad: jump to the cue and play from it (paused or not). An empty pad stores the playhead (on the beat with
+   * QUANTIZE). Loop cues jump to the loop's start.
    */
   hotCueDown(i, quantize) {
     if (!this.loaded) return;
@@ -168,20 +163,9 @@ export class Deck {
       (this.track.cues ||= []).push({ pad: i, time: quantize ? this.snap(t) : t, loop: false, color: null, comment: '' });
     } else {
       this.seek(c.time);
-      if (!this.playing) {
-        this.play(true);
-        this.hotHeld = c;
-      }
+      if (!this.playing) this.play(true);
     }
     this.onChange();
-  }
-
-  hotCueUp() {
-    const c = this.hotHeld;
-    if (!c) return;
-    this.hotHeld = null;
-    this.play(false);
-    this.seek(c.time);
   }
 
   /** The beat length in seconds of the track's grid (0 without one). */
@@ -287,7 +271,7 @@ export class Deck {
 
   eject() {
     this.send({ type: 'unload' });
-    this.track = this.analysis = this.hotHeld = this.loop = this.padFx = null;
+    this.track = this.analysis = this.loop = this.padFx = null;
     this.playing = false;
     this.onChange();
   }

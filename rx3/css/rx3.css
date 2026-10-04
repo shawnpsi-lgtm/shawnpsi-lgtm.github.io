@@ -378,7 +378,7 @@ rx-select.open .rxs-btn .tri { transform: rotate(180deg); }
 @media (max-width: 600px) and (orientation: portrait) {
   html, body { overflow: hidden; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
   #app {
-    grid-template: "nav" auto "screen" auto "phone" 1fr / 1fr; height: 100vh; height: 100dvh; overflow: hidden;
+    grid-template: "nav" auto "screen" auto "phone" 1fr / minmax(0, 1fr); height: 100vh; height: 100dvh; overflow: hidden;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     container: app / size; /* so the short-phone rules below see the height inside the safe areas */
   }
@@ -421,11 +421,17 @@ rx-select.open .rxs-btn .tri { transform: rotate(180deg); }
   #ph-nav { grid-area: nav; display: flex; padding: 8px 8px 0; }
   .ph-nav .ph-btn { flex: 0 0 auto; padding: 0 9px; }
   @media (max-width: 375px) { .ph-nav .ph-btn { padding: 0 6px; font-size: 13px; } #ph-nav { gap: 4px; } }
-  .ph-bpm { position: relative; flex: 1; border: 1px solid #ddd; }
-  .ph-bpm small { position: absolute; top: 3px; }
-  .ph-bpm #ph-deck { left: 5px; }
-  .ph-bpm .u { right: 5px; }
-  .ph-bpm b { position: absolute; right: 6px; bottom: 0; color: var(--orange); font: normal 28px var(--sans); letter-spacing: .5px; }
+  @media (max-width: 340px) { .ph-nav .ph-btn { padding: 0 4px; font-size: 12px; } .ph-bpm b { font-size: 20px; } }
+  /* DECK n and BPM on a line, the number under them: sized to fit below the labels, so they never overlap */
+  .ph-bpm {
+    flex: 1; min-width: 0; display: grid; grid-template: auto 1fr / 1fr auto; padding: 3px 5px 2px;
+    border: 1px solid #ddd;
+  }
+  #ph-nav .ph-bpm small { line-height: 12px; white-space: nowrap; }
+  .ph-bpm b {
+    grid-column: 1 / -1; align-self: end; justify-self: end; color: var(--orange);
+    font: normal 24px/1 var(--sans); font-variant-numeric: tabular-nums; letter-spacing: .5px; white-space: nowrap;
+  }
 
   /* X-PADs: the screen's touch strip; a white marker at the finger, blue where a deck is parked */
   .ph-pad { display: flex; flex-direction: column; }

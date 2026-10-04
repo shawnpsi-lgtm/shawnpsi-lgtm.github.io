@@ -59,9 +59,8 @@ On a phone (portrait) the bars are replaced by one panel that drives the deck ta
 and FILTER, **PADS / VOL** swaps between (VOL until PADS is picked; the choice is remembered):
 
 - **PADS**: the deck's eight pads. A, B, E and F are HOT CUE pads, read from the track's rekordbox analysis (the
-  `.EXT`'s PCO2, with colours and comments, else the `.DAT`'s PCOB), lit in their rekordbox colour. Playing, a pad
-  jumps there and plays on; paused, it plays from the cue while held and goes back on release (PLAY while holding
-  keeps it playing). An empty pad stores the playhead (on the beat with QUANTIZE) until the page is closed. Loop cues
+  `.EXT`'s PCO2, with colours and comments, else the `.DAT`'s PCOB), lit in their rekordbox colour. A pad jumps
+  there and plays from it, whether the deck was playing or paused. An empty pad stores the playhead (on the beat with QUANTIZE) until the page is closed. Loop cues
   jump to the loop's start. C and D are a 4-bar and a 2-bar beat loop (from the nearest beat with QUANTIZE; press
   again to exit, lit orange while on). G and H are two of rekordbox's Pad FX, while held and only while playing:
   ROLL repeats a 1/4 beat (from the 1/4 beat it's in with QUANTIZE) and VINYL BRAKE slows the deck to a stop over
