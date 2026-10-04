@@ -108,12 +108,6 @@ export class Screen {
         else app.browser.select(i);
         this.render();
       });
-      $('#list-' + side).addEventListener('wheel', (e) => {
-        if (side !== 'l') return;
-        e.preventDefault();
-        app.browser.move(Math.sign(e.deltaY));
-        this.render();
-      }, { passive: false });
     }
     this.bindListSwipe();
     this.el.addEventListener('click', (e) => {
@@ -154,54 +148,89 @@ export class Screen {
     });
   }
 
-  /** Touch: swipe the track list to scroll it a row at a time, flick to coast; a drag never selects a row. */
+  /**
+   * Scrolling the track list moves its 12-row window, 1:1 with the finger or the wheel: swipe (flick to coast), or
+   * trackpad / mouse wheel. The highlighted row stays put, and a drag never selects a row. iPhones get raw touch
+   * events with touchmove cancelled, since Safari can take a pointer drag over for its own panning.
+   */
   bindListSwipe() {
     const el = $('#list-l'), b = this.app.browser;
-    let drag = null, coast = 0, swallow = false;
-    const step = (rows) => { // fractional rows in, whole rows scrolled; returns false at either end
-      drag.acc += rows;
-      const n = Math.trunc(drag.acc);
+    const rowPx = () => 50 * this.scale; // a row's height on screen
+    let drag = null, coast = 0, swallow = false, wheel = 0;
+    const scroll = (rows, acc) => { // fractional rows in; scrolls whole rows, keeps the rest; false at either end
+      acc.n += rows;
+      const n = Math.trunc(acc.n);
       if (!n) return true;
-      drag.acc -= n;
+      acc.n -= n;
       const moved = b.scroll(n);
       if (moved) this.render();
       return moved;
     };
-    el.addEventListener('pointerdown', (e) => {
+    const start = (y, t) => {
       cancelAnimationFrame(coast);
       swallow = false;
-      drag = { id: e.pointerId, y: e.clientY, t: e.timeStamp, acc: 0, v: 0, moved: false };
-    });
-    el.addEventListener('pointermove', (e) => {
-      if (!drag || e.pointerId !== drag.id) return;
-      const dy = drag.y - e.clientY;
-      if (!drag.moved) {
-        if (Math.abs(dy) < 8) return;
-        drag.moved = true;
-        el.setPointerCapture(e.pointerId); // only now: capturing at once would retarget the tap's click to the list
-      }
-      const rows = dy / (50 * this.scale), dt = Math.max(1, e.timeStamp - drag.t);
-      drag.v = 0.7 * (rows / dt) + 0.3 * drag.v; // rows per ms, smoothed
-      drag.y = e.clientY;
-      drag.t = e.timeStamp;
-      step(rows);
-    });
-    const up = () => {
+      drag = { y, t, n: 0, v: 0, moved: false };
+    };
+    const move = (y, t) => { // returns true once it's a drag
+      if (!drag) return false;
+      const dy = drag.y - y;
+      if (!drag.moved && Math.abs(dy) < 8) return false;
+      drag.moved = true;
+      const rows = dy / rowPx(), dt = Math.max(1, t - drag.t);
+      drag.v = 0.7 * Math.max(-0.04, Math.min(0.04, rows / dt)) + 0.3 * drag.v; // rows per ms, smoothed and capped
+      drag.y = y;
+      drag.t = t;
+      scroll(rows, drag);
+      return true;
+    };
+    const end = () => {
       if (!drag) return;
-      swallow = drag.moved;
-      if (drag.moved && Math.abs(drag.v) > 0.004) {
+      const d = drag;
+      drag = null;
+      swallow = d.moved;
+      if (!d.moved) return;
+      if (Math.abs(d.v) > 0.004) {
         let last = performance.now();
         const fly = (now) => {
           const dt = now - last;
           last = now;
-          drag.v *= Math.pow(0.995, dt);
-          if (Math.abs(drag.v) > 0.001 && step(drag.v * dt)) coast = requestAnimationFrame(fly);
+          d.v *= Math.pow(0.994, dt);
+          if (Math.abs(d.v) > 0.001 && scroll(d.v * dt, d)) coast = requestAnimationFrame(fly);
         };
         coast = requestAnimationFrame(fly);
-      } else if (drag.moved && Math.abs(drag.acc) >= 0.5) step(Math.sign(drag.acc) * 0.5); // settle on the nearest row
+      } else if (Math.abs(d.n) >= 0.5) scroll(Math.sign(d.n) * 0.5, d); // settle on the nearest row
     };
-    el.addEventListener('pointerup', up);
-    el.addEventListener('pointercancel', up);
+    // touch
+    el.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) start(e.touches[0].clientY, e.timeStamp);
+      else drag = null;
+    }, { passive: true });
+    el.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // the list isn't natively scrollable: never let Safari pan or zoom from here
+      if (e.touches.length === 1) move(e.touches[0].clientY, e.timeStamp);
+    }, { passive: false });
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+    // mouse / pen drag
+    el.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch') start(e.clientY, e.timeStamp);
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'touch' || !drag) return;
+      const was = drag.moved;
+      if (move(e.clientY, e.timeStamp) && !was) el.setPointerCapture(e.pointerId); // not before: it retargets the click
+    });
+    el.addEventListener('pointerup', (e) => { if (e.pointerType !== 'touch') end(); });
+    el.addEventListener('pointercancel', (e) => { if (e.pointerType !== 'touch') end(); });
+    // trackpad / mouse wheel: pixels (or lines, or pages) to rows
+    el.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      cancelAnimationFrame(coast);
+      const rows = e.deltaMode === 1 ? e.deltaY : e.deltaMode === 2 ? e.deltaY * 12 : e.deltaY / rowPx();
+      const acc = { n: wheel };
+      scroll(rows, acc);
+      wheel = acc.n;
+    }, { passive: false });
     el.addEventListener('click', (e) => { // runs before the row handler (capture)
       if (!swallow) return;
       swallow = false;
@@ -303,15 +332,26 @@ export class Screen {
     $$('#cats button').forEach((btn) => btn.classList.toggle('sel', btn.dataset.cat === b.category));
     $('#col-l').textContent = l?.head || '';
     const loaded = new Set(app.decks.map((d) => d.track?.id));
-    const row = (it, i, sel) => {
-      const cls = [i === sel ? 'sel' : '', it.track && loaded.has(it.track.id) ? 'loaded' : '',
-        it.track && memory.tags.has(it.track.id) ? 'tagged' : '', it.act ? 'action' : ''].join(' ');
-      const meta = it.meta !== undefined && it.meta !== '' ? `<span class="meta">${esc(it.meta)}</span>` : '';
-      return `<li data-i="${i}" class="${cls}">${meta}${esc(it.label)}</li>`;
-    };
-    const items = l ? l.items.slice(l.top, l.top + ROWS) : [];
-    this.set($('#list-l'), items.map((it, k) => row(it, l.top + k, l.cursor)).join('') +
-      '<li></li>'.repeat(ROWS - items.length));
+    const cls = (it, i, sel) => [i === sel ? 'sel' : '', it.track && loaded.has(it.track.id) ? 'loaded' : '',
+      it.track && memory.tags.has(it.track.id) ? 'tagged' : '', it.act ? 'action' : ''].join(' ');
+    const inner = (it) => (it.meta !== undefined && it.meta !== '' ? `<span class="meta">${esc(it.meta)}</span>` : '') +
+      esc(it.label);
+    const row = (it, i, sel) => `<li data-i="${i}" class="${cls(it, i, sel)}">${inner(it)}</li>`;
+    // the left list keeps its ROWS <li>s and rewrites what's in them: replacing the row under a finger mid-swipe
+    // would send the rest of that touch to a detached node (iOS), and the swipe would stop
+    const ul = $('#list-l');
+    if (ul.children.length !== ROWS) ul.innerHTML = '<li></li>'.repeat(ROWS);
+    for (let k = 0; k < ROWS; k++) {
+      const li = ul.children[k], i = l ? l.top + k : -1, it = l?.items[i];
+      if (it) li.dataset.i = i;
+      else delete li.dataset.i;
+      li.className = it ? cls(it, i, l.cursor) : '';
+      const html = it ? inner(it) : '';
+      if (this.cache.get(li) !== html) {
+        this.cache.set(li, html);
+        li.innerHTML = html;
+      }
+    }
     // right column: the next level of the highlighted folder, or the highlighted track's details
     const it = b.selected;
     let right = '', head = '';
