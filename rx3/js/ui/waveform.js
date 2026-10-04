@@ -1,5 +1,5 @@
 // Canvas drawing for the RX3's waveforms: the scrolling zoom view, and the whole-track overview with the
-// playhead and cue marker.
+// playhead and cue marker. Both show the deck's beat loop when one is on.
 import { WAVE_RATE } from '../audio/analyze.js';
 
 /** RX3 blue: deep where the energy is low-frequency, pale where it is bright. */
@@ -16,6 +16,20 @@ function beats(deck, from, to, fn) {
   for (let t = a.firstBeat + k * period; t < to; t += period, k++) fn(t, ((k % 4) + 4) % 4 === 0);
 }
 
+const LOOP = '#ffa21a';
+
+/** The beat loop, as on the unit: an orange band from IN to OUT, a line at each end; x(t) maps time to pixels. */
+function drawLoop(g, deck, x, top, bottom) {
+  const l = deck.loop;
+  if (!l) return;
+  const x0 = Math.round(x(l.start)), x1 = Math.round(x(l.end));
+  g.fillStyle = 'rgba(255,162,26,0.22)';
+  g.fillRect(x0, top, x1 - x0, bottom - top);
+  g.fillStyle = LOOP;
+  g.fillRect(x0 - 1, top, 2, bottom - top);
+  g.fillRect(x1 - 1, top, 2, bottom - top);
+}
+
 /** The zoom view: `pxPerSec` across, the playhead `headX` pixels from the left. */
 export function drawZoom(cv, deck, pxPerSec, headX, showGrid) {
   const g = cv.getContext('2d'), w = cv.width, h = cv.height;
@@ -25,6 +39,7 @@ export function drawZoom(cv, deck, pxPerSec, headX, showGrid) {
   if (!a) return;
   const now = deck.position(), t0 = now - headX / pxPerSec, t1 = t0 + w / pxPerSec;
   const tick = 14, mid = h / 2, amp = (h - 2 * tick - 8) / 2;
+  drawLoop(g, deck, (t) => (t - t0) * pxPerSec, 0, h);
   const peaks = a.peaks, cols = peaks.length / 2, colPerPx = WAVE_RATE / pxPerSec;
   for (let x = 0; x < w; x++) {
     const c0 = Math.floor((t0 + x / pxPerSec) * WAVE_RATE);
@@ -54,6 +69,17 @@ export function drawZoom(cv, deck, pxPerSec, headX, showGrid) {
       g.fillRect(x, tick, 1, h - 2 * tick);
     }
   });
+  if (deck.loop) { // IN / OUT over the loop's ends
+    g.font = '600 13px sans-serif';
+    g.fillStyle = LOOP;
+    g.textBaseline = 'top';
+    for (const [t, label, dx] of [[deck.loop.start, 'IN', 4], [deck.loop.end, 'OUT', -4]]) {
+      const x = (t - t0) * pxPerSec;
+      if (x < -40 || x > w + 40) continue;
+      g.textAlign = dx > 0 ? 'left' : 'right';
+      g.fillText(label, x + dx, tick + 2);
+    }
+  }
   if (deck.cue >= t0 && deck.cue <= t1) { // memory cue: orange marker at the bottom
     const x = Math.round((deck.cue - t0) * pxPerSec);
     g.fillStyle = '#ff5a1a';
@@ -100,6 +126,7 @@ export function drawOverview(cv, deck, opts = {}) {
   g.drawImage(cv._off, 0, 0);
   g.fillStyle = 'rgba(0,0,0,0.55)';
   g.fillRect(0, 0, px, waveH);
+  drawLoop(g, deck, (t) => (t / a.duration) * w, 0, waveH);
   // progress bar, bar ticks (every 16 bars, as on the unit), playhead, cue
   g.fillStyle = '#555';
   g.fillRect(0, waveH + 2, w, 4);

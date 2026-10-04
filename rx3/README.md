@@ -62,7 +62,7 @@ and FILTER, **PADS / VOL** swaps between (VOL until PADS is picked; the choice i
   `.EXT`'s PCO2, with colours and comments, else the `.DAT`'s PCOB), lit in their rekordbox colour. A pad jumps
   there and plays from it, whether the deck was playing or paused. An empty pad stores the playhead (on the beat with QUANTIZE) until the page is closed. Loop cues
   jump to the loop's start. C and D are a 4-bar and a 2-bar beat loop (from the nearest beat with QUANTIZE; press
-  again to exit, lit orange while on). Beside the pads, LOOP **1/2X** and **2X** halve or double the loop on from
+  again to exit, lit orange while on; the waveforms show it as an orange band from IN to OUT). Beside the pads, LOOP **1/2X** and **2X** halve or double the loop on from
   its start (1/32 to 512 beats); the pad shows the new length and still exits it. G and H are two of rekordbox's Pad FX, while held and only while playing:
   ROLL repeats a 1/4 beat (from the 1/4 beat it's in with QUANTIZE) and VINYL BRAKE slows the deck to a stop over
   2 beats. Both slip: on release the track carries on where it would have been.
