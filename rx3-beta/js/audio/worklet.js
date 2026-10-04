@@ -203,6 +203,7 @@ const colorSection = (ch) => colors[ch] || (colors[ch] = new ColorSection());
  *   'pre'    a channel strip before its EQ: position 0 (NOISE, SWEEP; ROLL, HELIX, ...)
  *   'post'   the strip after its EQ: position 1, the channel fader, position 2 (DUB ECHO, SPACE; REVERB, ECHO, ...)
  *   'master' the master bus: the Beat FX when MASTER is selected; its port takes the Beat FX messages
+ *   'filter' a channel's own FILTER after the strip (the phone's FILTER X-PAD), apart from its Color FX
  * At each position the Color FX runs first, then the Beat FX, as in MixerChannel::updateFilter.
  */
 class FxProcessor extends AudioWorkletProcessor {
@@ -210,6 +211,13 @@ class FxProcessor extends AudioWorkletProcessor {
     super();
     const { kind, channel } = options.processorOptions;
     this.kind = kind;
+    if (kind === 'filter') { // the phone's FILTER X-PAD: its own FILTER, after the channel's Color FX
+      this.filter = new (colorFx.find((m) => m.meta.name === 'FILTER').Core)(sampleRate);
+      this.sL = new Float32Array(64);
+      this.sR = new Float32Array(64);
+      this.port.onmessage = (e) => this.filter.setColor((e.data.value + 1) / 2);
+      return;
+    }
     this.beat = beatSection();
     if (kind === 'master') {
       this.route = 'MASTER';
@@ -223,7 +231,12 @@ class FxProcessor extends AudioWorkletProcessor {
 
   block(L, R, k, at) {
     const { beat, color, route } = this;
-    if (this.kind === 'master') {
+    if (this.kind === 'filter') {
+      const { sL, sR } = this;
+      sL.set(L);
+      sR.set(R);
+      this.filter.execute(sL, sR, L, R, L.length);
+    } else if (this.kind === 'master') {
       beat.operate(route, null, L, R, at);
     } else if (this.kind === 'pre') {
       const pos = color.position[k] = color.m.cfx.position;

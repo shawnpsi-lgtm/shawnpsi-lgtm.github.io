@@ -1,42 +1,55 @@
-// The phone panel (portrait), after shawnsingh.me/beatfx: one set of controls that drives the focused deck (picked
-// by tapping it on the screen). No EQ, faders or crossfader: the X-PAD is the focused channel's COLOR knob, so FILTER
-// brings a deck in or takes it out; a tap or sweep springs back to centre on release, a double-tap parks it there.
-// Beat FX goes to the deck you switch it on from.
+// The phone panel (portrait): one set of controls, in the screen's own style, that drives the focused deck (picked
+// by tapping it on the screen). No EQ, faders or crossfader: the FILTER X-PAD (the channel's own FILTER) brings a
+// deck in or takes it out, and the COLOR FX X-PAD is the channel's COLOR knob. On both, a tap or sweep springs back
+// to centre on release and a double-tap parks it there. Beat FX goes to the deck you switch it on from.
 import { BEAT_FX, COLOR_FX } from '../audio/engine.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
-const SEGS = 24;
+const DOUBLE_TAP = 350; // ms
 
 export class Phone {
   constructor(app) {
     this.app = app;
-    this.parked = [null, null]; // per deck: the X-PAD position (0..1) it's held at, or null
-    this.live = null; // { deck, x } while a finger is on the X-PAD
+    this.pads = [];
     this.buildButtons();
     this.buildFx();
-    this.buildXpad();
+    const e = app.engine;
+    const color = $('#ph-color');
+    color.innerHTML = COLOR_FX.map((m) => `<option>${m.name}</option>`).join('');
+    // one Color FX type for both channels, as on the unit; picking it here picks it for the mixer too
+    const pick = () => {
+      if (e.color.name === color.value) return;
+      e.selectColorFx(color.value);
+      $('#color-select').value = color.value;
+    };
+    color.onchange = pick;
+    this.buildPad($('#ph-xpad'), pick, (ch, x) => {
+      e.setColor(ch, x);
+      $(`[data-color="${ch}"]`).value = x;
+    });
+    this.buildPad($('#ph-filter'), () => {}, (ch, x) => e.setFilter(ch, x));
     this.noDoubleTapZoom();
   }
 
+  get deck() {
+    return this.app.focus;
+  }
+
   /**
-   * iOS Safari ignores user-scalable=no, so a quick second tap (resetting the knob, parking the X-PAD, tapping a
-   * list row twice) zooms the page. Swallow the second touchend and click the target ourselves instead.
+   * iOS Safari ignores user-scalable=no, so a quick second tap (resetting LEVEL, parking an X-PAD, tapping a list
+   * row twice) zooms the page. Swallow the second touchend and click the target ourselves instead.
    */
   noDoubleTapZoom() {
     const phone = matchMedia('(max-width: 600px) and (orientation: portrait)');
     let last = 0;
     document.addEventListener('touchend', (ev) => {
-      const quick = ev.timeStamp - last < 350;
+      const quick = ev.timeStamp - last < DOUBLE_TAP;
       last = ev.timeStamp;
       if (!phone.matches || !quick || ev.touches.length || ev.target.closest('input, select, textarea')) return;
       ev.preventDefault();
       ev.target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     }, { passive: false });
-  }
-
-  get deck() {
-    return this.app.focus;
   }
 
   buildButtons() {
@@ -75,108 +88,94 @@ export class Phone {
       }
       app.changed();
     };
-    // LEVEL/DEPTH knob: drag up to turn it up, double-tap for the middle (counted here: no dblclick on touch)
-    const knob = $('#ph-level');
+    // LEVEL/DEPTH: drag up to turn it up, double-tap for the middle (counted here: no dblclick on touch)
+    const box = $('#ph-level');
+    const set = (v) => {
+      e.setLevel(Math.max(0, Math.min(1, v)));
+      this.renderFx();
+      app.screen.renderFxPanel();
+    };
     let drag = null, lastTap = -1e9;
-    knob.addEventListener('pointerdown', (ev) => {
-      knob.setPointerCapture(ev.pointerId);
-      if (ev.timeStamp - lastTap < 350) {
-        e.setLevel(0.5);
-        this.renderFx();
-        app.screen.renderFxPanel();
-      }
+    box.addEventListener('pointerdown', (ev) => {
+      box.setPointerCapture(ev.pointerId);
+      if (ev.timeStamp - lastTap < DOUBLE_TAP) set(0.5);
       lastTap = ev.timeStamp;
       drag = { y: ev.clientY, v: e.fx.level };
     });
-    knob.addEventListener('pointermove', (ev) => {
-      if (!drag) return;
-      e.setLevel(Math.max(0, Math.min(1, drag.v + (drag.y - ev.clientY) / 180)));
-      this.renderFx();
-      app.screen.renderFxPanel();
+    box.addEventListener('pointermove', (ev) => {
+      if (drag) set(drag.v + (drag.y - ev.clientY) / 180);
     });
-    knob.addEventListener('pointerup', () => { drag = null; });
-    knob.addEventListener('pointercancel', () => { drag = null; });
+    box.addEventListener('pointerup', () => { drag = null; });
+    box.addEventListener('pointercancel', () => { drag = null; });
   }
 
-  buildXpad() {
-    const e = this.app.engine, pad = $('#ph-xpad'), sel = $('#ph-color');
-    sel.innerHTML = COLOR_FX.map((m) => `<option value="${m.name}">X-PAD &middot; ${m.name}</option>`).join('');
-    sel.value = COLOR_FX.some((m) => m.name === 'FILTER') ? 'FILTER' : COLOR_FX[0]?.name;
-    // one Color FX type for both channels, as on the unit; picking it here picks it for the mixer too
-    const pick = () => {
-      if (e.color.name === sel.value) return;
-      e.selectColorFx(sel.value);
-      $('#color-select').value = sel.value;
-    };
-    sel.onchange = pick;
-    pad.innerHTML = '<i></i>'.repeat(SEGS);
-    const set = (ch, x) => { // x: 0..1 across the strip, 0.5 = centre = off
-      e.setColor(ch, (x - 0.5) * 2);
-      $(`[data-color="${ch}"]`).value = (x - 0.5) * 2;
-    };
+  /** A touch strip for the focused deck: apply(ch, -1..1); a tap or sweep springs back, a double-tap parks. */
+  buildPad(el, before, apply) {
+    const pad = { el, parked: [null, null], live: null };
+    this.pads.push(pad);
     const at = (ev) => {
-      const r = pad.getBoundingClientRect();
+      const r = el.getBoundingClientRect();
       return Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
     };
     let deck = null, x = 0.5, lastTap = -1e9, latch = false;
-    pad.addEventListener('pointerdown', (ev) => {
+    const go = (ev) => {
+      x = at(ev);
+      apply(deck, (x - 0.5) * 2);
+      pad.live = { deck, x };
+      this.renderPad(pad);
+    };
+    el.addEventListener('pointerdown', (ev) => {
       if (deck != null) return; // one finger at a time
-      e.resume();
-      pad.setPointerCapture(ev.pointerId);
-      pick();
+      this.app.engine.resume();
+      el.setPointerCapture(ev.pointerId);
+      before();
       deck = this.deck;
-      latch = ev.timeStamp - lastTap < 350; // double-tap parks the knob where it lands
+      latch = ev.timeStamp - lastTap < DOUBLE_TAP;
       lastTap = ev.timeStamp;
-      x = at(ev);
-      set(deck, x);
-      this.live = { deck, x };
-      this.renderXpad();
+      go(ev);
     });
-    pad.addEventListener('pointermove', (ev) => {
-      if (deck == null) return;
-      x = at(ev);
-      set(deck, x);
-      this.live = { deck, x };
-      this.renderXpad();
+    el.addEventListener('pointermove', (ev) => {
+      if (deck != null) go(ev);
     });
     const up = () => {
       if (deck == null) return;
-      this.parked[deck] = latch ? x : null;
-      if (!latch) set(deck, 0.5); // springs back to centre
+      pad.parked[deck] = latch ? x : null;
+      if (!latch) apply(deck, 0); // springs back to centre
       deck = null;
-      this.live = null;
-      this.renderXpad();
+      pad.live = null;
+      this.renderPad(pad);
     };
-    pad.addEventListener('pointerup', up);
-    pad.addEventListener('pointercancel', up);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
   }
 
   // ---- state -> DOM
 
   render() {
-    const app = this.app, d = app.decks[this.deck];
+    const d = this.app.decks[this.deck];
     $('#ph-deck').textContent = 'DECK ' + (this.deck + 1);
     $('#ph-bpm').textContent = d.bpm ? d.bpm.toFixed(1) : '---.-';
     $('[data-ph="play"]').classList.toggle('lit', d.playing);
     $('[data-ph="cue"]').classList.toggle('lit', d.loaded && !d.playing);
     this.renderFx();
-    this.renderXpad();
+    this.pads.forEach((p) => this.renderPad(p));
   }
 
   renderFx() {
     const e = this.app.engine, m = e.beatMeta();
     $('#ph-beatfx').value = e.fx.name;
+    if (e.color.name) $('#ph-color').value = e.color.name;
     $('#ph-beat').textContent = m?.beats.find((b) => b.value === e.fx.beat)?.label ?? e.fx.beat ?? '';
-    $('#ph-level').style.setProperty('--turn', (e.fx.level - 0.5) * 270 + 'deg');
+    $('#ph-level-v').textContent = Math.round(e.fx.level * 100);
+    $('#ph-level').style.setProperty('--lv', e.fx.level * 100 + '%');
     $('#ph-on').classList.toggle('lit', e.fx.on && e.fx.channel === 'CH' + (this.deck + 1));
   }
 
-  /** Lights the strip centre-out to the finger, or to where the focused deck is parked. */
-  renderXpad() {
-    const x = this.live?.deck === this.deck ? this.live.x : this.parked[this.deck];
-    const segs = $('#ph-xpad').children, c = (SEGS - 1) / 2, p = x == null ? null : x * (SEGS - 1);
-    for (let i = 0; i < SEGS; i++) {
-      segs[i].className = p != null && i + 0.5 >= Math.min(c, p) && i - 0.5 <= Math.max(c, p) ? 'lit' : '';
-    }
+  /** The marker at the finger, or where the focused deck is parked (drawn blue); none at rest. */
+  renderPad(pad) {
+    const live = pad.live?.deck === this.deck ? pad.live.x : null, x = live ?? pad.parked[this.deck];
+    pad.el.classList.toggle('held', x != null);
+    pad.el.classList.toggle('parked', live == null && x != null);
+    if (x != null) pad.el.querySelector('i').style.left = x * 100 + '%';
   }
 }

@@ -438,7 +438,7 @@ export class Screen {
         `<div class="chl">MASTER BPM</div><div class="ch">${md?.bpm ? md.bpm.toFixed(1) : '---.-'}</div>` +
         `<div class="vals"><div style="top:14px">${app.decks[0].tempo ? (app.decks[0].tempo * app.decks[0].range).toFixed(2) : '0.00'}<small>% D1</small></div>` +
         `<div style="top:54px">${app.decks[1].tempo ? (app.decks[1].tempo * app.decks[1].range).toFixed(2) : '0.00'}<small>% D2</small></div>` +
-        `<div class="q">X-FADER ${e.xfader < -0.05 ? '◀' : e.xfader > 0.05 ? '▶' : '●'}</div></div>`);
+        `<div class="q">X-FADER ${e.xfader < -0.05 ? '<i class="tri l"></i>' : e.xfader > 0.05 ? '<i class="tri r"></i>' : '●'}</div></div>`);
       return;
     }
     const ch = e.fx.channel === 'MASTER' ? 'MASTER' : e.fx.channel.slice(2);
@@ -463,8 +463,8 @@ export class Screen {
     if (m.xpad?.kind === 'strip') {
       const x = ((e.fx.xpad - m.xpad.min) / (m.xpad.max - m.xpad.min)) * 100;
       el.className = 'xpad touch';
-      el.innerHTML = `<span class="lo">◀ ${m.xpad.left}</span><span class="mid">${e.fx.xpad === m.xpad.centre ? '' : e.fx.xpad}</span>` +
-        `<span class="hi">${m.xpad.right} ▶</span><i style="left:${x}%"></i>`;
+      el.innerHTML = `<span class="lo"><i class="tri l"></i> ${m.xpad.left}</span><span class="mid">${e.fx.xpad === m.xpad.centre ? '' : e.fx.xpad}</span>` +
+        `<span class="hi">${m.xpad.right} <i class="tri r"></i></span><i style="left:${x}%"></i>`;
     } else {
       el.className = 'xpad';
       this.set(el, m.beats.slice(0, 8).map((b, i) =>
@@ -476,7 +476,7 @@ export class Screen {
     const slots = this.app.bankSlots();
     this.set($('#bank'), slots.map((s, i) =>
       `<button data-slot="${i}" class="${this.app.bankArmed ? 'armed' : ''}">${s ? esc(s.name) + ' ' + s.label : ''}</button>`).join('') +
-      '<button class="trash" data-slot="trash" title="Hold a slot to store; trash clears">&#128465;</button>');
+      '<button class="trash" data-slot="trash" title="Hold a slot to store; CLR clears">CLR</button>');
   }
 
   // ---- every frame

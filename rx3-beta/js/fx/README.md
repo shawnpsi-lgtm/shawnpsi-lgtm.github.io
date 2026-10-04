@@ -23,7 +23,7 @@ A Beat FX module:
 export const meta = {
   name: 'ECHO',                 // menu and BEAT FX panel (and how the manager decides whether OFF rings out)
   unit: 'beat',                 // 'beat': the panel shows BPM, msec and the beat; '%': it shows the percent
-  // the values BEAT ◀ ▶ steps through: beatButtons(first, last) gives the firmware's beat buttons (value = the
+  // the values BEAT left/right steps through: beatButtons(first, last) gives the firmware's beat buttons (value = the
   // beat factor, 1/16 .. 64); a '%' effect lists percents
   beats: beatButtons(0, 9),
   defaultBeat: 5,               // index into beats: the effect's own default button
@@ -66,5 +66,5 @@ block, as the original does), and the beat-time maths.
 3. Add its reference scenarios to `re/fx_refs.py`, render them, and add the core to `../../tests/cores.mjs`.
    `npm test` must print PASS.
 
-That's all: it appears in the menus, BEAT ◀ ▶ steps through its `beats`, the X-PAD shows its pads or strip, and
+That's all: it appears in the menus, BEAT left/right steps through its `beats`, the X-PAD shows its pads or strip, and
 LEVEL/DEPTH, COLOR, PARAMETER, the channel select and ON/OFF drive it through the manager.

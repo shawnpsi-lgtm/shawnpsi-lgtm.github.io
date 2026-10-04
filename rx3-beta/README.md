@@ -31,11 +31,11 @@ the effects section, and the strip under that is the mixer.
 | W / O | CUE deck 1 / 2 (hold at the cue to preview) | A D / K ; | nudge deck 1 / 2 |
 | S B T L F | SOURCE, BROWSE, TAG LIST, PLAYLIST, SEARCH | M / I | MENU / INFO |
 | G | tag the track | E | Beat FX on/off |
-| [ ] | BEAT ◀ ▶ | X / H | mute / hide the controls |
+| [ ] | BEAT left/right | X / H | mute / hide the controls |
 
 The effects work as on the unit:
 
-- **BEAT FX**: pick the effect, BEAT ◀ ▶ (or an X-PAD pad) sets the beat (1/16 .. 16 or 64 beats of the selected
+- **BEAT FX**: pick the effect, BEAT left/right (or an X-PAD pad) sets the beat (1/16 .. 16 or 64 beats of the selected
   channel's BPM; REVERB: 1 .. 100 %), LEVEL/DEPTH the depth, FX ON/OFF switches it. ON crossfades into the effect;
   OFF lets ECHO and REVERB ring out and crossfades the others back to the dry signal; choosing another effect while
   on crossfades over to it. Each effect keeps its own beat. FLANGER, PHASER and FILTER sweep once per beat time

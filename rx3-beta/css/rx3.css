@@ -111,7 +111,9 @@ button { cursor: pointer; }
 .list.r li:nth-child(odd) { background: #474747; }
 .list li.sel { background: var(--blue) !important; }
 .list li.loaded { color: var(--green); }
-.list li.loaded::before { content: "\25B6"; position: absolute; left: 18px; font-size: 15px; }
+.list li.loaded::before { /* the loaded-track arrow, drawn: the glyph can come out as an emoji on iOS */
+  content: ""; position: absolute; left: 20px; top: 18px; border: solid transparent; border-width: 8px 0 8px 12px; border-left-color: currentColor;
+}
 .list li.tagged::after { content: ""; position: absolute; right: 12px; top: 20px; width: 10px; height: 10px; background: #f0c000; border-radius: 50%; }
 .list li .ico { position: absolute; left: 10px; top: 13px; width: 26px; height: 26px; }
 .list li .meta { float: right; font: 16px var(--sans); color: #aaa; margin-left: 12px; }
@@ -209,7 +211,7 @@ canvas.zoom[data-deck="1"] { top: 280px; }
 .xpad-label { left: 965px; }
 .bank { position: absolute; left: 10px; top: 23px; display: flex; gap: 10px; }
 .bank button { width: 130px; height: 40px; background: #000; border: 0; font-size: 15px; color: #ccc; }
-.bank button.trash { width: 36px; background: none; color: #666; font-size: 20px; }
+.bank button.trash { width: 44px; background: none; color: #666; font-size: 13px; }
 .bank button.armed { outline: 2px solid var(--orange); }
 .xpad { position: absolute; left: 648px; top: 20px; width: 610px; height: 46px; display: flex; border: 1px solid #555; }
 .xpad button { flex: 1; border: 0; border-right: 1px solid #555; background: #0c0c0c; font-size: 20px; padding: 0; }
@@ -328,102 +330,97 @@ canvas.zoom[data-deck="1"] { top: 280px; }
   .panel .gap { width: 100%; }
 }
 
-/* ---------- phone (portrait): the RX3 screen on top, a beatfx-style panel for the focused deck below ---------- */
+/* arrows drawn with borders, not glyphs: iOS can turn the arrow characters into emoji */
+.tri { display: inline-block; width: 0; height: 0; border: 0 solid transparent; vertical-align: middle; }
+.tri.l { border-width: .4em .6em .4em 0; border-right-color: currentColor; }
+.tri.r { border-width: .4em 0 .4em .6em; border-left-color: currentColor; }
+.tri.u { border-width: 0 .4em .6em; border-bottom-color: currentColor; }
+.tri.d { border-width: .6em .4em 0; border-top-color: currentColor; }
+.pause { display: inline-block; width: .55em; height: .8em; border: solid currentColor; border-width: 0 .2em; margin-left: .35em; vertical-align: middle; }
 
-@font-face {
-  font-family: "DSEG7"; src: url("../fonts/DSEG7Classic-BoldItalic.woff2") format("woff2"); font-weight: 700; font-display: swap;
-}
+/* ---------- phone (portrait): the RX3 screen on top, a panel in the screen's own style below ---------- */
+
 .phone { display: none; }
 
 @media (max-width: 600px) and (orientation: portrait) {
-  html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; background: #0b0c0f; }
-  #app, #app * { touch-action: manipulation; }
-  #app .ph-xpad, #app .ph-knob, #app .list.l { touch-action: none; }
-  html, body { overflow: hidden; }
+  html, body { overflow: hidden; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
   #app {
     grid-template: "screen" auto "phone" 1fr / 1fr; height: 100vh; height: 100dvh; overflow: hidden;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
+  #app, #app * { touch-action: manipulation; }
+  #app .ph-xpad, #app #ph-level, #app .list.l { touch-action: none; }
   #app .panel, #app .bar, #app .statusbar { display: none; }
   #screen-wrap { height: auto; aspect-ratio: 16 / 10; min-height: 0; }
   #search-input { -webkit-user-select: text; user-select: text; }
-
-  .phone {
-    grid-area: phone; display: flex; flex-direction: column; min-height: 0;
-    gap: clamp(6px, 1.4dvh, 14px); padding: clamp(8px, 1.6dvh, 14px) 12px 8px;
-    background: radial-gradient(120% 55% at 50% 0%, rgba(120, 130, 160, .10), transparent 60%), linear-gradient(#15161a, #0b0c0f 60%, #08090b);
-  }
-  .phone small { display: block; font-size: 9px; letter-spacing: 2px; color: #8b8e96; text-align: center; margin-bottom: 4px; }
-  .ph-row { display: flex; align-items: center; gap: 8px; }
-  .ph-btn, .ph-select {
-    height: clamp(38px, 5.5dvh, 46px); border: 1px solid #050506; border-radius: 6px; color: #e8e9ec; font-size: 12px;
-    font-weight: 600; letter-spacing: 1px; background: linear-gradient(#26282e, #101114 50%, #0b0c0f);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .12);
-  }
-  .ph-btn:active, .ph-btn.down { background: linear-gradient(#0a0b0d, #141518); box-shadow: inset 0 2px 6px rgba(0, 0, 0, .8); }
-  .ph-select {
-    padding: 0 24px; -webkit-appearance: none; appearance: none; text-align: center; text-align-last: center;
-    background: linear-gradient(45deg, transparent 50%, currentColor 50%) right 18px top 50% / 4px 4px no-repeat,
-      linear-gradient(135deg, currentColor 50%, transparent 50%) right 14px top 50% / 4px 4px no-repeat,
-      linear-gradient(#26282e, #101114 50%, #0b0c0f);
-  }
-  .ph-amber { color: #dfa32c; text-shadow: 0 0 6px rgba(223, 163, 44, .35); width: 100%; height: clamp(28px, 4dvh, 34px); font-size: 11px; }
-  .ph-bpm { flex: 1; text-align: center; }
-  .ph-bpm span {
-    font: 700 clamp(22px, 3.6dvh, 30px) "DSEG7", ui-monospace, Menlo, monospace; color: #ff2c1e;
-    text-shadow: 0 0 5px rgba(255, 44, 30, .85), 0 0 14px rgba(255, 44, 30, .4);
-  }
-  .ph-bpm small { display: inline; margin-left: 6px; color: #c1372a; }
-  .ph-bpm #ph-deck { display: block; margin: 0 0 2px; color: #8b8e96; }
-
-  .ph-xpad-wrap { display: flex; flex-direction: column; gap: 6px; }
-  .ph-xpad {
-    display: flex; gap: 3px; padding: 6px; height: clamp(44px, 7dvh, 64px); border-radius: 8px; touch-action: none;
-    background: linear-gradient(#08090b, #101216); border: 1px solid #05060a;
-    box-shadow: inset 0 2px 7px rgba(0, 0, 0, .85), 0 1px 0 rgba(255, 255, 255, .05);
-  }
-  .ph-xpad i { flex: 1; border-radius: 2px; background: #191b20; }
-  .ph-xpad i.lit { background: #4a68ff; box-shadow: 0 0 10px rgba(74, 104, 255, .85); }
-  .ph-xpad i:nth-child(12), .ph-xpad i:nth-child(13) { background: #23262e; } /* centre = off */
-  .ph-xpad i.lit:nth-child(12), .ph-xpad i.lit:nth-child(13) { background: #4a68ff; }
-
-  .ph-fx { align-items: flex-end; }
-  .ph-col { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-  .ph-col .ph-select { width: 100%; height: clamp(28px, 4dvh, 34px); font-size: 11px; }
-  .ph-beat { display: flex; align-items: center; gap: 6px; text-align: center; }
-  .ph-beat .ph-btn { flex: 0 0 44px; }
-  .ph-beat div { flex: 1; }
-  .ph-beat span { font: 600 18px ui-monospace, Menlo, monospace; color: #7d92ff; text-shadow: 0 0 9px rgba(74, 104, 255, .6); }
-  .ph-knob-cell { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; }
-  .ph-knob {
-    position: relative; width: clamp(56px, 9dvh, 74px); height: clamp(56px, 9dvh, 74px); border-radius: 50%; touch-action: none;
-    background: radial-gradient(circle at 36% 30%, rgba(255, 255, 255, .10), transparent 46%),
-      radial-gradient(circle closest-side, #161618 0 74%, #060607 76% 79%, #2e2e31 80.5%, #060607 82% 86%, #1a1a1c 88% 100%);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, .7);
-  }
-  .ph-knob i { position: absolute; inset: 0; transform: rotate(var(--turn, 0deg)); }
-  .ph-knob i::after {
-    content: ""; position: absolute; top: 9%; left: 50%; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: #e8271d;
-  }
-  .ph-on {
-    width: clamp(56px, 9dvh, 74px); height: clamp(56px, 9dvh, 74px); border-radius: 50%; border: 1px solid #050506;
-    background: radial-gradient(circle at 50% 35%, #23262b, #0c0d0f 72%);
-    box-shadow: 0 3px 9px rgba(0, 0, 0, .7), inset 0 1px 1px rgba(255, 255, 255, .12), inset 0 -3px 6px rgba(0, 0, 0, .6);
-  }
-  .ph-on.lit {
-    border-color: #16357a; box-shadow: 0 0 24px rgba(74, 104, 255, .75), 0 3px 9px rgba(0, 0, 0, .6);
-    background: radial-gradient(circle at 42% 30%, rgba(255, 255, 255, .85), transparent 32%),
-      radial-gradient(circle at 50% 46%, #7da2ff 0 26%, #3a63e0 56%, #16357a 82%);
-  }
-
-  .ph-nav .ph-btn { flex: 0 0 auto; padding: 0 12px; }
   /* the focused deck, picked by tapping it on the screen: drawn thick enough to see at phone scale */
   #screen .mini-deck.active, #screen .deck-info.active, #screen .deck-panel.active { box-shadow: inset 0 0 0 5px var(--blue); }
-  .ph-transport { align-items: flex-end; margin-top: auto; } /* CUE / PLAY stay at the bottom, under the thumbs */
-  .ph-cue, .ph-play { flex: 0 0 auto; width: clamp(64px, 10dvh, 84px); height: clamp(64px, 10dvh, 84px); border-radius: 50%; font-size: 14px; }
-  .ph-cue.lit { color: #ffb02e; border-color: #ffb02e; box-shadow: 0 0 14px rgba(255, 176, 46, .55); }
-  .ph-play.lit { color: #57d95e; border-color: #57d95e; box-shadow: 0 0 14px rgba(87, 217, 94, .55); }
-  .ph-nudge { flex: 1; }
-  .ph-nudge div { display: flex; gap: 8px; }
+
+  .phone { grid-area: phone; display: flex; flex-direction: column; gap: clamp(6px, 1.2dvh, 10px); min-height: 0; padding: 8px; }
+  .phone small { display: block; font-size: 11px; color: #aaa; letter-spacing: .5px; }
+  .ph-row { display: flex; gap: 6px; }
+  .ph-btn {
+    height: clamp(40px, 5.6dvh, 48px); padding: 0 12px; border: 1px solid #3a3a3a; border-radius: 0; background: #1c1c1c;
+    color: #ddd; font-size: 15px; letter-spacing: .5px;
+  }
+  .ph-btn:active { background: #6c6c6c; }
+
+  /* a section's head: grey label left, the effect picker (a black name box, as in the screen's FX panel) right */
+  .ph-head { display: flex; align-items: center; justify-content: space-between; height: 32px; padding-left: 10px; background: #2e2e2e; }
+  .ph-head span { font-size: 13px; color: #bbb; letter-spacing: .5px; }
+  .ph-select {
+    height: 100%; min-width: 0; padding: 0 30px 0 12px; border: 0; border-radius: 0; -webkit-appearance: none; appearance: none;
+    color: #fff; font: 500 19px var(--cond); letter-spacing: .5px;
+    background: linear-gradient(45deg, transparent 50%, #aaa 50%) right 16px top 50% / 5px 5px no-repeat,
+      linear-gradient(135deg, #aaa 50%, transparent 50%) right 11px top 50% / 5px 5px no-repeat, #000;
+  }
+
+  .ph-nav .ph-btn { flex: 0 0 auto; }
+  .ph-bpm { position: relative; flex: 1; border: 1px solid #ddd; }
+  .ph-bpm small { position: absolute; top: 3px; }
+  .ph-bpm #ph-deck { left: 5px; }
+  .ph-bpm .u { right: 5px; }
+  .ph-bpm b { position: absolute; right: 6px; bottom: 0; color: var(--orange); font: normal 28px var(--sans); letter-spacing: .5px; }
+
+  /* X-PADs: the screen's touch strip; a white marker at the finger, blue where a deck is parked */
+  .ph-pad { display: flex; flex-direction: column; }
+  .ph-xpad {
+    position: relative; height: clamp(44px, 6.5dvh, 56px); border: 1px solid #555;
+    background: linear-gradient(90deg, transparent calc(50% - 1px), #333 0 calc(50% + 1px), transparent 0), #0c0c0c;
+  }
+  .ph-xpad.filter {
+    background: linear-gradient(90deg, transparent calc(50% - 1px), #333 0 calc(50% + 1px), transparent 0),
+      linear-gradient(90deg, #102a50, #0c0c0c 45%, #0c0c0c 55%, #4a1a10);
+  }
+  .ph-xpad span { position: absolute; top: 50%; transform: translateY(-50%); font-size: 14px; color: #aaa; pointer-events: none; }
+  .ph-xpad .lo { left: 12px; }
+  .ph-xpad .hi { right: 12px; }
+  .ph-xpad i { display: none; position: absolute; top: 0; bottom: 0; width: 4px; margin-left: -2px; background: #fff; pointer-events: none; }
+  .ph-xpad.held i { display: block; }
+  .ph-xpad.parked i { background: var(--blue); box-shadow: 0 0 0 1px #000; }
+
+  .ph-fx { align-items: stretch; }
+  .ph-col { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .ph-beat { display: flex; gap: 6px; }
+  .ph-beat .ph-btn { flex: 0 0 48px; padding: 0; }
+  .ph-val { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; }
+  .ph-val b { font: 500 24px var(--cond); color: #fff; font-weight: 500; letter-spacing: .5px; }
+  .ph-level { flex: 0 0 92px; display: flex; flex-direction: column; gap: 4px; text-align: center; }
+  #ph-level { position: relative; border: 1px solid #3a3a3a; cursor: ns-resize; }
+  #ph-level b { font-size: 32px; }
+  #ph-level i { position: absolute; left: 0; bottom: 0; height: 4px; width: var(--lv, 50%); background: var(--blue); }
+  .ph-on {
+    flex: 0 0 84px; border: 1px solid #555; border-radius: 0; background: #000; color: #aaa; font: 500 20px var(--cond);
+    letter-spacing: .5px;
+  }
+  .ph-on.lit { background: #ddd; color: #000; border-color: #ddd; } /* as the screen's FX panel when on */
+
+  .ph-transport { align-items: flex-end; }
+  .ph-pad:has(.filter) { margin-top: auto; } /* FILTER sits on NUDGE; both stay at the bottom, under the thumbs */
+  .ph-cue, .ph-play { flex: 0 0 96px; height: clamp(52px, 8dvh, 64px); font: 500 22px var(--cond); }
+  .ph-cue.lit { color: var(--orange); border-color: var(--orange); }
+  .ph-play.lit { color: var(--green); border-color: var(--green); }
+  .ph-nudge { flex: 1; text-align: center; }
+  .ph-nudge div { display: flex; gap: 6px; margin-top: 4px; }
   .ph-nudge .ph-btn { flex: 1; }
 }

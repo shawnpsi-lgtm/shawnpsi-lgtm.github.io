@@ -1,11 +1,12 @@
 // The audio side: two decks, the RX3's mixer path, one Beat FX section and a Sound Color FX section per channel.
 //
-//   deck -> trim -> [0] -> EQ (low/mid/high) -> [1] -> channel fader -> [2] -> crossfader -> master bus -> [M] -> out
+//   deck -> trim -> [0] -> EQ (low/mid/high) -> [1] -> channel fader -> [2] -> FILTER -> crossfader -> master bus -> [M] -> out
 //
 // As in the firmware (MixerChannel::updateFilter), each effect has a fixed position in the channel: [0] before the
 // EQ, [1] before the fader, [2] after it. At a position the Color FX runs first, then the Beat FX if it is on that
 // channel. The Beat FX section is a single instance that runs in place wherever it is routed (so its tail survives
-// channel changes); routed to MASTER, it runs on the master bus [M], after both channels' Color FX.
+// channel changes); routed to MASTER, it runs on the master bus [M], after both channels' Color FX. FILTER is a second
+// copy of the Color FX FILTER per channel, for the phone panel's FILTER X-PAD; at centre it passes the signal untouched.
 import beatFx from '../fx/beat/index.js';
 import colorFx from '../fx/color/index.js';
 import { beatEffectMs } from '../fx/dsp.js';
@@ -28,9 +29,10 @@ class Channel {
       new AudioWorkletNode(ctx, 'rx3-fx', { outputChannelCount: [2], processorOptions: { kind, channel } });
     this.pre = fx('pre'); // position 0
     this.color = fx('post'); // position 1, the channel fader, position 2; takes the Color FX messages
+    this.filter = fx('filter');
     this.xfade = new GainNode(ctx);
     node.connect(this.trim).connect(this.pre).connect(this.low).connect(this.mid).connect(this.high)
-      .connect(this.color).connect(this.xfade);
+      .connect(this.color).connect(this.filter).connect(this.xfade);
   }
 }
 
@@ -134,7 +136,7 @@ export class Engine {
     return bpm ? beatEffectMs(bpm, this.fx.beat) : null;
   }
 
-  /** BEAT ◀ / ▶: step through the effect's beat (or percent) values. */
+  /** BEAT left / right: step through the effect's beat (or percent) values. */
   stepBeat(dir) {
     const vals = this.beatMeta().beats.map((b) => b.value);
     let i = 0;
@@ -177,6 +179,11 @@ export class Engine {
   setColor(ch, x) { // -1..1, 0 = centre
     this.color.amount[ch] = x;
     this.channels[ch].color.port.postMessage({ type: 'param', name: 'color', value: x });
+  }
+
+  /** The channel's own FILTER (the phone's FILTER X-PAD): -1 low-pass .. 0 off .. 1 high-pass. */
+  setFilter(ch, x) {
+    this.channels[ch].filter.port.postMessage({ value: x });
   }
 
   setColorParameter(x) { // 0..1, 0.5 = centre

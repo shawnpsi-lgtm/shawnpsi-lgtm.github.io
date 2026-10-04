@@ -360,7 +360,7 @@ class App {
       el.innerHTML = `<span class="dname">DECK ${i + 1}</span>` +
         knob('TEMPO', 'data-f="tempo" min="-1" max="1" step="0.0005" value="0"') +
         `<button data-f="sync">BEAT SYNC</button>` +
-        `<button data-f="nudge-">&#9664;</button><button data-f="nudge+">&#9654;</button>` +
+        `<button data-f="nudge-"><i class="tri l"></i></button><button data-f="nudge+"><i class="tri r"></i></button>` +
         knob('TRIM', 'data-f="trim" min="-1" max="1" step="0.01" value="0"') +
         knob('HI', 'data-f="high" min="-1" max="1" step="0.01" value="0"') +
         knob('MID', 'data-f="mid" min="-1" max="1" step="0.01" value="0"') +
