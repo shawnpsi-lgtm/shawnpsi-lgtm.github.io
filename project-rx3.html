@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>rx3 · Shawn Singh</title>
-  <meta name="description" content="rx3: a Pioneer XDJ-RX3 in your browser. Two decks, a mixer and the unit's own effects, matched to its firmware sample for sample." />
-  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="rx3: a Pioneer XDJ-RX3 in your browser, with effects ported from the unit's own firmware" />
 
 
   <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
@@ -15,145 +14,55 @@
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
   <link rel="stylesheet" href="/assets/ask.css?v=15">
   <style>
-    /* rx3's own colours: the icon's blue ring and orange centre, on the unit's black. */
-    .rx {
-      --rx-blue: #0a7fe6; --rx-blue-hi: #4a9fe8; --rx-ice: #9fd0ff; --rx-orange: #ff5a1a;
-      --rx-ink: #f5f5f7; --rx-mid: #98989d; --rx-line: rgb(255 255 255 / .1); --rx-panel: #0c0c0c;
-      color: var(--rx-ink);
+    /* sayclip's still of the same wallpaper shows until the video starts, or if it can't load. */
+    body { background: #000 url(/sayclip/wallpaper.jpg) center / cover fixed; }
+    /* The homepage's tahoeDay wallpaper, cropped to cover like the hero's. */
+    .r2-video {
+      position: fixed; top: 50%; left: 50%; width: 100vw; height: 56.25vw;
+      min-width: 177.78svh; min-height: 100svh; transform: translate(-50%, -50%);
+      border: 0; pointer-events: none;
     }
-    body { background: #000; }
+    /* Glass in the shape of the word: the script masks this to the letters and
+       hands it a refraction map and a rim-light map drawn from the same glyphs. */
+    .r2-glass {
+      position: relative; height: 100vh; margin: 0; color: transparent; font-size: 0;
+      --frost: 3px; --saturate: 1.75; --brightness: .78; --tint: .12;
+      -webkit-backdrop-filter: blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness));
+      backdrop-filter: blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness));
+      background: rgb(255 255 255 / var(--tint)) 0 0 / 100% 100% no-repeat;
+      -webkit-mask: 0 0 / 100% 100% no-repeat; mask: 0 0 / 100% 100% no-repeat;
+    }
 
-    /* ---------------- HERO ---------------- */
-    .rx-hero {
-      position: relative; min-height: 100svh; overflow: hidden; isolation: isolate;
-      display: grid; grid-template-rows: 1fr auto; padding-top: var(--nav-height, 48px);
-      background:
-        radial-gradient(60% 50% at 78% 38%, rgb(10 127 230 / .22), transparent 70%),
-        radial-gradient(40% 35% at 70% 70%, rgb(255 90 26 / .12), transparent 70%),
-        #000;
+
+    /* Scrolled down: rx3 itself, live, in a window on the same wallpaper. Same glass and shadow as r2music's. */
+    .rx-desk { position: relative; display: grid; place-items: center; gap: 28px; min-height: 100vh; padding: 72px 16px 64px; }
+    .rx-win {
+      position: relative; width: min(1170px, 100%); overflow: hidden; border-radius: 14px;
+      background: rgb(12 16 22 / .5); -webkit-backdrop-filter: blur(40px) saturate(1.5); backdrop-filter: blur(40px) saturate(1.5);
+      box-shadow: 0 0 0 1px rgb(0 0 0 / .6), 0 30px 90px rgb(0 0 0 / .55);
     }
-    .rx-hero__inner {
-      width: 100%; max-width: var(--max-w, 1200px); margin: 0 auto; padding: 40px 24px 24px;
-      display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: center; gap: 48px;
-    }
-    .rx-kicker {
-      display: inline-flex; align-items: center; gap: 10px; margin: 0 0 22px;
-      font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--rx-mid);
-    }
-    .rx-kicker i { width: 8px; height: 8px; border-radius: 50%; background: var(--rx-orange); box-shadow: 0 0 12px var(--rx-orange); }
-    .rx-title {
-      margin: 0; font-size: clamp(88px, 15vw, 196px); line-height: .86; font-weight: 700; letter-spacing: -.055em;
-      background: linear-gradient(180deg, #fff 30%, #8a8a90); -webkit-background-clip: text; background-clip: text; color: transparent;
-    }
-    .rx-title span { -webkit-text-fill-color: var(--rx-orange); color: var(--rx-orange); }
-    .rx-lede { margin: 26px 0 0; max-width: 30ch; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.2; font-weight: 600; letter-spacing: -.015em; color: var(--rx-ink); }
-    .rx-sub { margin: 16px 0 0; max-width: 46ch; font-size: 17px; line-height: 1.55; color: var(--rx-mid); }
-    .rx-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+    .rx-win::after { content: ''; position: absolute; z-index: 2; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12); pointer-events: none; }
+    .rx-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 40px; padding: 0 14px; }
+    .rx-lights { display: flex; gap: 9px; }
+    .rx-lights i { width: 14px; height: 14px; border-radius: 50%; background: #ff5f57; }
+    .rx-lights i + i { background: #febc2e; }
+    .rx-lights i + i + i { background: #28c840; }
+    .rx-bar p { margin: 0; font-size: .82rem; font-weight: 600; color: #98989d; }
+    /* The app is built at 1280x800 and scales itself to fit, so the frame keeps 16:10 (portrait on phones). */
+    .rx-win iframe { display: block; width: 100%; aspect-ratio: 16 / 10; max-height: calc(100vh - 200px); min-height: 360px; border: 0; background: #000; }
     .rx-btn {
-      display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 999px;
-      font-size: 16px; font-weight: 600; text-decoration: none; transition: transform .15s, background-color .2s, border-color .2s;
+      display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border: 1px solid #0071e3; border-radius: 980px;
+      background: #0071e3; color: #fff; font-size: .95rem; text-decoration: none; transition: background .2s;
     }
-    .rx-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .rx-btn--go { background: var(--rx-orange); color: #000; box-shadow: 0 8px 30px -8px rgb(255 90 26 / .7); }
-    .rx-btn--go:hover { background: #ff7438; transform: translateY(-1px); }
-    .rx-btn--ghost { color: var(--rx-ink); border: 1px solid rgb(255 255 255 / .22); }
-    .rx-btn--ghost:hover { border-color: rgb(255 255 255 / .5); }
-    .rx-btn:focus-visible { outline: 2px solid var(--rx-ice); outline-offset: 3px; }
-    .rx-note { margin: 14px 0 0; font-size: 13px; color: #636366; }
-
-    /* Jog wheel: spins at 33 rpm, one turn every 1.8 s. */
-    .rx-jog { position: relative; width: min(100%, 520px); aspect-ratio: 1; justify-self: center; }
-    .rx-jog svg { width: 100%; height: 100%; overflow: visible; }
-    .rx-jog__spin { transform-origin: 50% 50%; transform-box: view-box; animation: rx-spin 1.8s linear infinite; }
-    .rx-jog__halo { transform-origin: 50% 50%; transform-box: view-box; animation: rx-pulse .468s ease-out infinite; }
-    @keyframes rx-spin { to { transform: rotate(360deg); } }
-    /* 128 BPM: one beat every .468 s */
-    @keyframes rx-pulse { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.06); } }
-    .rx-jog__bpm {
-      position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
-      display: flex; gap: 18px; padding: 8px 16px; border: 1px solid var(--rx-line); border-radius: 10px;
-      background: rgb(12 12 12 / .8); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-      font: 600 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; color: var(--rx-mid); white-space: nowrap;
-    }
-    .rx-jog__bpm b { color: var(--rx-ink); font-weight: 600; }
-    .rx-jog__bpm em { font-style: normal; color: var(--rx-orange); }
-
-    /* Two decks of waveform across the bottom of the hero */
-    .rx-wave { position: relative; height: 128px; border-top: 1px solid var(--rx-line); background: linear-gradient(#050505, #000); }
-    .rx-wave canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-    .rx-wave__label {
-      position: absolute; left: 16px; z-index: 1; font: 600 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-      letter-spacing: .12em; color: rgb(255 255 255 / .45);
-    }
-
-    /* ---------------- BELOW THE HERO ---------------- */
-    .rx-meta {
-      max-width: var(--max-w, 1200px); margin: 0 auto; padding: 40px 24px 0;
-      display: flex; flex-wrap: wrap; gap: 16px 56px; border-bottom: 1px solid var(--rx-line); padding-bottom: 40px;
-    }
-    .rx-meta .back-link { flex-basis: 100%; }
-    .rx-meta dl { margin: 0; }
-    .rx-meta dt { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #636366; }
-    .rx-meta dd { margin: 6px 0 0; font-size: 16px; }
-
-    .rx-section { max-width: var(--max-w, 1200px); margin: 0 auto; padding: 96px 24px 0; }
-    .rx-h2 { margin: 0; max-width: 18ch; font-size: clamp(32px, 4.4vw, 52px); line-height: 1.05; font-weight: 700; letter-spacing: -.03em; }
-    .rx-h2 + p { margin: 16px 0 0; max-width: 54ch; font-size: 18px; line-height: 1.55; color: var(--rx-mid); }
-
-    .rx-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
-    .rx-stat { padding: 28px; border: 1px solid var(--rx-line); border-radius: 20px; background: var(--rx-panel); }
-    .rx-stat b { display: block; font-size: clamp(40px, 5vw, 60px); line-height: 1; font-weight: 700; letter-spacing: -.04em; }
-    .rx-stat:nth-child(1) b { color: var(--rx-orange); }
-    .rx-stat:nth-child(2) b { color: var(--rx-blue-hi); }
-    .rx-stat h3 { margin: 18px 0 6px; font-size: 18px; font-weight: 600; }
-    .rx-stat p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--rx-mid); }
-
-    .rx-fx { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 48px; }
-    .rx-bank { padding: 28px; border: 1px solid var(--rx-line); border-radius: 20px; background: var(--rx-panel); }
-    .rx-bank h3 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--rx-mid); }
-    .rx-bank ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; }
-    .rx-bank li {
-      padding: 9px 14px; border-radius: 8px; border: 1px solid #2e2e2e; background: #1a1a1a;
-      font: 600 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em;
-    }
-    .rx-bank--beat li { box-shadow: inset 0 -2px 0 var(--rx-blue); }
-    .rx-bank--color li { box-shadow: inset 0 -2px 0 var(--rx-orange); }
-    .rx-bank li.extra { border-style: dashed; color: var(--rx-mid); box-shadow: none; }
-    .rx-bank small { display: block; margin-top: 16px; font-size: 13px; color: #636366; }
-
-    .rx-final {
-      max-width: var(--max-w, 1200px); margin: 96px auto; padding: 0 24px;
-    }
-    .rx-final__card {
-      position: relative; overflow: hidden; padding: 64px 40px; border-radius: 28px; text-align: center;
-      border: 1px solid var(--rx-line);
-      background: radial-gradient(70% 120% at 50% 0%, rgb(10 127 230 / .25), transparent 70%), var(--rx-panel);
-    }
-    .rx-final__card .rx-h2 { margin: 0 auto; }
-    .rx-final__card p { margin: 14px auto 0; max-width: 44ch; font-size: 18px; color: var(--rx-mid); }
-    .rx-final__card .rx-cta { justify-content: center; }
-
-    [data-reveal-rx] { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
-    [data-reveal-rx].in { opacity: 1; transform: none; }
-
-    @media (max-width: 860px) {
-      .rx-hero__inner { grid-template-columns: 1fr; gap: 8px; padding-top: 24px; text-align: left; }
-      .rx-jog { order: -1; width: min(64vw, 260px); margin-bottom: 32px; }
-      .rx-stats, .rx-fx { grid-template-columns: 1fr; }
-      .rx-wave { height: 96px; }
-      .rx-section { padding-top: 72px; }
-      .rx-final__card { padding: 48px 20px; }
-    }
-    @media (max-width: 420px) {
-      .rx-btn { flex: 1 1 100%; justify-content: center; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .rx-jog__spin, .rx-jog__halo { animation: none; }
-      [data-reveal-rx] { opacity: 1; transform: none; transition: none; }
+    .rx-btn:hover { background: #0077ed; }
+    .rx-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    @media (max-width: 700px) {
+      .rx-desk { padding-bottom: 112px; }
+      .rx-win iframe { aspect-ratio: 9 / 16; max-height: calc(100svh - 190px); }
     }
   </style>
 </head>
-<body class="rx">
+<body>
 
   <!-- ============================================================
        NAVIGATION
@@ -195,287 +104,113 @@
     </div>
   </nav>
 
-  <!-- ============================================================
-       HERO
-       ============================================================ -->
-  <header class="rx-hero">
-    <div class="rx-hero__inner">
-      <div>
-        <p class="rx-kicker"><i aria-hidden="true"></i>Web Audio DJ System</p>
-        <h1 class="rx-title">rx<span>3</span></h1>
-        <p class="rx-lede">A pro DJ unit. Now it opens in a tab.</p>
-        <p class="rx-sub">Two decks, a mixer and every effect from the Pioneer XDJ-RX3, rebuilt from the unit's own firmware. It sounds the same, sample for sample. No install. No server.</p>
-        <div class="rx-cta">
-          <a class="rx-btn rx-btn--go" href="/rx3/">
-            Open rx3
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </a>
-          <a class="rx-btn rx-btn--ghost" href="#how">How it works</a>
-        </div>
-        <p class="rx-note">Free. Works on desktop and phone. Bring your own tracks.</p>
-      </div>
+  <iframe class="r2-video" aria-hidden="true" tabindex="-1" title=""
+          src="https://player.vimeo.com/video/1177562440?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;background=1&amp;autoplay=1&amp;loop=1&amp;muted=1"
+          allow="autoplay; fullscreen; picture-in-picture"></iframe>
 
-      <div class="rx-jog" aria-hidden="true">
-        <svg viewBox="0 0 400 400">
-          <defs>
-            <radialGradient id="rx-platter" cx="45%" cy="38%" r="65%">
-              <stop offset="0%" stop-color="#2a2a2c"/>
-              <stop offset="70%" stop-color="#121213"/>
-              <stop offset="100%" stop-color="#0a0a0a"/>
-            </radialGradient>
-            <linearGradient id="rx-ring" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#4a9fe8"/>
-              <stop offset="100%" stop-color="#0a5fb0"/>
-            </linearGradient>
-          </defs>
-          <circle class="rx-jog__halo" cx="200" cy="200" r="186" fill="none" stroke="#0a7fe6" stroke-width="2" opacity=".6"/>
-          <circle cx="200" cy="200" r="178" fill="#050505" stroke="#1e1e1e" stroke-width="2"/>
-          <circle cx="200" cy="200" r="162" fill="none" stroke="url(#rx-ring)" stroke-width="10"/>
-          <g class="rx-jog__spin">
-            <circle cx="200" cy="200" r="148" fill="url(#rx-platter)"/>
-            <g id="rx-ticks" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round"></g>
-            <circle cx="200" cy="200" r="100" fill="none" stroke="#1e1e1e" stroke-width="1"/>
-            <circle cx="200" cy="200" r="78" fill="none" stroke="#1e1e1e" stroke-width="1"/>
-            <rect x="196" y="58" width="8" height="34" rx="4" fill="#ff5a1a"/>
-          </g>
-          <circle cx="200" cy="200" r="54" fill="#0c0c0c" stroke="#262626" stroke-width="2"/>
-          <circle cx="200" cy="200" r="18" fill="#ff5a1a"/>
-          <circle cx="200" cy="200" r="30" fill="none" stroke="#ff5a1a" stroke-width="1" opacity=".35"/>
-        </svg>
-        <div class="rx-jog__bpm"><span>BPM <b>128.0</b></span><span>BEAT FX <em>ECHO 1/2</em></span></div>
-      </div>
-    </div>
-
-    <div class="rx-wave" aria-hidden="true">
-      <span class="rx-wave__label" style="top:10px">DECK 1</span>
-      <span class="rx-wave__label" style="top:calc(50% + 8px)">DECK 2</span>
-      <canvas id="rx-wave"></canvas>
-    </div>
-  </header>
-
-  <main>
-    <!-- Project details, like the other case studies -->
-    <div class="rx-meta">
-      <a href="work.html" class="back-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        All Work
-      </a>
-      <dl><dt>Role</dt><dd>Design and Engineering</dd></dl>
-      <dl><dt>Year</dt><dd>2026</dd></dl>
-      <dl><dt>Tools</dt><dd>JavaScript, Web Audio</dd></dl>
-      <dl><dt>Runs on</dt><dd>Any modern browser</dd></dl>
-    </div>
-
-    <!-- How it works -->
-    <section class="rx-section" id="how" aria-labelledby="rx-how-h">
-      <div data-reveal-rx>
-        <h2 class="rx-h2" id="rx-how-h">Not inspired by the RX3. Taken from it.</h2>
-        <p>Every effect is the firmware's own code, rebuilt line for line in the browser. Then each one is tested against the real unit's output until they match exactly.</p>
-      </div>
-      <div class="rx-stats">
-        <article class="rx-stat" data-reveal-rx>
-          <b>12</b>
-          <h3>Effects, straight from the unit</h3>
-          <p>Six Beat FX and six Sound Color FX, plus the systems that switch between them.</p>
-        </article>
-        <article class="rx-stat" data-reveal-rx>
-          <b>1:1</b>
-          <h3>Matched sample for sample</h3>
-          <p>An automated test plays each effect next to the original. They line up exactly.</p>
-        </article>
-        <article class="rx-stat" data-reveal-rx>
-          <b>0</b>
-          <h3>Servers in the way</h3>
-          <p>All the audio runs on your device. Nothing to install, and no extra delay.</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- The effects -->
-    <section class="rx-section" aria-labelledby="rx-fx-h">
-      <div data-reveal-rx>
-        <h2 class="rx-h2" id="rx-fx-h">The full effects section.</h2>
-        <p>Pick an effect, set the beat, tap it in. ECHO and REVERB ring out when you turn them off, just like on the unit.</p>
-      </div>
-      <div class="rx-fx">
-        <div class="rx-bank rx-bank--beat" data-reveal-rx>
-          <h3>Beat FX</h3>
-          <ul>
-            <li>ECHO</li><li>REVERB</li><li>FLANGER</li><li>PHASER</li><li>FILTER</li><li>TRANS</li>
-            <li class="extra">DRUM</li><li class="extra">NOISE</li>
-          </ul>
-          <small>Dashed: two extras the unit doesn't have. Plus LOW, MID and HI to aim any effect at one part of the track.</small>
-        </div>
-        <div class="rx-bank rx-bank--color" data-reveal-rx>
-          <h3>Sound Color FX</h3>
-          <ul>
-            <li>SPACE</li><li>DUB ECHO</li><li>SWEEP</li><li>NOISE</li><li>CRUSH</li><li>FILTER</li>
-          </ul>
-          <small>One knob per channel. Turn it either way from center.</small>
-        </div>
-      </div>
-    </section>
-
-    <!-- Phone -->
-    <section class="rx-section" style="padding-top:16px" aria-labelledby="rx-phone-h">
-      <div class="rx-stats">
-        <article class="rx-stat" data-reveal-rx>
-          <h3 id="rx-phone-h" style="margin-top:0">Built for your phone</h3>
-          <p>Hold it upright and the controls fold into one panel for the deck you tap.</p>
-        </article>
-        <article class="rx-stat" data-reveal-rx>
-          <h3 style="margin-top:0">Your cues come with you</h3>
-          <p>Hot cues and beat grids load from your rekordbox analysis, in your colors.</p>
-        </article>
-        <article class="rx-stat" data-reveal-rx>
-          <h3 style="margin-top:0">Pads, loops and rolls</h3>
-          <p>Hot cues, beat loops, ROLL and VINYL BRAKE, all on eight pads.</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- Closing call to action -->
-    <section class="rx-final" aria-labelledby="rx-final-h">
-      <div class="rx-final__card" data-reveal-rx>
-        <h2 class="rx-h2" id="rx-final-h">Load a track. Hit play.</h2>
-        <p>Drop in music from your computer or your r2music library and start mixing.</p>
-        <div class="rx-cta">
-          <a class="rx-btn rx-btn--go" href="/rx3/">
-            Open rx3
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </a>
-          <a class="rx-btn rx-btn--ghost" href="project-r2music.html">See r2music</a>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- ============================================================
-       NEXT PROJECT
-       ============================================================ -->
-  <a href="project-r2music.html" class="next-project">
-    <div class="container">
-      <p class="next-project__label">Next Project</p>
-      <div class="next-project__inner">
-        <h2 class="next-project__title">r2music</h2>
-        <svg class="next-project__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-        </svg>
-      </div>
-      <p class="next-project__sub">Your music library, in your own bucket</p>
-    </div>
-  </a>
-
-  <!-- ============================================================
-       FOOTER
-       ============================================================ -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer__inner">
-        <div>
-          <p class="footer__logo">Shawn Singh</p>
-          <p class="footer__tagline">data + design · San Francisco, CA</p>
-        </div>
-        <div class="footer__links">
-          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-            LinkedIn
-          </a>
-          <a href="/files/resume.pdf" class="footer__link" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download Résumé
-          </a>
-        </div>
-      </div>
-    </div>
-  </footer>
+  <h1 class="r2-glass">rx3</h1>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="r2-refract" x="0" y="0" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feImage x="0" y="0" preserveAspectRatio="none" result="map" />
+      <feDisplacementMap in="SourceGraphic" in2="map" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
 
   <script>
+    // Draws rx3 once per size, then derives everything from the glyphs:
+    // the mask, a displacement map that bends the video at the letter edges, and the rim light.
     (() => {
-      const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+      const el = document.querySelector('.r2-glass'), WORD = el.textContent.trim()
+      const filter = document.getElementById('r2-refract')
+      const img = filter.querySelector('feImage')
+      const map = filter.querySelector('feDisplacementMap')
+      // Only Chromium runs SVG filters in backdrop-filter; elsewhere the glass is frost and rim only.
+      const bends = !!navigator.userAgentData
 
-      // Platter ticks: 60 marks around the jog wheel.
-      const ticks = document.getElementById('rx-ticks')
-      let t = ''
-      for (let i = 0; i < 60; i++) {
-        const a = i / 60 * Math.PI * 2, long = i % 5 === 0
-        const r1 = long ? 126 : 132, r2 = 142
-        t += `<line x1="${200 + r1 * Math.sin(a)}" y1="${200 - r1 * Math.cos(a)}" x2="${200 + r2 * Math.sin(a)}" y2="${200 - r2 * Math.cos(a)}"${long ? ' stroke="#6c6c6c"' : ''}/>`
+      // Refraction and bevel scale with the letter size; frost, saturation, brightness and tint are CSS on .r2-glass.
+      const tune = { refract: .36, bevel: .005, rim: 2.65 }
+
+      function glyphs(w, h, scale) {
+        const c = document.createElement('canvas')
+        c.width = w * scale; c.height = h * scale
+        const x = c.getContext('2d', { willReadFrequently: true })
+        const font = getComputedStyle(document.body).fontFamily
+        x.font = `700 100px ${font}`
+        const size = Math.min(100 * w * .94 / x.measureText(WORD).width, h * .7) * scale
+        x.font = `700 ${size}px ${font}`
+        const m = x.measureText(WORD)
+        x.textAlign = 'center'
+        x.fillText(WORD, c.width / 2, c.height / 2 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2)
+        return { c, x, size: size / scale }
       }
-      ticks.innerHTML = t
 
-      // Two scrolling waveforms in rekordbox's three-band style: blue lows, amber mids, white highs.
-      // The shape is made up (a kick on every beat over a bed of texture), so nothing is loaded.
-      const cv = document.getElementById('rx-wave'), cx = cv.getContext('2d')
-      const PX_PER_BEAT = 36
-      function noise(n) { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s) }
-      function sample(i, seed) {
-        const beat = ((i % PX_PER_BEAT) + PX_PER_BEAT) % PX_PER_BEAT / PX_PER_BEAT
-        const bar = Math.floor(i / (PX_PER_BEAT * 16)) + seed
-        const drop = noise(bar) > .25 ? 1 : .45
-        const kick = Math.exp(-beat * 7) * drop
-        const tex = noise(i * .7 + seed * 99)
-        return {
-          low: Math.min(1, .18 + kick * .78 + tex * .06),
-          mid: Math.min(1, (.22 + tex * .3 + Math.exp(-((beat - .5) ** 2) * 40) * .25) * (.6 + drop * .4)),
-          hi: Math.min(1, (.08 + noise(i * 1.3 + seed) * .22) * (.5 + drop * .5)),
+      // Box blur along rows (step 1) or columns (step w), three times over reads as a gaussian.
+      function blur(src, dst, n, lines, stride, step, r) {
+        for (let i = 0; i < lines; i++) {
+          const o = i * stride
+          let sum = 0
+          for (let k = -r; k <= r; k++) sum += src[o + Math.min(Math.max(k, 0), n - 1) * step]
+          for (let j = 0; j < n; j++) {
+            dst[o + j * step] = sum / (2 * r + 1)
+            sum += src[o + Math.min(j + r + 1, n - 1) * step] - src[o + Math.max(j - r, 0) * step]
+          }
         }
       }
-      let w = 0, h = 0, dpr = 1
-      function size() {
-        dpr = Math.min(devicePixelRatio || 1, 2)
-        w = cv.clientWidth; h = cv.clientHeight
-        cv.width = w * dpr; cv.height = h * dpr
-        cx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      }
-      function lane(top, lh, offset, seed) {
-        const mid = top + lh / 2, half = lh / 2 - 6, play = Math.round(w * .5)
-        // the beat loop, orange band from IN to OUT like rx3's waveforms
-        if (seed === 7) {
-          const loopIn = Math.floor((offset + play) / (PX_PER_BEAT * 4)) * PX_PER_BEAT * 4 - offset
-          cx.fillStyle = 'rgb(255 90 26 / .1)'; cx.fillRect(loopIn, top + 2, PX_PER_BEAT * 4, lh - 4)
-          cx.fillStyle = 'rgb(255 90 26 / .8)'; cx.fillRect(loopIn, top + 2, 1, lh - 4); cx.fillRect(loopIn + PX_PER_BEAT * 4, top + 2, 1, lh - 4)
-        }
-        for (let x = 0; x < w; x += 2) {
-          const s = sample(x + offset, seed), past = x < play ? .45 : 1
-          cx.globalAlpha = past
-          cx.fillStyle = '#0a7fe6'; let a = s.low * half; cx.fillRect(x, mid - a, 1.6, a * 2)
-          cx.fillStyle = '#ffa53a'; a = s.mid * half * .72; cx.fillRect(x, mid - a, 1.6, a * 2)
-          cx.fillStyle = '#ffffff'; a = s.hi * half * .55; cx.fillRect(x, mid - a, 1.6, a * 2)
-        }
-        cx.globalAlpha = 1
-        // beat markers
-        cx.fillStyle = 'rgb(255 255 255 / .18)'
-        for (let x = -((offset % PX_PER_BEAT) + PX_PER_BEAT) % PX_PER_BEAT; x < w; x += PX_PER_BEAT) cx.fillRect(x, top + 2, 1, 4)
-        // playhead
-        cx.fillStyle = '#ff5a1a'; cx.fillRect(play - 1, top, 2, lh)
-      }
-      // 128 BPM: a beat every .46875 s, so the waveform moves PX_PER_BEAT / .46875 px a second.
-      const speed = PX_PER_BEAT / (60 / 128)
-      let start = performance.now(), running = true
-      function draw(now) {
-        const off = (now - start) / 1000 * speed
-        cx.clearRect(0, 0, w, h)
-        lane(0, h / 2, off, 3)
-        cx.fillStyle = 'rgb(255 255 255 / .08)'; cx.fillRect(0, h / 2, w, 1)
-        lane(h / 2, h / 2, off + PX_PER_BEAT * 40, 7)
-        if (running && !still) requestAnimationFrame(draw)
-      }
-      size(); draw(start)
-      addEventListener('resize', () => { size(); if (still || !running) draw(performance.now()) })
-      // Stop drawing once the hero is off screen.
-      new IntersectionObserver(([e]) => {
-        const was = running; running = e.isIntersecting
-        if (running && !was && !still) requestAnimationFrame(draw)
-      }).observe(cv)
 
-      // Fade sections in as they scroll into view.
-      const io = new IntersectionObserver(es => es.forEach(e => {
-        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) }
-      }), { threshold: .15 })
-      document.querySelectorAll('[data-reveal-rx]').forEach(el => io.observe(el))
+      function build() {
+        const w = innerWidth, h = innerHeight
+        const dpr = Math.min(devicePixelRatio || 1, 2)
+        const sharp = glyphs(w, h, dpr)
+        el.style.webkitMaskImage = el.style.maskImage = `url(${sharp.c.toDataURL()})`
+
+        // Height field: the letters, blurred, so it rises from 0 outside to 1 inside.
+        const { c, x, size } = glyphs(w, h, 1)
+        const px = x.getImageData(0, 0, w, h)
+        const d = px.data, n = w * h
+        let a = new Float32Array(n), b = new Float32Array(n)
+        for (let i = 0; i < n; i++) a[i] = d[i * 4 + 3] / 255
+        const r = Math.max(2, Math.round(size * tune.bevel))
+        for (let k = 0; k < 3; k++) { blur(a, b, w, h, w, 1, r); blur(b, a, h, w, 1, w, r) }
+
+        // Its slope points into each letter. Refraction pulls from outward; the rim lights where it's steep.
+        const gx = new Float32Array(n), gy = new Float32Array(n)
+        let max = 1e-6
+        for (let y = 1; y < h - 1; y++) for (let i = y * w + 1, e = y * w + w - 1; i < e; i++) {
+          gx[i] = a[i + 1] - a[i - 1]; gy[i] = a[i + w] - a[i - w]
+          max = Math.max(max, Math.hypot(gx[i], gy[i]))
+        }
+        const light = x.createImageData(w, h), l = light.data
+        for (let i = 0; i < n; i++) {
+          const sx = gx[i] / max, sy = gy[i] / max, s = Math.hypot(sx, sy)
+          d[i * 4] = 128 - sx * 127; d[i * 4 + 1] = 128 - sy * 127; d[i * 4 + 2] = 128; d[i * 4 + 3] = 255
+          const lit = Math.max(0, (sx + sy) * .7071), back = Math.max(0, -(sx + sy) * .7071)
+          l[i * 4] = l[i * 4 + 1] = l[i * 4 + 2] = 255
+          l[i * 4 + 3] = 255 * Math.min(1, tune.rim * (.7 * lit ** 2 + .3 * back ** 2 + .12 * s))
+        }
+
+        x.putImageData(light, 0, 0)
+        el.style.backgroundImage = `url(${c.toDataURL()})`
+        if (!bends) return
+        x.putImageData(px, 0, 0)
+        for (const t of [filter, img]) { t.setAttribute('width', w); t.setAttribute('height', h) }
+        img.setAttribute('href', c.toDataURL())
+        map.setAttribute('scale', Math.round(size * tune.refract))
+        el.style.backdropFilter = 'url(#r2-refract) blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness))'
+      }
+
+      let timer
+      addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(build, 150) })
+      document.fonts.ready.then(build)
     })()
   </script>
+
+  <section class="rx-desk" aria-label="rx3, live">
+    <div class="rx-win">
+      <div class="rx-bar"><div class="rx-lights" aria-hidden="true"><i></i><i></i><i></i></div><p>rx3</p><span></span></div>
+      <iframe src="/rx3/" title="rx3" loading="lazy" allow="autoplay; fullscreen"></iframe>
+    </div>
+    <a class="rx-btn" href="/rx3/">Open rx3<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </section>
 
   <link rel="stylesheet" href="/assets/glass.css?v=13">
 
