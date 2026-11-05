@@ -19,8 +19,66 @@
   <link rel="stylesheet" href="/assets/home.css?v=44">
   <link rel="stylesheet" href="/assets/ask.css?v=15">
   <script src="/assets/page-transition.js?v=1"></script>
+  <style>
+    /* "r2music is live" banner: rx3's Neon Ripple, redrawn in CSS in Shawn purple
+       (a dark base, two glowing bands drifting past each other, and film grain). */
+    :root { --live-h: 36px; }
+    .live-banner {
+      position: fixed; z-index: 101; top: 0; left: 0; right: 0;
+      height: calc(var(--live-h) + env(safe-area-inset-top, 0px));
+      padding: env(safe-area-inset-top, 0px) 16px 0;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      overflow: hidden; isolation: isolate;
+      background: rgb(3 3 5);
+      color: #fff; font-size: .8rem; font-weight: 500; letter-spacing: -.005em; white-space: nowrap;
+      text-decoration: none; text-shadow: 0 1px 8px rgb(20 0 30 / .6);
+      box-shadow: inset 0 -1px 0 rgb(255 255 255 / .1);
+    }
+    .live-banner::before, .live-banner::after {
+      content: ''; position: absolute; z-index: -1; pointer-events: none;
+    }
+    .live-banner::before {
+      inset: -150% -60%;
+      background:
+        radial-gradient(18% 30% at 22% 58%, #f0d4ff 0%, #d9a8f5 18%, rgb(179 111 217 / .75) 45%, transparent 75%),
+        radial-gradient(16% 26% at 48% 38%, #b36fd9 0%, rgb(154 79 196 / .6) 45%, transparent 75%),
+        radial-gradient(20% 32% at 74% 62%, #e2b8ff 0%, #b36fd9 22%, rgb(154 79 196 / .55) 50%, transparent 78%),
+        radial-gradient(14% 24% at 96% 40%, #9a4fc4 0%, transparent 70%);
+      filter: blur(6px) saturate(1.4);
+      animation: live-ripple 14s ease-in-out infinite alternate;
+    }
+    .live-banner::after {
+      inset: 0; opacity: .55; mix-blend-mode: overlay;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    @keyframes live-ripple {
+      0%   { transform: translateX(-18%) scaleY(1); }
+      50%  { transform: translateX(4%) scaleY(1.25); }
+      100% { transform: translateX(18%) scaleY(.9); }
+    }
+    .live-banner__eq { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
+    .live-banner__eq i { width: 2px; height: 100%; border-radius: 1px; background: #fff; transform-origin: bottom; animation: live-eq 1s ease-in-out infinite alternate; }
+    .live-banner__eq i:nth-child(2) { animation-delay: -.4s; }
+    .live-banner__eq i:nth-child(3) { animation-delay: -.7s; }
+    .live-banner__eq i:nth-child(4) { animation-delay: -.2s; }
+    @keyframes live-eq { from { transform: scaleY(.3); } to { transform: scaleY(1); } }
+    .live-banner__arrow { transition: transform .2s; }
+    .live-banner:hover .live-banner__arrow { transform: translateX(3px); }
+    .live-banner b { font-weight: 600; }
+    @media (prefers-reduced-motion: reduce) {
+      .live-banner::before, .live-banner__eq i { animation: none; }
+    }
+    @media (max-width: 420px) { .live-banner__more { display: none; } }
+    /* Make room for it: the floating nav sits under the banner. */
+    body:has(.live-banner) .nav { top: calc(var(--live-h) + env(safe-area-inset-top, 0px) + clamp(8px, 1.5vw, 14px)); }
+  </style>
 </head>
 <body>
+  <a class="live-banner" href="press-r2music.html">
+    <span class="live-banner__eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span><b>r2music is live.</b><span class="live-banner__more"> Read the announcement</span></span>
+    <svg class="live-banner__arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </a>
   <figure id="desktop-folder" class="desktop-icon desktop-file">
     <img src="/images/folder-icon-macos.png" alt="Folder" draggable="false" />
     <figcaption>untitled folder</figcaption>

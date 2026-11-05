@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>r2music is live — Shawn Singh</title>
+  <meta name="description" content="Press release: r2music, a music library in your own Cloudflare R2 bucket, is live, with rx3, a DJ unit in the browser that plays from it." />
+
+
+
+  <style>
+    .about-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 56px 0;
+    }
+
+    .about-section {
+      padding: 72px 0;
+    }
+
+    .about-col-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 64px;
+    }
+
+    .about-col-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--light);
+      padding-top: 6px;
+    }
+
+    .about-bio-large {
+      font-family: var(--serif);
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+      font-weight: 700;
+      line-height: 1.5;
+      color: var(--black);
+      max-width: 28ch;
+      margin-bottom: 32px;
+    }
+
+    .resume-cta {
+      margin-top: 40px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .resume-cta p {
+      font-size: 0.9rem;
+      color: var(--mid);
+      margin: 0;
+      max-width: none;
+    }
+
+    @media (max-width: 900px) {
+      .about-col-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    }
+
+    .press-dateline {
+      font-weight: 600;
+      color: var(--black);
+    }
+
+    .press-body p:not(.about-bio-large) {
+      font-size: 1rem;
+      color: var(--mid);
+      line-height: 1.8;
+      max-width: 65ch;
+      margin-bottom: 20px;
+    }
+
+    .press-body p:last-child { margin-bottom: 0; }
+
+    .press-steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-width: 65ch;
+      counter-reset: step;
+    }
+
+    .press-steps li {
+      counter-increment: step;
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      padding: 20px 0;
+      border-top: 1px solid var(--border);
+      font-size: 1rem;
+      color: var(--mid);
+      line-height: 1.8;
+    }
+
+    .press-steps li:first-child { border-top: 0; padding-top: 0; }
+
+    .press-steps li::before {
+      content: counter(step, decimal-leading-zero);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+      padding-top: 5px;
+    }
+
+    .press-steps b { color: var(--black); font-weight: 600; }
+
+    .press-end {
+      text-align: center;
+      letter-spacing: 0.4em;
+      color: var(--light);
+      font-size: 0.85rem;
+      padding: 0 0 72px;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
+  <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
+  <link rel="stylesheet" href="/assets/ask.css?v=15">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" data-always-scrolled role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo" style="display:flex;align-items:center;gap:10px;">
+        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+          <defs>
+            <radialGradient id="sg" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#d9a8f5"/>
+              <stop offset="55%" stop-color="#b36fd9"/>
+              <stop offset="100%" stop-color="#9a4fc4"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="50" fill="url(#sg)"/>
+          <text x="50" y="67" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif" font-size="52" font-weight="600" fill="white" letter-spacing="-1">S</text>
+        </svg>
+        Shawn Singh
+      </a>
+
+      <ul class="nav__links" role="list">
+        <li><a href="work.html">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+      </ul>
+
+      <div class="nav__right" style="display:flex;align-items:center;gap:8px;">
+      <button class="nav__theme-toggle" aria-label="Switch to dark mode">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="about-hero" style="padding-top: var(--nav-height); background: var(--bg-off); border-bottom: 1px solid var(--border);">
+    <div class="about-hero__inner">
+      <div data-reveal>
+        <p class="about-eyebrow">Press release</p>
+        <h1 class="about-title">r2music is live</h1>
+      </div>
+      <div data-reveal data-reveal-delay="80">
+        <p class="hero__sub" style="font-size: 1.05rem;">For immediate release<br />San Francisco, CA · November 5, 2026</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Announcement</p>
+          <div class="press-body">
+            <p class="about-bio-large">Your music library, in your own bucket, on every device you mix from.</p>
+            <p><span class="press-dateline">SAN FRANCISCO, November 5, 2026.</span> Shawn Singh today released r2music 1.0, a music library that lives in the listener&rsquo;s own Cloudflare R2 bucket rather than on a single laptop. It launches alongside rx3, a Pioneer XDJ-RX3 that runs in the browser and plays straight from that library. Together they let a DJ prepare a set in rekordbox at home and pick it up on any laptop or phone, with the same tracks, playlists and cues.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">What is r2music</p>
+          <div class="press-body">
+            <p>r2music is a Mac app and a web app that share one library. The Mac app reads your rekordbox collection, tracks and playlists along with their beat grids, waveforms and cues, and uploads it to a Cloudflare R2 bucket that you own.</p>
+            <p>Each track is uploaded once and named by its SHA-256, so nothing is stored twice. Playlists sit beside the music in an open <code>lists.json</code> file. The web app at r2.shawnsingh.me signs in with GitHub, connects to the same bucket, and streams through signed URLs that come straight from it. The files stay in your account, in formats you can read without r2music.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">What is rx3</p>
+          <div class="press-body">
+            <p>rx3 is an XDJ-RX3 for the browser: the unit&rsquo;s touch screen, its buttons, two decks and the mixer. Its effects are ported from the RX3&rsquo;s own firmware: Beat FX Echo, Reverb, Flanger, Phaser, Filter and Trans, and all six Sound Color FX, Space, Dub Echo, Sweep, Noise, Crush and Filter. Two more Beat FX, Drum and Noise, come from BEAT FX.</p>
+            <p>Everything runs on the device in Web Audio, so there is no server in the audio path and no added latency. On a computer, the keyboard under the screen maps every control, with each key lit by what it drives.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">How it fits together</p>
+          <ol class="press-steps">
+            <li><span><b>Prepare in rekordbox.</b> Build playlists and set cues on your Mac as you do today.</span></li>
+            <li><span><b>Upload once with r2music.</b> The Mac app sends new tracks and your playlists to your R2 bucket.</span></li>
+            <li><span><b>Open it anywhere.</b> Your laptop and phone read the same library, so a playlist saved on one is on the other.</span></li>
+            <li><span><b>Mix in rx3.</b> The r2music library appears as USB1 on rx3&rsquo;s source screen. A folder on your computer is USB2, and you can drop in any song to play it on the spot.</span></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Availability</p>
+          <div class="press-body">
+            <p>r2music 1.0 is available today for Apple Silicon Macs and on the web at r2.shawnsingh.me. rx3 is available at shawnsingh.me/rx3. Both run in current desktop and mobile browsers.</p>
+            <div class="resume-cta">
+              <a href="https://github.com/shawnpsi-lgtm/r2music-releases/releases/latest/download/r2music-mac-arm64.zip" class="btn btn--accent">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download r2music for Mac
+              </a>
+              <a href="https://r2.shawnsingh.me" class="btn btn--dark">Open r2music</a>
+              <a href="/rx3/" class="btn btn--dark">Open rx3</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">About Shawn Singh</p>
+          <div class="press-body">
+            <p>Shawn Singh is a data scientist at C3 AI and the founder of Visually Represented Studios, an Emmy Award-winning creative agency, based in San Francisco. See more work at <a href="work.html" style="color: var(--accent);">shawnsingh.me</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Press contact</p>
+          <div class="press-body">
+            <p><a href="mailto:shawn@visuallyrepresented.co" style="color: var(--accent);">shawn@visuallyrepresented.co</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p class="press-end" aria-hidden="true">###</p>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <p class="footer__logo">Shawn Singh</p>
+          <p class="footer__tagline">data + design — San Francisco, CA</p>
+        </div>
+        <div class="footer__links">
+          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            LinkedIn
+          </a>
+          <a href="/files/resume.pdf" class="footer__link" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Résumé
+          </a>
+          <a href="mailto:shawn@visuallyrepresented.co" class="footer__link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            shawn@visuallyrepresented.co
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <link rel="stylesheet" href="/assets/glass.css?v=13">
+
+  <script src="/assets/glass.js?v=14" defer></script>
+
+  <script src="/assets/chat.js?v=15"></script>
+</body>
+</html>
