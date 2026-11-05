@@ -186,8 +186,39 @@
       }
     };
 
+    // rx3 isn't one of React's cards, so it's added here, after r2music, built like the others: the image is the rx3
+    // landing page's hero (rx3/hero.html: the Neon Ripple with the glass "rx3"), with the caption over it, and it fades
+    // in on scroll as React's cards do.
+    const fillRx3 = () => {
+      const grid = document.querySelector('.grid');
+      const after = grid?.querySelector('.card-wrap[href="project-r2music.html"]');
+      if (!after || grid.querySelector('.card-wrap--rx3')) return;
+      after.insertAdjacentHTML('afterend',
+        '<a href="project-rx3.html" class="card-wrap card-wrap--rx3" aria-label="View rx3 project">' +
+          '<div class="card">' +
+            '<div class="card__img" style="position:relative;background:rgb(3,3,5)">' +
+              '<iframe src="/rx3/hero.html" title="" aria-hidden="true" tabindex="-1" loading="lazy" ' +
+                'style="position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none"></iframe>' +
+            '</div>' +
+            '<div class="card__overlay"><p class="card__overlay-title">rx3</p>' +
+              '<p class="card__overlay-tagline">A pro DJ unit, in a browser tab.</p><span class="btn btn--white">View Project</span></div>' +
+            '<div class="card-copy"><b>A pro DJ unit, in a browser tab</b></div>' +
+          '</div>' +
+          '<div class="card__info"><h3 class="card__title">rx3</h3>' +
+            '<p class="card__tagline">The Pioneer XDJ-RX3, rebuilt in the browser from its own firmware</p></div>' +
+        '</a>');
+      const card = grid.querySelector('.card-wrap--rx3');
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      Object.assign(card.style, { opacity: 0, transform: 'translateY(24px)', transition: 'opacity .6s, transform .6s' });
+      new IntersectionObserver(([e], io) => {
+        if (!e.isIntersecting) return;
+        Object.assign(card.style, { opacity: 1, transform: 'none' });
+        io.disconnect();
+      }, { threshold: .15 }).observe(card);
+    };
+
   const fillAll = () => {
-    fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); fillSayclipBadge();
+    fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); fillSayclipBadge(); fillRx3();
   };
   addEventListener('DOMContentLoaded', () => {
     fillAll();
