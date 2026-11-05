@@ -3,131 +3,99 @@
 <head>
   <meta charset="UTF-8" />
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>r music is live — Shawn Singh</title>
-  <meta name="description" content="r music is live: your music in your own Cloudflare R2 bucket, on your laptop and phone, and mixable in rx3, a DJ unit in your browser." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>rx3 + r2 · Shawn Singh</title>
+  <meta name="description" content="r music is live: your music in your own Cloudflare R2 bucket, on your laptop and phone, and mixed in rx3, a Pioneer XDJ-RX3 in your browser." />
 
 
-
-  <style>
-    .about-divider {
-      height: 1px;
-      background: var(--border);
-      margin: 56px 0;
-    }
-
-    .about-section {
-      padding: 72px 0;
-    }
-
-    .about-col-grid {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 64px;
-    }
-
-    .about-col-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--light);
-      padding-top: 6px;
-    }
-
-    .about-bio-large {
-      font-family: var(--serif);
-      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
-      font-weight: 700;
-      line-height: 1.5;
-      color: var(--black);
-      max-width: 28ch;
-      margin-bottom: 32px;
-    }
-
-    .resume-cta {
-      margin-top: 40px;
-      padding-top: 40px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    .resume-cta p {
-      font-size: 0.9rem;
-      color: var(--mid);
-      margin: 0;
-      max-width: none;
-    }
-
-    @media (max-width: 900px) {
-      .about-col-grid {
-        grid-template-columns: 1fr;
-        gap: 24px;
-      }
-    }
-
-    .press-body p:not(.about-bio-large) {
-      font-size: 1rem;
-      color: var(--mid);
-      line-height: 1.8;
-      max-width: 65ch;
-      margin-bottom: 20px;
-    }
-
-    .press-body p:last-child { margin-bottom: 0; }
-
-    .press-steps {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      max-width: 65ch;
-      counter-reset: step;
-    }
-
-    .press-steps li {
-      counter-increment: step;
-      display: grid;
-      grid-template-columns: 40px 1fr;
-      padding: 20px 0;
-      border-top: 1px solid var(--border);
-      font-size: 1rem;
-      color: var(--mid);
-      line-height: 1.8;
-    }
-
-    .press-steps li:first-child { border-top: 0; padding-top: 0; }
-
-    .press-steps li::before {
-      content: counter(step, decimal-leading-zero);
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      color: var(--accent);
-      padding-top: 5px;
-    }
-
-    .press-steps b { color: var(--black); font-weight: 600; }
-
-    .press-list li::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      margin-top: 12px;
-      border-radius: 50%;
-      background: var(--accent);
-      padding: 0;
-    }
-
-    .press-steps + .resume-cta { margin-top: 24px; }
-
-  </style>
   <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
   <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
+  <link rel="stylesheet" href="/assets/view-transition.css?v=1">
   <link rel="stylesheet" href="/assets/ask.css?v=15">
+  <style>
+    /* The Neon Ripple from Wayglim, fixed behind everything (assets/wayglim-rx3.js mounts it here). */
+    body { background: rgb(3 3 5); }
+    /* Large viewport plus safe areas: fills behind iOS Safari's status bar and toolbar. */
+    .rx-bg {
+      position: fixed; left: 0; width: 100%; pointer-events: none;
+      top: calc(-1 * env(safe-area-inset-top, 0px));
+      height: calc(100lvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+    }
+    /* Glass in the shape of the word: the script masks this to the letters and
+       hands it a refraction map and a rim-light map drawn from the same glyphs. */
+    .r2-glass {
+      position: relative; height: 100vh; margin: 0; color: transparent; font-size: 0;
+      --frost: 3px; --saturate: 1.75; --brightness: .78; --tint: .12;
+      -webkit-backdrop-filter: blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness));
+      backdrop-filter: blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness));
+      background: rgb(255 255 255 / var(--tint)) 0 0 / 100% 100% no-repeat;
+      -webkit-mask: 0 0 / 100% 100% no-repeat; mask: 0 0 / 100% 100% no-repeat;
+    }
+
+
+    /* Right under the title: what it's for, in big type. */
+    .rm-pitch { position: relative; display: grid; place-items: center; min-height: 80vh; padding: 72px 16px; }
+    .rm-pitch p {
+      margin: 0; max-width: 24ch; font-size: clamp(1.9rem, 4.6vw, 3.4rem); font-weight: 600; line-height: 1.15; letter-spacing: -.02em;
+      color: #fff; text-align: center; text-wrap: balance; text-shadow: 0 2px 16px rgb(0 0 0 / .5);
+    }
+    .rm-pitch span { display: block; margin-top: .5em; }
+    /* Under the title: rx3's typing line, with r music's taglines, and the links. */
+    .rx-desk { position: relative; display: grid; place-items: center; align-content: center; gap: 28px; min-height: 80vh; padding: 72px 16px; }
+    .rx-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+    /* How it works: r2music's flow diagram, with rx3 on the end, and a short caption for each step. */
+    .rm-flow { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 560px); justify-content: center; align-items: center; gap: 24px 56px; padding: 48px 16px 120px; color: #f5f5f7; }
+    .rm-steps, .rm-board {
+      border-radius: 14px; background: rgb(12 16 22 / .5); -webkit-backdrop-filter: blur(40px) saturate(1.5); backdrop-filter: blur(40px) saturate(1.5);
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12), 0 0 0 1px rgb(0 0 0 / .6), 0 30px 90px rgb(0 0 0 / .55);
+    }
+    .rm-steps { display: grid; gap: 20px; margin: 0; padding: 24px; list-style: none; counter-reset: rm; }
+    .rm-steps li { counter-increment: rm; display: grid; grid-template-columns: 28px 1fr; font-size: .9rem; line-height: 1.6; color: #b8b8be; }
+    .rm-steps li::before { content: counter(rm, decimal-leading-zero); font-size: .72rem; font-weight: 600; letter-spacing: .1em; color: #2997ff; padding-top: 2px; }
+    .rm-steps b { font-weight: 600; color: #f5f5f7; }
+    .rm-board { position: relative; width: min(560px, 100%); aspect-ratio: 1; container-type: inline-size; }
+    .rm-net { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: rgb(255 255 255 / .3); stroke-width: .5; }
+    .rm-net path { stroke-dasharray: 1 2; }
+    .rm-net .rm-dots { stroke: #2997ff; stroke-width: 1.2; stroke-linecap: round; stroke-dasharray: 0 .1; animation: rm-dash .8s linear infinite; }
+    .rm-node {
+      position: absolute; translate: -50% -50%; display: grid; justify-items: center; gap: 1px; padding: .7em 1em;
+      border-radius: 12px; background: #1c1c1e; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .1), 0 8px 24px rgb(0 0 0 / .35);
+      font-size: clamp(10px, 2.5cqw, 14px); font-weight: 600; line-height: 1.3; white-space: nowrap;
+    }
+    .rm-node svg { width: 2em; height: 2em; margin-bottom: 4px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .rm-node small { font-size: .8em; font-weight: 400; color: #98989d; }
+    .rm-node.hub svg, .rm-node.rx svg { color: #2997ff; }
+    /* Drawn in when it scrolls into view: nodes pop in down the flow, the lines draw between them. */
+    @media (prefers-reduced-motion: no-preference) {
+      .rm-flow.js .rm-node, .rm-flow.js .rm-net path { opacity: 0; }
+      .rm-flow.in .rm-node { animation: rm-pop .5s cubic-bezier(.2, .8, .2, 1) var(--d) both; }
+      .rm-flow.in .rm-net path { animation: rm-draw .6s ease-out var(--d) both; }
+      .rm-flow.in .rm-net .rm-dots { animation: rm-show .3s var(--d) both, rm-dash .8s linear infinite; }
+      .rm-flow.js .rm-steps li { opacity: 0; }
+      .rm-flow.in .rm-steps li { animation: rm-rise .5s ease-out var(--d) both; }
+    }
+    @keyframes rm-pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; } }
+    @keyframes rm-draw { from { opacity: 1; stroke-dashoffset: 1; } to { opacity: 1; } }
+    @keyframes rm-show { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes rm-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; } }
+    @keyframes rm-dash { to { stroke-dashoffset: -.1; } }
+    @media (max-width: 860px) { .rm-flow { grid-template-columns: minmax(0, 560px); } .rm-board { order: -1; } }
+    .rx-btn {
+      display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border: 1px solid #0071e3; border-radius: 980px;
+      background: #0071e3; color: #fff; font-size: .95rem; text-decoration: none; transition: background .2s;
+    }
+    .rx-btn:hover { background: #0077ed; }
+    .rx-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .rx-btn.rx-btn--ghost { background: rgb(255 255 255 / .1); border-color: rgb(255 255 255 / .25); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+    .rx-btn.rx-btn--ghost:hover { background: rgb(255 255 255 / .18); }
+    /* Under the window: what you can mix with, typed out and deleted, one line after another. */
+    .rx-type { margin: 0; min-height: 1.3em; font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 600; letter-spacing: -.01em; color: #fff; text-align: center; text-shadow: 0 2px 12px rgb(0 0 0 / .5); }
+    .rx-type span::after { content: ''; display: inline-block; width: 2px; height: 1em; margin-left: 3px; vertical-align: -.12em; background: #0a84ff; animation: rx-caret 1s steps(1) infinite; }
+    @keyframes rx-caret { 50% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .rx-type span::after { animation: none; } }
+  </style>
 </head>
 <body>
 
@@ -171,139 +139,192 @@
     </div>
   </nav>
 
-  <header class="about-hero" style="padding-top: var(--nav-height); background: var(--bg-off); border-bottom: 1px solid var(--border);">
-    <div class="about-hero__inner">
-      <div data-reveal>
-        <p class="about-eyebrow">It&rsquo;s out</p>
-        <h1 class="about-title">r music is live</h1>
-      </div>
-      <div data-reveal data-reveal-delay="80">
-        <p class="hero__sub" style="font-size: 1.05rem;">November 5, 2026<br />from Shawn</p>
-      </div>
+  <div class="rx-bg" aria-hidden="true"></div>
+
+  <script src="/assets/wayglim-rx3.js?v=1" defer></script>
+  <h1 class="r2-glass">rx3 + r2</h1>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="r2-refract" x="0" y="0" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feImage x="0" y="0" preserveAspectRatio="none" result="map" />
+      <feDisplacementMap in="SourceGraphic" in2="map" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+
+  <script>
+    // Draws rx3 once per size, then derives everything from the glyphs:
+    // the mask, a displacement map that bends the video at the letter edges, and the rim light.
+    (() => {
+      const el = document.querySelector('.r2-glass'), WORD = el.textContent.trim()
+      const filter = document.getElementById('r2-refract')
+      const img = filter.querySelector('feImage')
+      const map = filter.querySelector('feDisplacementMap')
+      // Only Chromium runs SVG filters in backdrop-filter; elsewhere the glass is frost and rim only.
+      const bends = !!navigator.userAgentData
+
+      // Refraction and bevel scale with the letter size; frost, saturation, brightness and tint are CSS on .r2-glass.
+      const tune = { refract: .36, bevel: .005, rim: 2.65 }
+
+      function glyphs(w, h, scale) {
+        const c = document.createElement('canvas')
+        c.width = w * scale; c.height = h * scale
+        const x = c.getContext('2d', { willReadFrequently: true })
+        const font = getComputedStyle(document.body).fontFamily
+        x.font = `700 100px ${font}`
+        const size = Math.min(100 * w * .94 / x.measureText(WORD).width, h * .7) * scale
+        x.font = `700 ${size}px ${font}`
+        // Centered on the ink, not the advance box: across by the letters' left and right edges, and down by their
+        // weight, since the short r and x sit low beside the tall 3 and a box-centered word reads as sitting low.
+        const m = x.measureText(WORD)
+        const cx = c.width / 2 + (m.actualBoundingBoxLeft - m.actualBoundingBoxRight) / 2
+        let cy = c.height / 2 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2
+        x.fillText(WORD, cx, cy)
+        const top = Math.max(0, Math.floor(cy - m.actualBoundingBoxAscent)), rows = Math.ceil(m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) + 1
+        const ink = x.getImageData(0, top, c.width, Math.min(rows, c.height - top)).data
+        let mass = 0, moment = 0
+        for (let i = 3; i < ink.length; i += 4) if (ink[i]) { mass += ink[i]; moment += ink[i] * (top + ((i >> 2) / c.width | 0)) }
+        if (mass) { x.clearRect(0, 0, c.width, c.height); cy += (c.height / 2 - moment / mass) * .5; x.fillText(WORD, cx, cy) }
+        return { c, x, size: size / scale }
+      }
+
+      // Box blur along rows (step 1) or columns (step w), three times over reads as a gaussian.
+      function blur(src, dst, n, lines, stride, step, r) {
+        for (let i = 0; i < lines; i++) {
+          const o = i * stride
+          let sum = 0
+          for (let k = -r; k <= r; k++) sum += src[o + Math.min(Math.max(k, 0), n - 1) * step]
+          for (let j = 0; j < n; j++) {
+            dst[o + j * step] = sum / (2 * r + 1)
+            sum += src[o + Math.min(j + r + 1, n - 1) * step] - src[o + Math.max(j - r, 0) * step]
+          }
+        }
+      }
+
+      function build() {
+        const w = innerWidth, h = innerHeight
+        const dpr = Math.min(devicePixelRatio || 1, 2)
+        const sharp = glyphs(w, h, dpr)
+        el.style.webkitMaskImage = el.style.maskImage = `url(${sharp.c.toDataURL()})`
+
+        // Height field: the letters, blurred, so it rises from 0 outside to 1 inside.
+        const { c, x, size } = glyphs(w, h, 1)
+        const px = x.getImageData(0, 0, w, h)
+        const d = px.data, n = w * h
+        let a = new Float32Array(n), b = new Float32Array(n)
+        for (let i = 0; i < n; i++) a[i] = d[i * 4 + 3] / 255
+        const r = Math.max(2, Math.round(size * tune.bevel))
+        for (let k = 0; k < 3; k++) { blur(a, b, w, h, w, 1, r); blur(b, a, h, w, 1, w, r) }
+
+        // Its slope points into each letter. Refraction pulls from outward; the rim lights where it's steep.
+        const gx = new Float32Array(n), gy = new Float32Array(n)
+        let max = 1e-6
+        for (let y = 1; y < h - 1; y++) for (let i = y * w + 1, e = y * w + w - 1; i < e; i++) {
+          gx[i] = a[i + 1] - a[i - 1]; gy[i] = a[i + w] - a[i - w]
+          max = Math.max(max, Math.hypot(gx[i], gy[i]))
+        }
+        const light = x.createImageData(w, h), l = light.data
+        for (let i = 0; i < n; i++) {
+          const sx = gx[i] / max, sy = gy[i] / max, s = Math.hypot(sx, sy)
+          d[i * 4] = 128 - sx * 127; d[i * 4 + 1] = 128 - sy * 127; d[i * 4 + 2] = 128; d[i * 4 + 3] = 255
+          const lit = Math.max(0, (sx + sy) * .7071), back = Math.max(0, -(sx + sy) * .7071)
+          l[i * 4] = l[i * 4 + 1] = l[i * 4 + 2] = 255
+          l[i * 4 + 3] = 255 * Math.min(1, tune.rim * (.7 * lit ** 2 + .3 * back ** 2 + .12 * s))
+        }
+
+        x.putImageData(light, 0, 0)
+        el.style.backgroundImage = `url(${c.toDataURL()})`
+        if (!bends) return
+        x.putImageData(px, 0, 0)
+        for (const t of [filter, img]) { t.setAttribute('width', w); t.setAttribute('height', h) }
+        img.setAttribute('href', c.toDataURL())
+        map.setAttribute('scale', Math.round(size * tune.refract))
+        el.style.backdropFilter = 'url(#r2-refract) blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness))'
+      }
+
+      let timer
+      addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(build, 150) })
+      document.fonts.ready.then(build)
+    })()
+  </script>
+
+  <section class="rm-pitch">
+    <p>Access and manage your rekordbox library from anywhere. <span>Whether you&rsquo;re prepping for a set, growing your library or DJing live, rx3 + r2 brings music streaming and performance DJ software together.</span></p>
+  </section>
+
+  <section class="rx-desk" aria-label="r music">
+    <p class="rx-type" aria-label="Your music, in your own bucket, Your music, stored once, Your music, on your laptop, Your music, on your phone, Your music, in rx3, Mix with Dub Echo, Mix with Space, Mix with your rekordbox cues, Mix anywhere."><span aria-hidden="true"></span></p>
+    <div class="rx-actions">
+      <a class="rx-btn" href="https://r2.shawnsingh.me">Open r music<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+      <a class="rx-btn rx-btn--ghost" href="https://github.com/shawnpsi-lgtm/r2music-releases/releases/latest/download/r2music-mac-arm64.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Mac</a>
+      <a class="rx-btn rx-btn--ghost" href="/rx3/">Open rx3<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
     </div>
-  </header>
+  </section>
 
-  <main>
-
-    <section class="about-section" style="border-bottom: 1px solid var(--border);">
-      <div class="container">
-        <div class="about-col-grid" data-reveal>
-          <p class="about-col-label">The short version</p>
-          <div class="press-body">
-            <p class="about-bio-large">Your music in one place you own. Play it and mix it from your laptop or your phone.</p>
-            <p>r music keeps your songs and playlists in your own cloud storage, so they&rsquo;re on every device you use. rx3 is a DJ setup in a browser tab that plays straight from it. Both are out today.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="about-section" style="border-bottom: 1px solid var(--border);">
-      <div class="container">
-        <div class="about-col-grid" data-reveal>
-          <p class="about-col-label">r music</p>
-          <ul class="press-steps press-list">
-            <li><span><b>Your music, your storage.</b> Songs live in your own Cloudflare R2 bucket. Nobody else holds them.</span></li>
-            <li><span><b>Brings your rekordbox library over.</b> The Mac app grabs your songs, playlists and cues and uploads them for you.</span></li>
-            <li><span><b>Same library everywhere.</b> Make a playlist on your laptop and it&rsquo;s on your phone at r2.shawnsingh.me.</span></li>
-            <li><span><b>No duplicates.</b> Each song is uploaded once, even if it&rsquo;s in ten playlists.</span></li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="about-section" style="border-bottom: 1px solid var(--border);">
-      <div class="container">
-        <div class="about-col-grid" data-reveal>
-          <p class="about-col-label">rx3</p>
-          <ul class="press-steps press-list">
-            <li><span><b>A real DJ unit in your browser.</b> It&rsquo;s the Pioneer XDJ-RX3: two decks, a mixer and the touch screen.</span></li>
-            <li><span><b>The real effects.</b> Echo, reverb, dub echo, space and the rest, ported from the unit itself.</span></li>
-            <li><span><b>No lag.</b> The sound runs on your device, not on a server.</span></li>
-            <li><span><b>Your r music library is built in.</b> It shows up as USB1, ready to load.</span></li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="about-section" style="border-bottom: 1px solid var(--border);">
-      <div class="container">
-        <div class="about-col-grid" data-reveal>
-          <p class="about-col-label">Get started</p>
-          <div class="press-body">
-            <ol class="press-steps">
-              <li><span><b>Make an R2 bucket</b> in your Cloudflare account if you don&rsquo;t have one yet.</span></li>
-              <li><span><b>Open r2.shawnsingh.me</b>, sign in with GitHub and connect your bucket.</span></li>
-              <li><span><b>Add your music.</b> Drop files in on the web, or get the Mac app to bring your rekordbox library.</span></li>
-              <li><span><b>Mix it.</b> Open rx3, pick USB1 and load a song onto each deck.</span></li>
-            </ol>
-            <div class="resume-cta">
-              <a href="https://r2.shawnsingh.me" class="btn btn--accent">Open r music</a>
-              <a href="https://github.com/shawnpsi-lgtm/r2music-releases/releases/latest/download/r2music-mac-arm64.zip" class="btn btn--dark">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Mac app
-              </a>
-              <a href="/rx3/" class="btn btn--dark">Open rx3</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="about-section" style="border-bottom: 1px solid var(--border);">
-      <div class="container">
-        <div class="about-col-grid" data-reveal>
-          <p class="about-col-label">Good to know</p>
-          <ul class="press-steps press-list press-faq">
-            <li><span><b>What&rsquo;s R2?</b> Cloudflare&rsquo;s file storage. You make a bucket in your own Cloudflare account, and it has a free tier to start with.</span></li>
-            <li><span><b>Do I need rekordbox?</b> No. You can upload songs straight from the web app.</span></li>
-            <li><span><b>Which Macs?</b> The Mac app is for Apple Silicon. It isn&rsquo;t notarized yet, so the first time, unzip it into Applications, then go to System Settings &rarr; Privacy &amp; Security and click Open Anyway.</span></li>
-            <li><span><b>Can I try rx3 without r music?</b> Yes. Drop a song onto the page, or pick a folder on your computer as USB2. Songs you drop in stay in that tab.</span></li>
-            <li><span><b>Can I leave?</b> Anytime. Your songs are plain files in your bucket, and your playlists are in a readable lists.json next to them.</span></li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="about-section">
-      <div class="container">
-        <div class="about-col-grid" data-reveal>
-          <p class="about-col-label">Questions?</p>
-          <div class="press-body">
-            <p>Email me at <a href="mailto:shawn@visuallyrepresented.co" style="color: var(--accent);">shawn@visuallyrepresented.co</a>. I&rsquo;d love to hear what you mix.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- ============================================================
-       FOOTER
-       ============================================================ -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer__inner">
-        <div>
-          <p class="footer__logo">Shawn Singh</p>
-          <p class="footer__tagline">data + design — San Francisco, CA</p>
-        </div>
-        <div class="footer__links">
-          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-            LinkedIn
-          </a>
-          <a href="/files/resume.pdf" class="footer__link" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download Résumé
-          </a>
-          <a href="mailto:shawn@visuallyrepresented.co" class="footer__link">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            shawn@visuallyrepresented.co
-          </a>
-        </div>
-      </div>
+  <section class="rm-flow" aria-label="How r music works">
+    <ol class="rm-steps">
+      <li style="--d:0s"><span><b>Find.</b> The Mac app reads your rekordbox library: tracks and playlists, with their beat grids, waveforms and cues.</span></li>
+      <li style="--d:.5s"><span><b>Upload once.</b> Each track goes to your Cloudflare R2 bucket once, named by its SHA-256, so nothing is stored twice. Playlists sit beside them in an open lists.json.</span></li>
+      <li style="--d:1s"><span><b>Sync.</b> Your laptop and phone open the same bucket, so a playlist saved on the laptop is already on your phone.</span></li>
+      <li style="--d:1.5s"><span><b>Play.</b> Sort and upload in Files, stream over signed URLs straight from your bucket, or open rx3, where your library is USB1, and mix.</span></li>
+    </ol>
+    <div class="rm-board" aria-hidden="true">
+      <svg class="rm-net" viewBox="0 0 100 100">
+        <path pathLength="1" d="M50 11V38" style="--d:.35s"/>
+        <path pathLength="1" d="M50 38C50 50 27 50 27 62" style="--d:.85s"/>
+        <path pathLength="1" d="M50 38C50 50 73 50 73 62" style="--d:.85s"/>
+        <path pathLength="1" d="M27 62V77M73 62V77" style="--d:1.35s"/>
+        <path pathLength="1" d="M50 77H21Q17 77 17 81V88" style="--d:1.45s"/>
+        <path pathLength="1" d="M50 77H79Q83 77 83 81V88" style="--d:1.45s"/>
+        <path pathLength="1" d="M50 77V88" style="--d:1.45s"/>
+        <path class="rm-dots" pathLength="1" d="M50 11V38" style="--d:.9s"/>
+        <path class="rm-dots" pathLength="1" d="M50 38C50 50 27 50 27 62" style="--d:1.4s"/>
+        <path class="rm-dots" pathLength="1" d="M50 38C50 50 73 50 73 62" style="--d:1.4s"/>
+        <path class="rm-dots" pathLength="1" d="M50 77V88" style="--d:2s"/>
+      </svg>
+      <div class="rm-node" style="left:50%;top:11%;--d:0s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M6 12c0-1.7.7-3.2 1.8-4.2M18 12c0 1.7-.7 3.2-1.8 4.2"/><circle cx="12" cy="12" r="2"/></svg>rekordbox<small>on your Mac</small></div>
+      <div class="rm-node hub" style="left:50%;top:38%;--d:.5s"><svg viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>Your R2 bucket<small>tracks + lists.json</small></div>
+      <div class="rm-node" style="left:27%;top:62%;--d:1s"><svg viewBox="0 0 24 24"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></svg>Laptop<small>Mac app</small></div>
+      <div class="rm-node" style="left:73%;top:62%;--d:1.1s"><svg viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>Phone<small>web app</small></div>
+      <div class="rm-node" style="left:17%;top:88%;--d:1.6s"><svg viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>Files<small>lists, upload</small></div>
+      <div class="rm-node rx" style="left:50%;top:88%;--d:1.6s"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/></svg>rx3<small>mix it, as USB1</small></div>
+      <div class="rm-node" style="left:83%;top:88%;--d:1.6s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4z"/></svg>Stream<small>signed URLs</small></div>
     </div>
-  </footer>
+  </section>
+
+  <script>
+    // rx3's typing line: types each tagline, holds it, deletes back to the prefix it shares with the next. Reduced motion: swaps whole lines.
+    (() => {
+      const el = document.querySelector('.rx-type span')
+      const lines = ['Your music, in your own bucket', 'Your music, stored once', 'Your music, on your laptop', 'Your music, on your phone', 'Your music, in rx3', 'Mix with Dub Echo', 'Mix with Space', 'Mix with your rekordbox cues', 'Mix anywhere']
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+      let i = 0, n = 0, deleting = false
+      const tick = () => {
+        const line = lines[i]
+        if (still) { el.textContent = line; i = (i + 1) % lines.length; return setTimeout(tick, 2200) }
+        if (!deleting) {
+          el.textContent = line.slice(0, ++n)
+          if (n < line.length) return setTimeout(tick, 55 + Math.random() * 45)
+          deleting = true
+          return setTimeout(tick, 1600)
+        }
+        el.textContent = line.slice(0, --n)
+        const next = lines[(i + 1) % lines.length]
+        let keep = 0
+        while (keep < line.length && keep < next.length && line[keep] === next[keep]) keep++
+        if (n > keep) return setTimeout(tick, 30)
+        deleting = false; i = (i + 1) % lines.length
+        setTimeout(tick, 350)
+      }
+      tick()
+    })();
+
+    // The diagram draws itself the first time it scrolls into view.
+    (() => {
+      const flow = document.querySelector('.rm-flow')
+      flow.classList.add('js')
+      const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { flow.classList.add('in'); io.disconnect() } }, { threshold: .3 })
+      io.observe(flow)
+    })()
+  </script>
 
   <link rel="stylesheet" href="/assets/glass.css?v=13">
 
