@@ -14,14 +14,9 @@
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
   <link rel="stylesheet" href="/assets/ask.css?v=15">
   <style>
-    /* sayclip's still of the same wallpaper shows until the video starts, or if it can't load. */
-    body { background: #000 url(/sayclip/wallpaper.jpg) center / cover fixed; }
-    /* The homepage's tahoeDay wallpaper, cropped to cover like the hero's. */
-    .r2-video {
-      position: fixed; top: 50%; left: 50%; width: 100vw; height: 56.25vw;
-      min-width: 177.78svh; min-height: 100svh; transform: translate(-50%, -50%);
-      border: 0; pointer-events: none;
-    }
+    /* The neon ripple behind everything. The gradient shows if WebGL can't start. */
+    body { background: #07081c linear-gradient(180deg, #5b5bf0 0%, #8a6cf2 38%, #ff7ad9 52%, #10112c 64%, #06071a 100%) fixed; }
+    .rx-bg { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; pointer-events: none; }
     /* Glass in the shape of the word: the script masks this to the letters and
        hands it a refraction map and a rim-light map drawn from the same glyphs. */
     .r2-glass {
@@ -104,10 +99,95 @@
     </div>
   </nav>
 
-  <iframe class="r2-video" aria-hidden="true" tabindex="-1" title=""
-          src="https://player.vimeo.com/video/1177562440?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;background=1&amp;autoplay=1&amp;loop=1&amp;muted=1"
-          allow="autoplay; fullscreen; picture-in-picture"></iframe>
+  <canvas class="rx-bg" aria-hidden="true"></canvas>
 
+  <script>
+    // Neon ripple: a glowing wave with a cyan edge, violet haze above and pink sparkles fading out below.
+    // One full-screen fragment shader; no libraries.
+    (() => {
+      const cv = document.querySelector('.rx-bg')
+      const gl = cv.getContext('webgl', { antialias: false, premultipliedAlpha: false })
+      if (!gl) { cv.remove(); return }
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+      const vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}'
+      const fs = `precision highp float;
+uniform vec2 R; uniform float T;
+float h(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+// Where the wave sits at x: one deep swing plus a slower second motion.
+float wave(float x, float t){
+  return .5 + .24*sin(x*4.2 - t*.55) + .035*sin(x*8.3 + t*.8);
+}
+void main(){
+  vec2 uv = gl_FragCoord.xy / R;
+  float ar = R.x / R.y;
+  float x = (uv.x - .5) * ar;
+  float t = T;
+  // Distance above (+) or below (-) the wave, measured across it rather than straight down.
+  float c = wave(x, t);
+  float dc = (wave(x + .002, t) - wave(x - .002, t)) / .004;
+  float d = (uv.y - c) / sqrt(1. + dc*dc);
+  float up = max(d, 0.), dn = max(-d, 0.);
+
+  vec3 top    = vec3(.2,.2,.66);
+  vec3 violet = vec3(.5,.4,.95);
+  vec3 pink   = vec3(.98,.5,.9);
+  vec3 cyan   = vec3(.5,.95,1.);
+  vec3 navy   = vec3(.03,.035,.1);
+
+  // Sky: deep blue up top into violet near the wave, then a thick pink sheet resting on it.
+  vec3 col = mix(violet, top, smoothstep(.02, .5, up));
+  col = mix(col, pink, exp(-up / .075) * .9);
+  // Below: dark navy almost at once, with a faint pink spill.
+  col = mix(col, navy, smoothstep(0., .05, dn));
+  col += pink * exp(-dn / .025) * .25;
+
+  // The tube: a soft, thick pink glow, with cyan along its underside where light travels.
+  float travel = .35 + .65 * smoothstep(.2, .9, .5 + .5*sin(x*2.6 - t*1.4));
+  col += vec3(1.,.62,.95) * exp(-pow((d - .025) / .03, 2.)) * .45;
+  col += vec3(1.,.9,.98) * exp(-pow((d - .01) / .014, 2.)) * .15;
+  col += cyan * exp(-pow((d + .002) / .012, 2.)) * .9 * travel;
+  col += mix(pink, cyan, .4) * exp(-abs(d) / .05) * .15;
+
+  // Sparkles: fine pink dust, densest just under the wave.
+  vec2 g = floor(gl_FragCoord.xy);
+  float n = h(g + floor(t * 4.) * 17.);
+  float dens = exp(-dn / .14) + .08 * exp(-up / .18);
+  float spark = step(1. - dens * .1, n);
+  col += vec3(1.,.55,.9) * spark * (.35 + .5 * h(g + 3.));
+
+  // Vignette and a touch of grain.
+  col *= 1. - .4 * pow(length(uv - .5) * 1.2, 2.);
+  col += (h(gl_FragCoord.xy + fract(t)) - .5) * .02;
+  gl_FragColor = vec4(col, 1.);
+}`
+      function sh(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s }
+      const pr = gl.createProgram()
+      gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr)
+      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) { cv.remove(); return }
+      gl.useProgram(pr)
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW)
+      const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0)
+      const uR = gl.getUniformLocation(pr, 'R'), uT = gl.getUniformLocation(pr, 'T')
+
+      function size() {
+        const dpr = Math.min(devicePixelRatio || 1, 1.5)
+        cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr)
+        gl.viewport(0, 0, cv.width, cv.height)
+      }
+      const t0 = performance.now()
+      function frame(now) {
+        gl.uniform2f(uR, cv.width, cv.height)
+        gl.uniform1f(uT, still ? 4 : (now - t0) / 1000)
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
+        if (!still && !document.hidden) requestAnimationFrame(frame)
+      }
+      size(); frame(t0)
+      addEventListener('resize', () => { size(); if (still) frame(t0) })
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && !still) requestAnimationFrame(frame) })
+    })()
+  </script>
   <h1 class="r2-glass">rx3</h1>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <filter id="r2-refract" x="0" y="0" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
