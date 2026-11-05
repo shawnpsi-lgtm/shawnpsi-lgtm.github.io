@@ -38,10 +38,10 @@
     /* Scrolled down: r music itself, a working demo on the real library, as a window on the Neon Ripple.
        Sizes and colours are the r2music web app's own. */
     /* Laid out like project-rx3.html's window: the app, the typed line and the button all fit in one screenful. */
-    .r2-desk { position: relative; display: grid; place-items: center; gap: 28px; min-height: 100vh; padding: 72px 16px 64px; }
+    .r2-desk { position: relative; display: grid; place-items: center; gap: 20px; min-height: 100vh; padding: 64px 16px 32px; }
     .r2-app {
       --accent: #0071e3; --bg: #19191b; --black: #f5f5f7; --dark: #e5e5ea; --mid: #98989d; --light: #636366; --border: #3a3a3c;
-      position: relative; display: flex; width: min(1170px, 100%); height: min(657px, calc(100svh - 250px)); min-height: 440px;
+      position: relative; display: flex; width: min(1170px, 100%); height: min(800px, calc(100svh - 200px)); min-height: 520px;
       overflow: hidden; border-radius: 14px; color: var(--black); font-size: 16px; line-height: 1.6;
       user-select: none; -webkit-user-select: none;
       background: rgb(12 16 22 / .5); -webkit-backdrop-filter: blur(40px) saturate(1.5); backdrop-filter: blur(40px) saturate(1.5);
@@ -95,17 +95,21 @@
     .r2-pane + .r2-pane { border-left: 1px solid var(--border); }
     /* Split view: a blue line over the pane the sidebar and keys act on. */
     .r2-panes:has(> :nth-child(2)) > .focus::before { content: ''; position: absolute; top: 0; left: 20px; right: 20px; height: 2px; background: var(--accent); }
-    .r2-top { display: flex; align-items: center; gap: 10px; padding: 24px 0 16px; }
-    .r2-title { flex: 1; min-width: 0; }
-    .r2-title h2 { margin: 0; font: 700 1.6rem/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: -.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; outline: none; }
+    .r2-top { display: flex; align-items: center; gap: 8px; padding: 14px 0 10px; }
+    /* Name and size on one line, so the header is a single row. */
+    .r2-title { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 10px; }
+    .r2-title h2 { margin: 0; flex: 0 1 auto; min-width: 0; font: 700 1.3rem/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: -.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; outline: none; }
     .r2-title h2[contenteditable] { text-overflow: clip; box-shadow: 0 2px 0 var(--accent); }
-    .r2-title p { margin: 2px 0 0; font-size: .82rem; line-height: 1.6; color: var(--mid); }
+    .r2-title p { flex: 0 1000 auto; min-width: 0; margin: 0; font-size: .78rem; line-height: 1.6; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .r2-top .r2-btn { padding: 4px 12px; font-size: .76rem; }
+    /* Search and count share a row. */
+    .r2-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
     .r2-search {
-      width: min(260px, 100%); padding: 7px 14px 7px 34px; font: inherit; font-size: .85rem; color: var(--black); border: 1px solid var(--border); border-radius: 980px; outline: none;
-      background: #1c1c1e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398989d' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-4-4'/%3E%3C/svg%3E") no-repeat 12px center / 14px;
+      flex: 0 1 220px; min-width: 120px; padding: 4px 12px 4px 30px; font: inherit; font-size: .8rem; color: var(--black); border: 1px solid var(--border); border-radius: 980px; outline: none;
+      background: #1c1c1e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398989d' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-4-4'/%3E%3C/svg%3E") no-repeat 11px center / 13px;
     }
     .r2-search:focus { border-color: var(--accent); }
-    .r2-count { margin: 10px 0 14px; font-size: .85rem; line-height: 1.6; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .r2-count { flex: 1; min-width: 0; margin: 0; font-size: .76rem; line-height: 1.6; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .r2-scroll { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -20px; padding: 0 20px 84px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
     .r2-finder { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: .8rem; }
     .r2-finder th { position: sticky; top: 0; z-index: 1; padding: 6px 10px; text-align: left; font-size: .64rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--light); background: var(--bg); border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; cursor: pointer; }
@@ -171,7 +175,7 @@
       .r2-side { position: absolute; z-index: 5; inset: 0 auto 0 0; width: min(82%, 260px); padding-bottom: 84px; background: rgb(24 28 34 / .97); transform: translateX(-102%); transition: transform .25s ease; box-shadow: 10px 0 40px #0008; }
       .r2-app.drawer .r2-side { transform: none; }
       .r2-menu { display: inline-grid; margin-left: -8px; }
-      .r2-top .r2-btn { padding: 7px 12px; }
+      .r2-top .r2-btn { padding: 4px 10px; }
       .r2-finder th:nth-child(5), .r2-finder td:nth-child(5) { display: none; }
       .r2-player { left: 12px; right: 12px; padding: 8px 16px 8px 8px; gap: 12px; }
       .r2-np { flex-direction: column; align-items: stretch; gap: 2px; }
@@ -580,8 +584,8 @@
         el.className = 'r2-pane'
         el.tabIndex = -1   // clicks focus the pane, so ⌘A, ⌫, space and Esc reach it
         el.innerHTML = `<header class="r2-top"></header>
-          <input class="r2-search" type="search" placeholder="Search" aria-label="Search tracks" autocomplete="off">
-          <p class="r2-count"></p>
+          <div class="r2-bar"><input class="r2-search" type="search" placeholder="Search" aria-label="Search tracks" autocomplete="off">
+          <p class="r2-count"></p></div>
           <div class="r2-scroll"><table class="r2-finder">
             <thead><tr><th></th><th data-k="title">Title</th><th data-k="artist">Artist</th><th data-k="time">Time</th><th data-k="kind">Kind</th></tr></thead>
             <tbody></tbody></table><p class="r2-empty"></p></div>`
