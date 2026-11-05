@@ -7,28 +7,42 @@
   <title>rx3 demo</title>
   <link rel="icon" type="image/svg+xml" href="./img/icon.svg">
   <link rel="stylesheet" href="./css/rx3.css">
-  <!-- The RX3's screen running a short scripted workflow, for the rx3 page on shawnsingh.me (js/demo.js).
+  <!-- The RX3's screen running a short scripted tour of its menus and effects, for shawnsingh.me (js/demo.js).
        No audio and no controls: the waveforms are drawn from made-up tracks and everything runs on the clock. -->
   <style>
     html, body, #screen-wrap { background: #000; }
     #screen-wrap { position: fixed; inset: 0; }
     #screen, #screen * { pointer-events: none; }
+    /* the finger: where the demo is touching the screen (1280x800 coordinates, like everything on it) */
+    .finger {
+      position: absolute; z-index: 50; left: 0; top: 0; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%;
+      background: rgb(255 255 255 / .28); box-shadow: 0 0 0 2px rgb(255 255 255 / .75), 0 0 24px rgb(255 255 255 / .35);
+      opacity: 0; transform: scale(.6); transition: opacity .12s, transform .12s;
+    }
+    .finger.down { opacity: 1; transform: scale(1); }
   </style>
   <script type="module" src="./js/demo.js"></script>
 </head>
 <body>
   <div id="app" class="compact">
     <main id="screen-wrap">
-      <div id="screen" class="view-playing">
+      <div id="screen" class="view-source">
         <header class="scr-head">
           <div class="head-src"><span class="usb-ico"></span><span id="head-src">USB1</span></div>
-          <div id="head-title" class="head-title">TRACK</div>
+          <div id="head-title" class="head-title">SOURCE</div>
           <div class="head-right">
             <span class="timer-ico"></span><span class="head-clock" id="clock-a">00:00:00</span>
             <span class="rec-dot"></span><span class="head-clock dim">00:00:00</span>
             <button class="info-btn" tabindex="-1"><span><i class="tri l"></i></span>INFO</button>
           </div>
         </header>
+        <section class="v-source">
+          <div class="col-head l">DEVICE NAME</div>
+          <div class="col-head r">INFO</div>
+          <ol id="devices" class="devices"></ol>
+          <dl id="device-info" class="device-info"></dl>
+          <button class="settings-btn" disabled>MY SETTINGS MENU</button>
+        </section>
         <section class="v-browse">
           <nav id="cats" class="cats"></nav>
           <div class="col-head l" id="col-l">TRACK</div>
@@ -63,6 +77,7 @@
           <div class="deck-panel" data-deck="0"></div>
           <div class="deck-panel" data-deck="1"></div>
         </section>
+        <div class="finger" aria-hidden="true"></div>
       </div>
     </main>
   </div>
