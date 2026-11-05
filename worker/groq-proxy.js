@@ -346,7 +346,7 @@ async function health(env) {
   });
 }
 
-// /r2music/*: the demo on project-r2music.html, read straight from the r2music bucket
+// /r2music/*: the demo on project-r2.html, read straight from the r2music bucket
 // (format: github.com/shawnpsi-lgtm/r2music BUCKET_FORMAT.md). Anyone can see the
 // library's names and covers; audio is only served for tracks on the PLAYABLE list,
 // which is Shawn's own music. Everything else in the bucket stays unreachable.

@@ -40,7 +40,7 @@
   const TITLES = {
     '/about.html': 'About', '/work.html': 'Work', '/project-cloudexa.html': 'Cloudexa',
     '/project-emmy.html': 'Emmy Award', '/project-djai.html': 'DJai', '/project-ngc2.html': 'NGC2',
-    '/project-visuallyrepresented.html': 'Visually Represented', '/project-r2music.html': 'r2music', '/shawnfluence.html': 'Shawnfluence',
+    '/project-visuallyrepresented.html': 'Visually Represented', '/project-r2.html': 'r2', '/shawnfluence.html': 'Shawnfluence',
     '/files/resume.pdf': 'R\u00e9sum\u00e9', '/beatfx/': 'BEAT FX', '/sayclip/': 'Sayclip',
   };
   // Any other site path gets a name from its file, so no raw path shows: /privacy.html -> Privacy.

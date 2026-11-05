@@ -173,7 +173,7 @@
         ['[href="project-visuallyrepresented.html"]', '', 'A Visual System for brands'],
         ['.card-wrap--tv', 'SHAWN TV', ''],
         ['[href="/sayclip/"]', '', 'Crate-dig for Audio Samples by Query'],
-        ['[href="project-r2music.html"]', '', 'Your music library, in your own bucket'],
+        ['[href="project-r2.html"]:not(.card-wrap--r2)', '', 'Your music library, in your own bucket'],
       ];
       for (const [sel, kicker, line, tag] of items) {
         const card = document.querySelector('.grid .card-wrap' + sel + ' .card');
@@ -197,7 +197,7 @@
       // React's r2music card is hidden, r2 takes its place. Desktop only: phones are one card per row anyway.
       if (!document.getElementById('top-cards-css')) document.head.insertAdjacentHTML('beforeend',
         '<style id="top-cards-css">' +
-          '.grid .card-wrap[href="project-r2music.html"]{display:none!important}' +
+          '.grid .card-wrap[href="project-r2.html"]:not(.card-wrap--r2){display:none!important}' +
           '@media (width>900px){' +
             '.grid:has(>.card-wrap--rx3:first-child)>.card-wrap:nth-child(n){grid-column:span 3}' +
             '.grid:has(>.card-wrap--rx3:first-child)>.card-wrap:nth-child(n+5):nth-child(-n+7){grid-column:span 2}' +
