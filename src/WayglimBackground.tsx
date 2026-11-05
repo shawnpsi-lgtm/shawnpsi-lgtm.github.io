@@ -47,20 +47,20 @@ const WAYGLIM_SETTINGS = {
   ],
   "durationSeconds": 60,
   "maxPixelRatio": 2,
-  "pace": 0.7,
+  "pace": 0.75,
   "params": {
     "balanceX": 0,
     "balanceY": 0,
     "bend": 48,
-    "chromaSplit": 0,
+    "chromaSplit": 24,
     "cornerRadius": 12,
     "curve": "line",
     "curveDepth": 0,
     "customColors": [
       [
-        0.7451,
-        0.2353,
-        1
+        1,
+        0.1686,
+        0.8392
       ],
       [
         0.4784,
@@ -68,14 +68,14 @@ const WAYGLIM_SETTINGS = {
         1
       ],
       [
-        0.5765,
-        0.3412,
+        0,
+        0.898,
         1
       ],
       [
-        0.8549,
-        0.4392,
-        1
+        1,
+        0.3725,
+        0.6353
       ]
     ],
     "effectArea": "core",
@@ -92,7 +92,7 @@ const WAYGLIM_SETTINGS = {
     "grainDrift": 35,
     "grainScale": 85,
     "grainSoftness": 15,
-    "height": 50,
+    "height": 52,
     "inset": 0,
     "lens": {
       "angle": 2,
@@ -117,7 +117,7 @@ const WAYGLIM_SETTINGS = {
       "spread": 0.97,
       "swirl": -0.14
     },
-    "lightTravel": 80,
+    "lightTravel": 43,
     "masks": [],
     "masksEnabled": true,
     "mode": "ripple",
@@ -230,16 +230,16 @@ const WAYGLIM_SETTINGS = {
       "smoothing": 45
     },
     "position": 50,
-    "refraction": 49,
+    "refraction": 45,
     "saturation": 100,
-    "secondaryMotion": 38,
+    "secondaryMotion": 29,
     "shading": 0,
     "softness": 70,
     "spectrum": "custom",
     "speed": 3,
-    "spread": 62,
+    "spread": 4,
     "surfaceGrain": true,
-    "wobble": 42
+    "wobble": 29
   },
   "pauseOffscreen": true,
   "respectReducedMotion": true,
