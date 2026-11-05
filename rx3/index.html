@@ -182,6 +182,46 @@
     </section>
   </div>
 
+  <!-- Desktop only: a small, dismissable tip that rx3 plays best on a phone or with a controller. -->
+  <aside id="rx-tip" class="rx-tip" role="note" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+    <p>For the best experience, use rx3 on mobile or with a controller.<br>Open <b>shawnsingh.me/rx3</b> on your phone.</p>
+    <button type="button" aria-label="Dismiss tip">&times;</button>
+  </aside>
+  <style>
+    .rx-tip {
+      position: fixed; z-index: 50; top: 12px; right: 12px; display: flex; align-items: flex-start; gap: 10px;
+      max-width: 300px; padding: 10px 10px 10px 12px; border-radius: 10px;
+      background: rgb(20 22 28 / .92); border: 1px solid rgb(255 255 255 / .12); box-shadow: 0 10px 30px rgb(0 0 0 / .45);
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+      font: 12px/1.45 var(--sans); color: #d6d6db; animation: rx-tip-in .3s ease-out;
+    }
+    .rx-tip svg { flex: none; width: 18px; height: 18px; margin-top: 1px; fill: none; stroke: var(--blue); stroke-width: 2; stroke-linecap: round; }
+    .rx-tip p { margin: 0; }
+    .rx-tip b { color: #fff; font-weight: 600; -webkit-user-select: all; user-select: all; }
+    .rx-tip button { flex: none; width: 22px; height: 22px; margin: -2px -2px 0 0; padding: 0; border: 0; border-radius: 6px; background: none; color: #8e8e93; font-size: 18px; line-height: 1; }
+    .rx-tip button:hover { background: rgb(255 255 255 / .1); color: #fff; }
+    @keyframes rx-tip-in { from { opacity: 0; transform: translateY(-6px); } }
+    @media (prefers-reduced-motion: reduce) { .rx-tip { animation: none; } }
+  </style>
+  <script>
+    (() => {
+      const tip = document.getElementById('rx-tip'), KEY = 'rx3-tip-dismissed'
+      let dismissed = false
+      try { dismissed = localStorage.getItem(KEY) === '1' } catch {}
+      // Desktop = a mouse/trackpad and no touch screen. Hidden for good once dismissed or a controller connects.
+      const desktop = matchMedia('(pointer: fine)').matches && !matchMedia('(any-pointer: coarse)').matches
+      const pad = () => [...(navigator.getGamepads?.() || [])].some(Boolean)
+      if (dismissed || !desktop || pad()) return
+      tip.hidden = false
+      tip.querySelector('button').addEventListener('click', () => {
+        tip.hidden = true
+        try { localStorage.setItem(KEY, '1') } catch {}
+      })
+      addEventListener('gamepadconnected', () => { tip.hidden = true })
+    })()
+  </script>
+
   <input id="folder-input" type="file" webkitdirectory multiple hidden>
   <input id="files-input" type="file" accept="audio/*,.mp3,.wav,.aif,.aiff,.m4a,.flac,.ogg" multiple hidden>
 </body>
