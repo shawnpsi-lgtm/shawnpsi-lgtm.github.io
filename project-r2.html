@@ -21,6 +21,8 @@
       position: fixed; left: 0; width: 100%; pointer-events: none;
       top: calc(-1 * env(safe-area-inset-top, 0px));
       height: calc(100lvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+      /* r2's own colour: rx3's pink ripple turned to purple. The glass bends whatever is behind it, so it follows. */
+      filter: hue-rotate(-45deg);
     }
     /* Glass in the shape of the word: the script masks this to the letters and
        hands it a refraction map and a rim-light map drawn from the same glyphs. */

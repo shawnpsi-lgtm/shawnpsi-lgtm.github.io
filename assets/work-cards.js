@@ -229,7 +229,7 @@
     };
 
     // r2 takes the place of React's r2music card, built the same way as rx3's: the hero is rx3/hero.html with the word
-    // swapped (?word=r2), the Neon Ripple with the glass "r2", which is project-r2.html's opening view.
+    // swapped (?word=r2) and turned purple (?hue=-45), the same as project-r2.html's opening view.
     const fillR2 = () => {
       const grid = document.querySelector('.grid');
       const old = grid?.querySelector('.card-wrap[href="project-r2music.html"]');
@@ -241,7 +241,7 @@
         '<a href="project-r2.html" class="card-wrap card-wrap--r2" aria-label="View r2 project">' +
           '<div class="card">' +
             '<div class="card__img" style="position:relative;overflow:hidden;background:rgb(3,3,5)">' +
-              '<iframe src="/rx3/hero.html?word=r2&fill=.5" title="" aria-hidden="true" tabindex="-1" loading="lazy" ' +
+              '<iframe src="/rx3/hero.html?word=r2&hue=-45&fill=.5" title="" aria-hidden="true" tabindex="-1" loading="lazy" ' +
                 'style="position:absolute;left:0;top:0;width:1000px;height:900px;border:0;pointer-events:none;' +
                 'transform-origin:0 0;transform:scale(.3)"></iframe>' +
             '</div>' +
