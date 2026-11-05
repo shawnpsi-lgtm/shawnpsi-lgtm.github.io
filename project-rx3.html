@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>rx3 · Shawn Singh</title>
   <meta name="description" content="rx3: a Pioneer XDJ-RX3 in your browser, with effects ported from the unit's own firmware" />
 
@@ -16,7 +16,12 @@
   <style>
     /* The Neon Ripple from Wayglim, fixed behind everything (assets/wayglim-rx3.js mounts it here). */
     body { background: rgb(3 3 5); }
-    .rx-bg { position: fixed; inset: 0; pointer-events: none; }
+    /* Large viewport plus safe areas: fills behind iOS Safari's status bar and toolbar. */
+    .rx-bg {
+      position: fixed; left: 0; width: 100%; pointer-events: none;
+      top: calc(-1 * env(safe-area-inset-top, 0px));
+      height: calc(100lvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+    }
     /* Glass in the shape of the word: the script masks this to the letters and
        hands it a refraction map and a rim-light map drawn from the same glyphs. */
     .r2-glass {
