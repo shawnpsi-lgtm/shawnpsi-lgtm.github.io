@@ -34,24 +34,32 @@
     }
 
 
-    /* Right under the title: what it's for, in big type. */
-    .rm-pitch { position: relative; display: grid; place-items: center; min-height: 80vh; padding: 72px 16px; }
-    .rm-pitch p {
-      margin: 0; max-width: 24ch; font-size: clamp(1.9rem, 4.6vw, 3.4rem); font-weight: 600; line-height: 1.15; letter-spacing: -.02em;
-      color: #fff; text-align: center; text-wrap: balance; text-shadow: 0 2px 16px rgb(0 0 0 / .5);
+    /* Under the title: one line on what it's for, with rx3's typing line beneath it. A soft dark pool
+       sits behind free-floating text so it reads calmly over the brightest part of the ripple. */
+    .rm-intro { position: relative; isolation: isolate; display: grid; justify-items: center; gap: 22px; padding: 18vh 16px 14vh; text-align: center; }
+    .rm-intro::before, .rm-demo::before {
+      content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+      background: radial-gradient(60% 55% at 50% 50%, rgb(3 3 5 / .5), transparent 75%);
     }
-    .rm-pitch span { display: block; margin-top: .5em; }
-    /* Under the title: rx3's typing line, with r music's taglines, and the links. */
-    .rx-desk { position: relative; display: grid; place-items: center; align-content: center; gap: 28px; min-height: 80vh; padding: 72px 16px; }
-    .rx-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .rm-pitch {
+      margin: 0; max-width: 20ch; font-size: clamp(1.9rem, 4.4vw, 3.2rem); font-weight: 600; line-height: 1.12; letter-spacing: -.025em;
+      color: #fff; text-wrap: balance; text-shadow: 0 2px 20px rgb(0 0 0 / .45);
+    }
+    /* Sections ease in as they arrive instead of sitting there when you scroll onto them. */
+    @media (prefers-reduced-motion: no-preference) {
+      .js-reveal .reveal { opacity: 0; transform: translateY(28px); transition: opacity .9s ease, transform .9s cubic-bezier(.2, .8, .2, 1); }
+      .js-reveal .reveal.in { opacity: 1; transform: none; }
+    }
 
     /* How it works: r2music's flow diagram, with rx3 on the end, and a short caption for each step. */
-    .rm-flow { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 560px); justify-content: center; align-items: center; gap: 24px 56px; padding: 48px 16px 120px; color: #f5f5f7; }
-    .rm-steps, .rm-board {
+    .rm-flow { position: relative; display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 560px); justify-content: center; align-items: center; gap: 24px 56px; padding: 10vh 16px 56px; color: #f5f5f7; }
+    .rm-panel, .rm-board {
       border-radius: 14px; background: rgb(12 16 22 / .5); -webkit-backdrop-filter: blur(40px) saturate(1.5); backdrop-filter: blur(40px) saturate(1.5);
       box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12), 0 0 0 1px rgb(0 0 0 / .6), 0 30px 90px rgb(0 0 0 / .55);
     }
-    .rm-steps { display: grid; gap: 20px; margin: 0; padding: 24px; list-style: none; counter-reset: rm; }
+    .rm-lede { margin: 0 0 20px; padding-bottom: 20px; border-bottom: 1px solid rgb(255 255 255 / .1); font-size: 1.08rem; font-weight: 600; line-height: 1.45; letter-spacing: -.01em; color: #f5f5f7; text-wrap: pretty; }
+    .rm-panel { padding: 24px; }
+    .rm-steps { display: grid; gap: 18px; margin: 0; padding: 0; list-style: none; counter-reset: rm; }
     .rm-steps li { counter-increment: rm; display: grid; grid-template-columns: 28px 1fr; font-size: .9rem; line-height: 1.6; color: #b8b8be; }
     .rm-steps li::before { content: counter(rm, decimal-leading-zero); font-size: .72rem; font-weight: 600; letter-spacing: .1em; color: #2997ff; padding-top: 2px; }
     .rm-steps b { font-weight: 600; color: #f5f5f7; }
@@ -82,16 +90,44 @@
     @keyframes rm-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; } }
     @keyframes rm-dash { to { stroke-dashoffset: -.1; } }
     @media (max-width: 860px) { .rm-flow { grid-template-columns: minmax(0, 560px); } .rm-board { order: -1; } }
-    .rx-btn {
-      display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border: 1px solid #0071e3; border-radius: 980px;
-      background: #0071e3; color: #fff; font-size: .95rem; text-decoration: none; transition: background .2s;
+    /* After the diagram: rx3 itself, live, the same window as on the rx3 page, with a caption, then the links. */
+    .rm-demo { position: relative; isolation: isolate; display: grid; justify-items: center; gap: 18px; padding: 10vh 16px 16vh; }
+    .rm-caption { margin: 0; max-width: 46ch; font-size: .95rem; font-weight: 500; line-height: 1.6; color: #fff; text-align: center; text-shadow: 0 1px 12px rgb(0 0 0 / .7); }
+    .rx-win {
+      /* 16:10 screen + 40px title bar, and the button under it, all fit in one screenful */
+      position: relative; width: min(1170px, 100%, calc((100svh - 290px) * 1.6)); overflow: hidden; border-radius: 14px;
+      background: rgb(12 16 22 / .5); -webkit-backdrop-filter: blur(40px) saturate(1.5); backdrop-filter: blur(40px) saturate(1.5);
+      box-shadow: 0 0 0 1px rgb(0 0 0 / .6), 0 30px 90px rgb(0 0 0 / .55);
     }
-    .rx-btn:hover { background: #0077ed; }
-    .rx-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .rx-btn.rx-btn--ghost { background: rgb(255 255 255 / .1); border-color: rgb(255 255 255 / .25); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
-    .rx-btn.rx-btn--ghost:hover { background: rgb(255 255 255 / .18); }
+    .rx-win::after { content: ''; position: absolute; z-index: 2; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12); pointer-events: none; }
+    .rx-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 40px; padding: 0 14px; }
+    .rx-lights { display: flex; gap: 9px; }
+    .rx-lights i { width: 14px; height: 14px; border-radius: 50%; background: #ff5f57; }
+    .rx-lights i + i { background: #febc2e; }
+    .rx-lights i + i + i { background: #28c840; }
+    .rx-bar p { margin: 0; font-size: .82rem; font-weight: 600; color: #98989d; }
+    /* rx3's playing screen (rx3/demo.html), two tracks mixing. It's built at 1280x800, so the frame keeps 16:10. */
+    .rx-win iframe { display: block; width: 100%; aspect-ratio: 16 / 10; border: 0; background: #000; pointer-events: none; }
+    /* The links, last on the page: three equal glass buttons, side by side, stacked on phones. */
+    .rm-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: min(600px, 100%); margin-top: 28px; }
+    .rx-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 20px; border: 1px solid rgb(255 255 255 / .22); border-radius: 980px;
+      background: rgb(255 255 255 / .1); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+      color: #fff; font-size: .95rem; white-space: nowrap; text-decoration: none; transition: background .2s, border-color .2s;
+    }
+    .rx-btn .short { display: none; }
+    @media (max-width: 560px) { .rx-btn .short { display: inline; } }
+    .rx-btn:hover { background: rgb(255 255 255 / .18); border-color: rgb(255 255 255 / .35); }
+    .rx-btn svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    /* Phones: still one even row, just smaller, and the download reads "Mac app". */
+    @media (max-width: 560px) {
+      .rm-actions { gap: 8px; margin-top: 20px; }
+      .rx-btn { gap: 5px; height: 36px; padding: 0 10px; font-size: .8rem; }
+      .rx-btn svg { width: 13px; height: 13px; }
+      .rx-btn .long { display: none; }
+    }
     /* Under the window: what you can mix with, typed out and deleted, one line after another. */
-    .rx-type { margin: 0; min-height: 1.3em; font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 600; letter-spacing: -.01em; color: #fff; text-align: center; text-shadow: 0 2px 12px rgb(0 0 0 / .5); }
+    .rx-type { margin: 0; min-height: 1.3em; font-size: clamp(1.15rem, 2.4vw, 1.5rem); font-weight: 500; letter-spacing: -.01em; color: #fff; text-align: center; text-shadow: 0 2px 12px rgb(0 0 0 / .5); }
     .rx-type span::after { content: ''; display: inline-block; width: 2px; height: 1em; margin-left: 3px; vertical-align: -.12em; background: #0a84ff; animation: rx-caret 1s steps(1) infinite; }
     @keyframes rx-caret { 50% { opacity: 0; } }
     @media (prefers-reduced-motion: reduce) { .rx-type span::after { animation: none; } }
@@ -246,26 +282,21 @@
     })()
   </script>
 
-  <section class="rm-pitch">
-    <p>Access and manage your rekordbox library from anywhere. <span>Whether you&rsquo;re prepping for a set, growing your library or DJing live, rx3 + r2 brings music streaming and performance DJ software together.</span></p>
-  </section>
-
-  <section class="rx-desk" aria-label="r music">
+  <section class="rm-intro reveal">
+    <p class="rm-pitch">Access and manage your rekordbox library from anywhere.</p>
     <p class="rx-type" aria-label="Your music, in your own bucket, Your music, stored once, Your music, on your laptop, Your music, on your phone, Your music, in rx3, Mix with Dub Echo, Mix with Space, Mix with your rekordbox cues, Mix anywhere."><span aria-hidden="true"></span></p>
-    <div class="rx-actions">
-      <a class="rx-btn" href="https://r2.shawnsingh.me">Open r music<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
-      <a class="rx-btn rx-btn--ghost" href="https://github.com/shawnpsi-lgtm/r2music-releases/releases/latest/download/r2music-mac-arm64.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Mac</a>
-      <a class="rx-btn rx-btn--ghost" href="/rx3/">Open rx3<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
-    </div>
   </section>
 
   <section class="rm-flow" aria-label="How r music works">
-    <ol class="rm-steps">
+    <div class="rm-panel">
+      <p class="rm-lede">Whether you&rsquo;re prepping for a set, growing your library or DJing live, rx3 + r2 brings music streaming and performance DJ software together.</p>
+      <ol class="rm-steps">
       <li style="--d:0s"><span><b>Find.</b> The Mac app reads your rekordbox library: tracks and playlists, with their beat grids, waveforms and cues.</span></li>
       <li style="--d:.5s"><span><b>Upload once.</b> Each track goes to your Cloudflare R2 bucket once, named by its SHA-256, so nothing is stored twice. Playlists sit beside them in an open lists.json.</span></li>
       <li style="--d:1s"><span><b>Sync.</b> Your laptop and phone open the same bucket, so a playlist saved on the laptop is already on your phone.</span></li>
       <li style="--d:1.5s"><span><b>Play.</b> Sort and upload in Files, stream over signed URLs straight from your bucket, or open rx3, where your library is USB1, and mix.</span></li>
-    </ol>
+      </ol>
+    </div>
     <div class="rm-board" aria-hidden="true">
       <svg class="rm-net" viewBox="0 0 100 100">
         <path pathLength="1" d="M50 11V38" style="--d:.35s"/>
@@ -287,6 +318,19 @@
       <div class="rm-node" style="left:17%;top:88%;--d:1.6s"><svg viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>Files<small>lists, upload</small></div>
       <div class="rm-node rx" style="left:50%;top:88%;--d:1.6s"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/></svg>rx3<small>mix it, as USB1</small></div>
       <div class="rm-node" style="left:83%;top:88%;--d:1.6s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4z"/></svg>Stream<small>signed URLs</small></div>
+    </div>
+  </section>
+
+  <section class="rm-demo reveal" aria-label="rx3, playing">
+    <div class="rx-win">
+      <div class="rx-bar"><div class="rx-lights" aria-hidden="true"><i></i><i></i><i></i></div><p>rx3 · Playing</p><span></span></div>
+      <iframe src="/rx3/demo.html" title="rx3 playing two tracks" loading="lazy" tabindex="-1"></iframe>
+    </div>
+    <p class="rm-caption">Your r2 music shows up in rx3 as USB1, so you can load it onto the decks and mix.</p>
+    <div class="rm-actions">
+      <a class="rx-btn" href="project-r2music.html">Open r2<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+      <a class="rx-btn" href="project-rx3.html">Open rx3<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+      <a class="rx-btn" href="https://github.com/shawnpsi-lgtm/r2music-releases/releases/latest/download/r2music-mac-arm64.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span><span class="long">Download for </span>Mac<span class="short"> app</span></span></a>
     </div>
   </section>
 
@@ -315,6 +359,13 @@
         setTimeout(tick, 350)
       }
       tick()
+    })();
+
+    // Sections marked .reveal ease in the first time they scroll into view.
+    (() => {
+      document.documentElement.classList.add('js-reveal')
+      const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }), { threshold: .15 })
+      document.querySelectorAll('.reveal').forEach(el => io.observe(el))
     })();
 
     // The diagram draws itself the first time it scrolls into view.
