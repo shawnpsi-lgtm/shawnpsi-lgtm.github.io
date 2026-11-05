@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>rx3</title>
   <!-- The rx3 landing page's hero on its own (project-rx3.html, copied as is): the Wayglim Neon Ripple with the glass
-       "rx3" over it, sized to whatever frame it's in. The Work page's rx3 card shows it in an iframe. -->
+       "rx3" over it, sized to whatever frame it's in. The Work page's rx3 card shows it in an iframe.
+       One difference from the page: the glass is drawn in WebGL here, not with backdrop-filter. Chrome on the GPU drops
+       a backdrop-filter inside the card's iframe and left bare outlined letters, so this redraws the same filter chain
+       (bend, frost, saturate, brightness, tint, rim) from the wallpaper's canvas every frame. backdrop-filter stays as the
+       fallback where WebGL2 isn't there. -->
   <style>
     html, body { margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     /* The Neon Ripple from Wayglim, fixed behind everything (assets/wayglim-rx3.js mounts it here). */
@@ -21,11 +25,24 @@
       background: rgb(255 255 255 / var(--tint)) 0 0 / 100% 100% no-repeat;
       -webkit-mask: 0 0 / 100% 100% no-repeat; mask: 0 0 / 100% 100% no-repeat;
     }
+    /* Drawn in WebGL instead: the heading keeps the word for screen readers and draws nothing. */
+    .r2-glass.is-gl { -webkit-backdrop-filter: none; backdrop-filter: none; background: none; -webkit-mask: none; mask: none; }
+    .rx-glass { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   </style>
 </head>
 <body>
   <div class="rx-bg" aria-hidden="true"></div>
 
+  <script>
+    // The glass reads the wallpaper's WebGL canvas each frame, so that canvas has to keep its last frame after it's shown.
+    {
+      const get = HTMLCanvasElement.prototype.getContext
+      HTMLCanvasElement.prototype.getContext = function (type, opts) {
+        if (type === 'webgl2' && !this.classList.contains('rx-glass')) opts = { ...opts, preserveDrawingBuffer: true }
+        return get.call(this, type, opts)
+      }
+    }
+  </script>
   <script src="/assets/wayglim-rx3.js?v=1" defer></script>
   <h1 class="r2-glass">rx3</h1>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -87,6 +104,97 @@
         }
       }
 
+      // The glass in WebGL: the page's backdrop-filter chain, run on the wallpaper's canvas. For each pixel inside the
+      // letters it bends the wallpaper by the displacement map (feDisplacementMap: offset = scale * (map - .5)), frosts
+      // it with a 3px gaussian, then saturate(1.75), brightness(.78), the white .12 tint and the rim light over that.
+      const glass = (() => {
+        const cv = document.createElement('canvas')
+        cv.className = 'rx-glass'; cv.setAttribute('aria-hidden', 'true')
+        const gl = cv.getContext('webgl2', { premultipliedAlpha: true, antialias: false, depth: false })
+        if (!gl) return null
+        const sh = (type, src) => { const o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); return o }
+        const prog = gl.createProgram()
+        gl.attachShader(prog, sh(gl.VERTEX_SHADER, `#version 300 es
+          void main() { vec2 p = vec2(gl_VertexID == 1 ? 3. : -1., gl_VertexID == 2 ? 3. : -1.); gl_Position = vec4(p, 0., 1.); }`))
+        gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, `#version 300 es
+          precision highp float;
+          uniform sampler2D uBg, uMask, uMap, uLight;
+          uniform vec2 uView; uniform float uDpr, uScale, uFrost; uniform vec4 uBgRect;
+          out vec4 o;
+          vec3 bg(vec2 p) {
+            vec4 c = texture(uBg, clamp((p - uBgRect.xy) / uBgRect.zw, 0., 1.));
+            return c.rgb * c.a + vec3(3., 3., 5.) / 255. * (1. - c.a);
+          }
+          vec3 bent(vec2 p) { return bg(p + uScale * (texture(uMap, p / uView).rg - .5)); }
+          void main() {
+            vec2 p = vec2(gl_FragCoord.x, uView.y * uDpr - gl_FragCoord.y) / uDpr;
+            float m = texture(uMask, p / uView).a;
+            if (m < .002) { o = vec4(0.); return; }
+            vec3 c = vec3(0.); float tw = 0.;
+            for (int j = -3; j <= 3; j++) for (int i = -3; i <= 3; i++) {
+              vec2 k = vec2(i, j) * uFrost * .75;
+              float w = exp(-dot(k, k) / (2. * uFrost * uFrost));
+              c += bent(p + k) * w; tw += w;
+            }
+            c /= tw;
+            float s = 1.75;
+            c = clamp(mat3(.213 + .787 * s, .213 - .213 * s, .213 - .213 * s,
+                           .715 - .715 * s, .715 + .285 * s, .715 - .715 * s,
+                           .072 - .072 * s, .072 - .072 * s, .072 + .928 * s) * c, 0., 1.);
+            c *= .78;
+            c = c * .88 + .12;
+            float l = texture(uLight, p / uView).a;
+            c = c * (1. - l) + l;
+            o = vec4(c * m, m);
+          }`))
+        gl.linkProgram(prog)
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null
+        gl.useProgram(prog)
+        const u = n => gl.getUniformLocation(prog, n)
+        const tex = unit => {
+          const t = gl.createTexture()
+          gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t)
+          for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR],
+            [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v)
+          return t
+        }
+        const tBg = tex(0), tMask = tex(1), tMap = tex(2), tLight = tex(3)
+        gl.uniform1i(u('uBg'), 0); gl.uniform1i(u('uMask'), 1); gl.uniform1i(u('uMap'), 2); gl.uniform1i(u('uLight'), 3)
+        const upload = (unit, t, src) => {
+          gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t)
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src)
+        }
+        let ready = false, visible = true, raf = 0
+        const frame = () => {
+          raf = 0
+          const src = document.querySelector('.rx-bg canvas')
+          if (ready && src && src.width > 1) {
+            const r = src.getBoundingClientRect()
+            upload(0, tBg, src)
+            gl.uniform4f(u('uBgRect'), r.left, r.top, r.width, r.height)
+            gl.viewport(0, 0, cv.width, cv.height)
+            gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT)
+            gl.drawArrays(gl.TRIANGLES, 0, 3)
+          }
+          if (visible && !document.hidden) raf = requestAnimationFrame(frame)
+        }
+        const go = () => { if (!raf && visible && !document.hidden) raf = requestAnimationFrame(frame) }
+        new IntersectionObserver(([e]) => { visible = e.isIntersecting; go() }).observe(el)
+        document.addEventListener('visibilitychange', go)
+        el.after(cv)
+        el.classList.add('is-gl')
+        return {
+          set(mask, map, light, scale, dpr) {
+            const w = innerWidth, h = innerHeight
+            cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr)
+            upload(1, tMask, mask); upload(2, tMap, map); upload(3, tLight, light)
+            gl.uniform2f(u('uView'), w, h); gl.uniform1f(u('uDpr'), dpr)
+            gl.uniform1f(u('uScale'), scale); gl.uniform1f(u('uFrost'), 3)
+            ready = true; go()
+          }
+        }
+      })()
+
       function build() {
         const w = innerWidth, h = innerHeight
         const dpr = Math.min(devicePixelRatio || 1, 2)
@@ -118,6 +226,13 @@
           l[i * 4 + 3] = 255 * Math.min(1, tune.rim * (.7 * lit ** 2 + .3 * back ** 2 + .12 * s))
         }
 
+        if (glass) {
+          const lc = document.createElement('canvas'); lc.width = w; lc.height = h
+          lc.getContext('2d').putImageData(light, 0, 0)
+          x.putImageData(px, 0, 0)
+          glass.set(sharp.c, c, lc, Math.round(size * tune.refract), dpr)
+          return
+        }
         x.putImageData(light, 0, 0)
         el.style.backgroundImage = `url(${c.toDataURL()})`
         if (!bends) return
