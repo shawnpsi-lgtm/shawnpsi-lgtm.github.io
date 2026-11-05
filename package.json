@@ -10,7 +10,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "deploy:worker": "npx wrangler deploy --config worker/wrangler.toml",
-    "build:glass": "vite build --config vite.glass.config.ts"
+    "build:glass": "vite build --config vite.glass.config.ts",
+    "build:wayglim": "vite build --config vite.wayglim.config.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
