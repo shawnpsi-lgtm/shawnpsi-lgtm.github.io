@@ -7,8 +7,8 @@
   <title>rx3 demo</title>
   <link rel="icon" type="image/svg+xml" href="./img/icon.svg">
   <link rel="stylesheet" href="./css/rx3.css">
-  <!-- Just the RX3's playing screen, two decks mixing, for the rx3 page on shawnsingh.me. No sound and no controls:
-       the tracks are decoded and analyzed silently and the playheads run on the clock (js/demo.js). -->
+  <!-- The RX3's screen running a short scripted workflow, for the rx3 page on shawnsingh.me (js/demo.js).
+       No audio and no controls: the waveforms are drawn from made-up tracks and everything runs on the clock. -->
   <style>
     html, body, #screen-wrap { background: #000; }
     #screen-wrap { position: fixed; inset: 0; }
@@ -20,6 +20,26 @@
   <div id="app" class="compact">
     <main id="screen-wrap">
       <div id="screen" class="view-playing">
+        <header class="scr-head">
+          <div class="head-src"><span class="usb-ico"></span><span id="head-src">USB1</span></div>
+          <div id="head-title" class="head-title">TRACK</div>
+          <div class="head-right">
+            <span class="timer-ico"></span><span class="head-clock" id="clock-a">00:00:00</span>
+            <span class="rec-dot"></span><span class="head-clock dim">00:00:00</span>
+            <button class="info-btn" tabindex="-1"><span><i class="tri l"></i></span>INFO</button>
+          </div>
+        </header>
+        <section class="v-browse">
+          <nav id="cats" class="cats"></nav>
+          <div class="col-head l" id="col-l">TRACK</div>
+          <div class="col-head r" id="col-r">INFO</div>
+          <ol id="list-l" class="list l"></ol>
+          <ol id="list-r" class="list r"></ol>
+        </section>
+        <footer class="mini">
+          <div class="mini-deck" data-deck="0"></div>
+          <div class="mini-deck" data-deck="1"></div>
+        </footer>
         <section class="v-playing">
           <div class="top-left"><span class="timer-ico"></span>REMAIN<span class="rec-time">00:00:00</span><i></i></div>
           <div class="top-right">
