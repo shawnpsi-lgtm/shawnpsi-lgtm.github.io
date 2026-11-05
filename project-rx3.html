@@ -32,7 +32,8 @@
     /* Scrolled down: rx3 itself, live, in a window on the same wallpaper. Same glass and shadow as r2music's. */
     .rx-desk { position: relative; display: grid; place-items: center; gap: 28px; min-height: 100vh; padding: 72px 16px 64px; }
     .rx-win {
-      position: relative; width: min(1170px, 100%); overflow: hidden; border-radius: 14px;
+      /* 16:10 screen + 40px title bar, and the button under it, all fit in one screenful */
+      position: relative; width: min(1170px, 100%, calc((100svh - 220px) * 1.6)); overflow: hidden; border-radius: 14px;
       background: rgb(12 16 22 / .5); -webkit-backdrop-filter: blur(40px) saturate(1.5); backdrop-filter: blur(40px) saturate(1.5);
       box-shadow: 0 0 0 1px rgb(0 0 0 / .6), 0 30px 90px rgb(0 0 0 / .55);
     }
@@ -43,8 +44,8 @@
     .rx-lights i + i { background: #febc2e; }
     .rx-lights i + i + i { background: #28c840; }
     .rx-bar p { margin: 0; font-size: .82rem; font-weight: 600; color: #98989d; }
-    /* The app is built at 1280x800 and scales itself to fit, so the frame keeps 16:10 (portrait on phones). */
-    .rx-win iframe { display: block; width: 100%; aspect-ratio: 16 / 10; max-height: calc(100vh - 200px); min-height: 360px; border: 0; background: #000; }
+    /* rx3's playing screen (rx3/demo.html), two tracks mixing. It's built at 1280x800, so the frame keeps 16:10. */
+    .rx-win iframe { display: block; width: 100%; aspect-ratio: 16 / 10; border: 0; background: #000; pointer-events: none; }
     .rx-btn {
       display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border: 1px solid #0071e3; border-radius: 980px;
       background: #0071e3; color: #fff; font-size: .95rem; text-decoration: none; transition: background .2s;
@@ -53,7 +54,6 @@
     .rx-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     @media (max-width: 700px) {
       .rx-desk { padding-bottom: 112px; }
-      .rx-win iframe { aspect-ratio: 9 / 16; max-height: calc(100svh - 190px); }
     }
   </style>
 </head>
@@ -200,8 +200,8 @@
 
   <section class="rx-desk" aria-label="rx3, live">
     <div class="rx-win">
-      <div class="rx-bar"><div class="rx-lights" aria-hidden="true"><i></i><i></i><i></i></div><p>rx3</p><span></span></div>
-      <iframe src="/rx3/" title="rx3" loading="lazy" allow="autoplay; fullscreen"></iframe>
+      <div class="rx-bar"><div class="rx-lights" aria-hidden="true"><i></i><i></i><i></i></div><p>rx3 · Playing</p><span></span></div>
+      <iframe src="/rx3/demo.html" title="rx3 playing two tracks" loading="lazy" tabindex="-1"></iframe>
     </div>
     <a class="rx-btn" href="/rx3/">Open rx3<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
   </section>

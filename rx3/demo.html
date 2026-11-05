@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <title>rx3 demo</title>
+  <link rel="icon" type="image/svg+xml" href="./img/icon.svg">
+  <link rel="stylesheet" href="./css/rx3.css">
+  <!-- Just the RX3's playing screen, two decks mixing, for the rx3 page on shawnsingh.me. No sound and no controls:
+       the tracks are decoded and analyzed silently and the playheads run on the clock (js/demo.js). -->
+  <style>
+    html, body, #screen-wrap { background: #000; }
+    #screen-wrap { position: fixed; inset: 0; }
+    #screen, #screen * { pointer-events: none; }
+  </style>
+  <script type="module" src="./js/demo.js"></script>
+</head>
+<body>
+  <div id="app" class="compact">
+    <main id="screen-wrap">
+      <div id="screen" class="view-playing">
+        <section class="v-playing">
+          <div class="top-left"><span class="timer-ico"></span>REMAIN<span class="rec-time">00:00:00</span><i></i></div>
+          <div class="top-right">
+            <span class="rec-dot"></span><span class="head-clock dim">00:00:00</span>
+            <button class="info-btn" tabindex="-1"><span><i class="tri l"></i></span>INFO</button>
+          </div>
+          <div class="deck-info" data-deck="0"></div>
+          <div class="deck-info" data-deck="1"></div>
+          <canvas class="zoom" data-deck="0" width="890" height="210"></canvas>
+          <canvas class="zoom" data-deck="1" width="890" height="200"></canvas>
+          <div class="playhead"></div>
+          <aside id="fx-panel" class="fx-panel"></aside>
+          <div class="zoom-grid"><button tabindex="-1">&minus;</button><button class="on" tabindex="-1">ZOOM</button><button tabindex="-1">GRID</button></div>
+          <div class="tabs"><button tabindex="-1">STATUS</button><button class="on" tabindex="-1">BEAT FX</button></div>
+          <div class="band">
+            <div class="bank-label">BEAT FX BANK</div>
+            <div id="bank" class="bank"></div>
+            <div class="xpad-label">X-PAD</div>
+            <div id="xpad" class="xpad"></div>
+          </div>
+          <div class="deck-panel" data-deck="0"></div>
+          <div class="deck-panel" data-deck="1"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
