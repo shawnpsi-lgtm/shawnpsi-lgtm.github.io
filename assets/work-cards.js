@@ -186,8 +186,37 @@
       }
     };
 
+    // rx3 isn't one of React's cards, so it's added here: a full-width card after the last one (the grid's rows are
+    // full, so a half-width card would sit alone), showing the live rx3 demo, the RX3 screen running a short set.
+    const fillRx3 = () => {
+      const grid = document.querySelector('.grid');
+      const after = grid?.querySelector('.card-wrap[href="project-r2music.html"]');
+      if (!after || grid.querySelector('.card-wrap--rx3')) return;
+      if (!document.getElementById('rx3-card-css')) {
+        // wide: the screen on the right two thirds, so the copy sits on black at the left; one column: full width on top
+        document.head.insertAdjacentHTML('beforeend', '<style id="rx3-card-css">' +
+          '.card-wrap--rx3 iframe{position:absolute;top:0;right:0;width:66%;height:100%;border:0;pointer-events:none}' +
+          '.card-wrap--rx3 .card-copy{max-width:30%}' +
+          '@media (width<=900px){.card-wrap--rx3 .card{height:auto!important}.card-wrap--rx3 .card__img{position:relative;aspect-ratio:16/10;height:auto}' +
+          '.card-wrap--rx3 iframe{width:100%;height:100%}.card-wrap--rx3 .card-copy{position:relative;max-width:none;inset:auto;padding:18px 20px 22px}}</style>');
+      }
+      after.insertAdjacentHTML('afterend',
+        '<a href="project-rx3.html" class="card-wrap card-wrap--rx3" aria-label="View rx3 project" style="grid-column:1/-1">' +
+          '<div class="card">' +
+            '<div class="card__img" style="position:relative;background:#000">' +
+              '<iframe src="/rx3/demo.html" title="" aria-hidden="true" tabindex="-1" loading="lazy"></iframe>' +
+            '</div>' +
+            '<div class="card__overlay"><p class="card__overlay-title">rx3</p>' +
+              '<p class="card__overlay-tagline">A pro DJ unit, in a browser tab.</p><span class="btn btn--white">View Project</span></div>' +
+            '<div class="card-copy"><span>RX3</span><b>A pro DJ unit, in a browser tab</b></div>' +
+          '</div>' +
+          '<div class="card__info"><h3 class="card__title">rx3</h3>' +
+            '<p class="card__tagline">The Pioneer XDJ-RX3, rebuilt in the browser from its own firmware</p></div>' +
+        '</a>');
+    };
+
   const fillAll = () => {
-    fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); fillSayclipBadge();
+    fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); fillSayclipBadge(); fillRx3();
   };
   addEventListener('DOMContentLoaded', () => {
     fillAll();
