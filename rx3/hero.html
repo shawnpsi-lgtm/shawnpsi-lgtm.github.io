@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rx3</title>
+  <!-- The rx3 landing page's hero on its own (project-rx3.html, copied as is): the Wayglim Neon Ripple with the glass
+       "rx3" over it, sized to whatever frame it's in. The Work page's rx3 card shows it in an iframe. -->
+  <style>
+    html, body { margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    /* The Neon Ripple from Wayglim, fixed behind everything (assets/wayglim-rx3.js mounts it here). */
+    body { background: rgb(3 3 5); }
+    .rx-bg { position: fixed; inset: 0; pointer-events: none; }
+    /* Glass in the shape of the word: the script masks this to the letters and
+       hands it a refraction map and a rim-light map drawn from the same glyphs. */
+    .r2-glass {
+      position: relative; height: 100vh; margin: 0; color: transparent; font-size: 0;
+      --frost: 3px; --saturate: 1.75; --brightness: .78; --tint: .12;
+      -webkit-backdrop-filter: blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness));
+      backdrop-filter: blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness));
+      background: rgb(255 255 255 / var(--tint)) 0 0 / 100% 100% no-repeat;
+      -webkit-mask: 0 0 / 100% 100% no-repeat; mask: 0 0 / 100% 100% no-repeat;
+    }
+  </style>
+</head>
+<body>
+  <div class="rx-bg" aria-hidden="true"></div>
+
+  <script src="/assets/wayglim-rx3.js?v=1" defer></script>
+  <h1 class="r2-glass">rx3</h1>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="r2-refract" x="0" y="0" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feImage x="0" y="0" preserveAspectRatio="none" result="map" />
+      <feDisplacementMap in="SourceGraphic" in2="map" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+
+  <script>
+    // Draws rx3 once per size, then derives everything from the glyphs:
+    // the mask, a displacement map that bends the video at the letter edges, and the rim light.
+    (() => {
+      const el = document.querySelector('.r2-glass'), WORD = el.textContent.trim()
+      const filter = document.getElementById('r2-refract')
+      const img = filter.querySelector('feImage')
+      const map = filter.querySelector('feDisplacementMap')
+      // Only Chromium runs SVG filters in backdrop-filter; elsewhere the glass is frost and rim only.
+      const bends = !!navigator.userAgentData
+
+      // Refraction and bevel scale with the letter size; frost, saturation, brightness and tint are CSS on .r2-glass.
+      const tune = { refract: .36, bevel: .005, rim: 2.65 }
+
+      function glyphs(w, h, scale) {
+        const c = document.createElement('canvas')
+        c.width = w * scale; c.height = h * scale
+        const x = c.getContext('2d', { willReadFrequently: true })
+        const font = getComputedStyle(document.body).fontFamily
+        x.font = `700 100px ${font}`
+        const size = Math.min(100 * w * .94 / x.measureText(WORD).width, h * .7) * scale
+        x.font = `700 ${size}px ${font}`
+        const m = x.measureText(WORD)
+        x.textAlign = 'center'
+        x.fillText(WORD, c.width / 2, c.height / 2 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2)
+        return { c, x, size: size / scale }
+      }
+
+      // Box blur along rows (step 1) or columns (step w), three times over reads as a gaussian.
+      function blur(src, dst, n, lines, stride, step, r) {
+        for (let i = 0; i < lines; i++) {
+          const o = i * stride
+          let sum = 0
+          for (let k = -r; k <= r; k++) sum += src[o + Math.min(Math.max(k, 0), n - 1) * step]
+          for (let j = 0; j < n; j++) {
+            dst[o + j * step] = sum / (2 * r + 1)
+            sum += src[o + Math.min(j + r + 1, n - 1) * step] - src[o + Math.max(j - r, 0) * step]
+          }
+        }
+      }
+
+      function build() {
+        const w = innerWidth, h = innerHeight
+        const dpr = Math.min(devicePixelRatio || 1, 2)
+        const sharp = glyphs(w, h, dpr)
+        el.style.webkitMaskImage = el.style.maskImage = `url(${sharp.c.toDataURL()})`
+
+        // Height field: the letters, blurred, so it rises from 0 outside to 1 inside.
+        const { c, x, size } = glyphs(w, h, 1)
+        const px = x.getImageData(0, 0, w, h)
+        const d = px.data, n = w * h
+        let a = new Float32Array(n), b = new Float32Array(n)
+        for (let i = 0; i < n; i++) a[i] = d[i * 4 + 3] / 255
+        const r = Math.max(2, Math.round(size * tune.bevel))
+        for (let k = 0; k < 3; k++) { blur(a, b, w, h, w, 1, r); blur(b, a, h, w, 1, w, r) }
+
+        // Its slope points into each letter. Refraction pulls from outward; the rim lights where it's steep.
+        const gx = new Float32Array(n), gy = new Float32Array(n)
+        let max = 1e-6
+        for (let y = 1; y < h - 1; y++) for (let i = y * w + 1, e = y * w + w - 1; i < e; i++) {
+          gx[i] = a[i + 1] - a[i - 1]; gy[i] = a[i + w] - a[i - w]
+          max = Math.max(max, Math.hypot(gx[i], gy[i]))
+        }
+        const light = x.createImageData(w, h), l = light.data
+        for (let i = 0; i < n; i++) {
+          const sx = gx[i] / max, sy = gy[i] / max, s = Math.hypot(sx, sy)
+          d[i * 4] = 128 - sx * 127; d[i * 4 + 1] = 128 - sy * 127; d[i * 4 + 2] = 128; d[i * 4 + 3] = 255
+          const lit = Math.max(0, (sx + sy) * .7071), back = Math.max(0, -(sx + sy) * .7071)
+          l[i * 4] = l[i * 4 + 1] = l[i * 4 + 2] = 255
+          l[i * 4 + 3] = 255 * Math.min(1, tune.rim * (.7 * lit ** 2 + .3 * back ** 2 + .12 * s))
+        }
+
+        x.putImageData(light, 0, 0)
+        el.style.backgroundImage = `url(${c.toDataURL()})`
+        if (!bends) return
+        x.putImageData(px, 0, 0)
+        for (const t of [filter, img]) { t.setAttribute('width', w); t.setAttribute('height', h) }
+        img.setAttribute('href', c.toDataURL())
+        map.setAttribute('scale', Math.round(size * tune.refract))
+        el.style.backdropFilter = 'url(#r2-refract) blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness))'
+      }
+
+      let timer
+      addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(build, 150) })
+      document.fonts.ready.then(build)
+    })()
+  </script>
+</body>
+</html>
