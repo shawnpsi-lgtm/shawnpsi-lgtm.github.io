@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rx3 · Shawn Singh</title>
+  <meta name="description" content="rx3: a Pioneer XDJ-RX3 in your browser, with effects ported from the unit's own firmware" />
+
+
+  <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
+  <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
+  <link rel="stylesheet" href="/assets/view-transition.css?v=1">
+  <link rel="stylesheet" href="/assets/ask.css?v=15">
+  <style>
+    /* The neon ripple behind everything. The gradient shows if WebGL can't start. */
+    body { background: #07081c linear-gradient(180deg, #5b5bf0 0%, #8a6cf2 38%, #ff7ad9 52%, #10112c 64%, #06071a 100%) fixed; }
+    .rx-bg { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; pointer-events: none; }
+    /* Glass in the shape of the word: the script masks this to the letters and
+       hands it a refraction map and a rim-light map drawn from the same glyphs. */
+    .r2-glass {
+      position: relative; height: 100vh; margin: 0; color: transparent; font-size: 0;
+      --frost: 3px; --saturate: 1.75; --brightness: .78; --tint: .12;
+      -webkit-backdrop-filter: blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness));
+      backdrop-filter: blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness));
+      background: rgb(255 255 255 / var(--tint)) 0 0 / 100% 100% no-repeat;
+      -webkit-mask: 0 0 / 100% 100% no-repeat; mask: 0 0 / 100% 100% no-repeat;
+    }
+
+
+    /* Scrolled down: rx3 itself, live, in a window on the same wallpaper. Same glass and shadow as r2music's. */
+    .rx-desk { position: relative; display: grid; place-items: center; gap: 28px; min-height: 100vh; padding: 72px 16px 64px; }
+    .rx-win {
+      position: relative; width: min(1170px, 100%); overflow: hidden; border-radius: 14px;
+      background: rgb(12 16 22 / .5); -webkit-backdrop-filter: blur(40px) saturate(1.5); backdrop-filter: blur(40px) saturate(1.5);
+      box-shadow: 0 0 0 1px rgb(0 0 0 / .6), 0 30px 90px rgb(0 0 0 / .55);
+    }
+    .rx-win::after { content: ''; position: absolute; z-index: 2; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12); pointer-events: none; }
+    .rx-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 40px; padding: 0 14px; }
+    .rx-lights { display: flex; gap: 9px; }
+    .rx-lights i { width: 14px; height: 14px; border-radius: 50%; background: #ff5f57; }
+    .rx-lights i + i { background: #febc2e; }
+    .rx-lights i + i + i { background: #28c840; }
+    .rx-bar p { margin: 0; font-size: .82rem; font-weight: 600; color: #98989d; }
+    /* The app is built at 1280x800 and scales itself to fit, so the frame keeps 16:10 (portrait on phones). */
+    .rx-win iframe { display: block; width: 100%; aspect-ratio: 16 / 10; max-height: calc(100vh - 200px); min-height: 360px; border: 0; background: #000; }
+    .rx-btn {
+      display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border: 1px solid #0071e3; border-radius: 980px;
+      background: #0071e3; color: #fff; font-size: .95rem; text-decoration: none; transition: background .2s;
+    }
+    .rx-btn:hover { background: #0077ed; }
+    .rx-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    @media (max-width: 700px) {
+      .rx-desk { padding-bottom: 112px; }
+      .rx-win iframe { aspect-ratio: 9 / 16; max-height: calc(100svh - 190px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" data-always-scrolled role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo" style="display:flex;align-items:center;gap:10px;">
+        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+          <defs>
+            <radialGradient id="sg" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#d9a8f5"/>
+              <stop offset="55%" stop-color="#b36fd9"/>
+              <stop offset="100%" stop-color="#9a4fc4"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="50" fill="url(#sg)"/>
+          <text x="50" y="67" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif" font-size="52" font-weight="600" fill="white" letter-spacing="-1">S</text>
+        </svg>
+        Shawn Singh
+      </a>
+
+      <ul class="nav__links" role="list">
+        <li><a href="work.html" class="active">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+      </ul>
+
+      <div class="nav__right" style="display:flex;align-items:center;gap:8px;">
+      <button class="nav__theme-toggle" aria-label="Switch to dark mode">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      </div>
+    </div>
+  </nav>
+
+  <canvas class="rx-bg" aria-hidden="true"></canvas>
+
+  <script>
+    // Neon ripple: a glowing wave with a cyan edge, violet haze above and pink sparkles fading out below.
+    // One full-screen fragment shader; no libraries.
+    (() => {
+      const cv = document.querySelector('.rx-bg')
+      const gl = cv.getContext('webgl', { antialias: false, premultipliedAlpha: false })
+      if (!gl) { cv.remove(); return }
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+      const vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}'
+      const fs = `precision highp float;
+uniform vec2 R; uniform float T;
+float h(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+// Where the wave sits at x: one deep swing plus a slower second motion.
+float wave(float x, float t){
+  return .5 + .28*sin(x*4.2 - t*.55) + .035*sin(x*8.3 + t*.8);
+}
+void main(){
+  vec2 uv = gl_FragCoord.xy / R;
+  float ar = R.x / R.y;
+  // Zoomed out: Z shrinks the wave, its glow and the haze together. The wave sits a little below center.
+  const float Z = 1.75;
+  float x = (uv.x - .5) * ar * Z;
+  float y = .5 + (uv.y - .4) * Z;
+  float t = T;
+  // Distance above (+) or below (-) the wave, measured across it rather than straight down.
+  float c = wave(x, t);
+  float dc = (wave(x + .002, t) - wave(x - .002, t)) / .004;
+  float d = (y - c) / sqrt(1. + dc*dc);
+  float up = max(d, 0.), dn = max(-d, 0.);
+
+  vec3 top    = vec3(.2,.2,.66);
+  vec3 violet = vec3(.5,.4,.95);
+  vec3 pink   = vec3(.98,.5,.9);
+  vec3 cyan   = vec3(.5,.95,1.);
+  vec3 navy   = vec3(.03,.035,.1);
+
+  // Sky: deep blue up top into violet near the wave, then a thick pink sheet resting on it.
+  vec3 col = mix(violet, top, smoothstep(.02, .9, up));
+  col = mix(col, pink, exp(-up / .075) * .9);
+  // Below: dark navy almost at once, with a faint pink spill.
+  col = mix(col, navy, smoothstep(0., .05, dn));
+  col += pink * exp(-dn / .025) * .25;
+
+  // The tube: a soft, thick pink glow, with cyan along its underside where light travels.
+  float travel = .35 + .65 * smoothstep(.2, .9, .5 + .5*sin(x*2.6 - t*1.4));
+  col += vec3(1.,.62,.95) * exp(-pow((d - .025) / .03, 2.)) * .45;
+  col += vec3(1.,.9,.98) * exp(-pow((d - .01) / .014, 2.)) * .15;
+  col += cyan * exp(-pow((d + .002) / .012, 2.)) * .9 * travel;
+  col += mix(pink, cyan, .4) * exp(-abs(d) / .05) * .15;
+
+  // Sparkles: fine pink dust, densest just under the wave.
+  vec2 g = floor(gl_FragCoord.xy);
+  float n = h(g + floor(t * 4.) * 17.);
+  float dens = exp(-dn / .14) + .08 * exp(-up / .18);
+  float spark = step(1. - dens * .1, n);
+  col += vec3(1.,.55,.9) * spark * (.35 + .5 * h(g + 3.));
+
+  // Vignette and a touch of grain.
+  col *= 1. - .4 * pow(length(uv - .5) * 1.2, 2.);
+  col += (h(gl_FragCoord.xy + fract(t)) - .5) * .02;
+  gl_FragColor = vec4(col, 1.);
+}`
+      function sh(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s }
+      const pr = gl.createProgram()
+      gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr)
+      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) { cv.remove(); return }
+      gl.useProgram(pr)
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW)
+      const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0)
+      const uR = gl.getUniformLocation(pr, 'R'), uT = gl.getUniformLocation(pr, 'T')
+
+      function size() {
+        const dpr = Math.min(devicePixelRatio || 1, 1.5)
+        cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr)
+        gl.viewport(0, 0, cv.width, cv.height)
+      }
+      const t0 = performance.now()
+      function frame(now) {
+        gl.uniform2f(uR, cv.width, cv.height)
+        gl.uniform1f(uT, still ? 4 : (now - t0) / 1000)
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
+        if (!still && !document.hidden) requestAnimationFrame(frame)
+      }
+      size(); frame(t0)
+      addEventListener('resize', () => { size(); if (still) frame(t0) })
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && !still) requestAnimationFrame(frame) })
+    })()
+  </script>
+  <h1 class="r2-glass">rx3</h1>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="r2-refract" x="0" y="0" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feImage x="0" y="0" preserveAspectRatio="none" result="map" />
+      <feDisplacementMap in="SourceGraphic" in2="map" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+
+  <script>
+    // Draws rx3 once per size, then derives everything from the glyphs:
+    // the mask, a displacement map that bends the video at the letter edges, and the rim light.
+    (() => {
+      const el = document.querySelector('.r2-glass'), WORD = el.textContent.trim()
+      const filter = document.getElementById('r2-refract')
+      const img = filter.querySelector('feImage')
+      const map = filter.querySelector('feDisplacementMap')
+      // Only Chromium runs SVG filters in backdrop-filter; elsewhere the glass is frost and rim only.
+      const bends = !!navigator.userAgentData
+
+      // Refraction and bevel scale with the letter size; frost, saturation, brightness and tint are CSS on .r2-glass.
+      const tune = { refract: .36, bevel: .005, rim: 2.65 }
+
+      function glyphs(w, h, scale) {
+        const c = document.createElement('canvas')
+        c.width = w * scale; c.height = h * scale
+        const x = c.getContext('2d', { willReadFrequently: true })
+        const font = getComputedStyle(document.body).fontFamily
+        x.font = `700 100px ${font}`
+        const size = Math.min(100 * w * .94 / x.measureText(WORD).width, h * .7) * scale
+        x.font = `700 ${size}px ${font}`
+        const m = x.measureText(WORD)
+        x.textAlign = 'center'
+        x.fillText(WORD, c.width / 2, c.height / 2 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2)
+        return { c, x, size: size / scale }
+      }
+
+      // Box blur along rows (step 1) or columns (step w), three times over reads as a gaussian.
+      function blur(src, dst, n, lines, stride, step, r) {
+        for (let i = 0; i < lines; i++) {
+          const o = i * stride
+          let sum = 0
+          for (let k = -r; k <= r; k++) sum += src[o + Math.min(Math.max(k, 0), n - 1) * step]
+          for (let j = 0; j < n; j++) {
+            dst[o + j * step] = sum / (2 * r + 1)
+            sum += src[o + Math.min(j + r + 1, n - 1) * step] - src[o + Math.max(j - r, 0) * step]
+          }
+        }
+      }
+
+      function build() {
+        const w = innerWidth, h = innerHeight
+        const dpr = Math.min(devicePixelRatio || 1, 2)
+        const sharp = glyphs(w, h, dpr)
+        el.style.webkitMaskImage = el.style.maskImage = `url(${sharp.c.toDataURL()})`
+
+        // Height field: the letters, blurred, so it rises from 0 outside to 1 inside.
+        const { c, x, size } = glyphs(w, h, 1)
+        const px = x.getImageData(0, 0, w, h)
+        const d = px.data, n = w * h
+        let a = new Float32Array(n), b = new Float32Array(n)
+        for (let i = 0; i < n; i++) a[i] = d[i * 4 + 3] / 255
+        const r = Math.max(2, Math.round(size * tune.bevel))
+        for (let k = 0; k < 3; k++) { blur(a, b, w, h, w, 1, r); blur(b, a, h, w, 1, w, r) }
+
+        // Its slope points into each letter. Refraction pulls from outward; the rim lights where it's steep.
+        const gx = new Float32Array(n), gy = new Float32Array(n)
+        let max = 1e-6
+        for (let y = 1; y < h - 1; y++) for (let i = y * w + 1, e = y * w + w - 1; i < e; i++) {
+          gx[i] = a[i + 1] - a[i - 1]; gy[i] = a[i + w] - a[i - w]
+          max = Math.max(max, Math.hypot(gx[i], gy[i]))
+        }
+        const light = x.createImageData(w, h), l = light.data
+        for (let i = 0; i < n; i++) {
+          const sx = gx[i] / max, sy = gy[i] / max, s = Math.hypot(sx, sy)
+          d[i * 4] = 128 - sx * 127; d[i * 4 + 1] = 128 - sy * 127; d[i * 4 + 2] = 128; d[i * 4 + 3] = 255
+          const lit = Math.max(0, (sx + sy) * .7071), back = Math.max(0, -(sx + sy) * .7071)
+          l[i * 4] = l[i * 4 + 1] = l[i * 4 + 2] = 255
+          l[i * 4 + 3] = 255 * Math.min(1, tune.rim * (.7 * lit ** 2 + .3 * back ** 2 + .12 * s))
+        }
+
+        x.putImageData(light, 0, 0)
+        el.style.backgroundImage = `url(${c.toDataURL()})`
+        if (!bends) return
+        x.putImageData(px, 0, 0)
+        for (const t of [filter, img]) { t.setAttribute('width', w); t.setAttribute('height', h) }
+        img.setAttribute('href', c.toDataURL())
+        map.setAttribute('scale', Math.round(size * tune.refract))
+        el.style.backdropFilter = 'url(#r2-refract) blur(var(--frost)) saturate(var(--saturate)) brightness(var(--brightness))'
+      }
+
+      let timer
+      addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(build, 150) })
+      document.fonts.ready.then(build)
+    })()
+  </script>
+
+  <section class="rx-desk" aria-label="rx3, live">
+    <div class="rx-win">
+      <div class="rx-bar"><div class="rx-lights" aria-hidden="true"><i></i><i></i><i></i></div><p>rx3</p><span></span></div>
+      <iframe src="/rx3/" title="rx3" loading="lazy" allow="autoplay; fullscreen"></iframe>
+    </div>
+    <a class="rx-btn" href="/rx3/">Open rx3<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </section>
+
+  <link rel="stylesheet" href="/assets/glass.css?v=13">
+
+  <script src="/assets/glass.js?v=14" defer></script>
+
+  <script src="/assets/chat.js?v=15"></script>
+</body>
+</html>
