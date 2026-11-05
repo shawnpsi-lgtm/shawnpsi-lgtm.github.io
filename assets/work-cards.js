@@ -196,9 +196,10 @@
       after.insertAdjacentHTML('afterend',
         '<a href="project-rx3.html" class="card-wrap card-wrap--rx3" aria-label="View rx3 project">' +
           '<div class="card">' +
-            '<div class="card__img" style="position:relative;background:rgb(3,3,5)">' +
-              '<iframe src="/rx3/hero.html" title="" aria-hidden="true" tabindex="-1" loading="lazy" ' +
-                'style="position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none"></iframe>' +
+            '<div class="card__img" style="position:relative;overflow:hidden;background:rgb(3,3,5)">' +
+              '<iframe src="/rx3/hero.html?fill=.7" title="" aria-hidden="true" tabindex="-1" loading="lazy" ' +
+                'style="position:absolute;left:0;top:0;width:1000px;height:900px;border:0;pointer-events:none;' +
+                'transform-origin:0 0;transform:scale(.3)"></iframe>' +
             '</div>' +
             '<div class="card__overlay"><p class="card__overlay-title">rx3</p>' +
               '<p class="card__overlay-tagline">A pro DJ unit, in a browser tab.</p><span class="btn btn--white">View Project</span></div>' +
@@ -208,6 +209,16 @@
             '<p class="card__tagline">The Pioneer XDJ-RX3, rebuilt in the browser from its own firmware</p></div>' +
         '</a>');
       const card = grid.querySelector('.card-wrap--rx3');
+      // The hero lays itself out for the window it's in, so at card size the ripple and glass would come out coarser and
+      // the word would fill the card. It's drawn 1000px wide in the card's shape instead, with the word at the share of
+      // the width it takes on a desktop window (?fill), and scaled down: the project page's opening view, small.
+      const box = card.querySelector('.card__img'), frame = box.querySelector('iframe');
+      new ResizeObserver(() => {
+        const k = box.clientWidth / 1000;
+        if (!k) return;
+        frame.style.height = Math.round(box.clientHeight / k) + 'px';
+        frame.style.transform = `scale(${k})`;
+      }).observe(box);
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       Object.assign(card.style, { opacity: 0, transform: 'translateY(24px)', transition: 'opacity .6s, transform .6s' });
       new IntersectionObserver(([e], io) => {
