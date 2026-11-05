@@ -787,6 +787,27 @@
     body:has(.desktop-icon) .min-h-screen > div:first-of-type {
       position: fixed !important;
     }
+    /* iOS Safari draws the page behind the status bar and the bottom toolbar,
+       but fixed boxes sized to 100%/vh stop at the visible viewport and leave
+       black bands there. Size the pinned wallpaper to the large viewport and
+       stretch it over the safe areas (viewport-fit=cover makes env() real). */
+    body:has(.desktop-icon) .min-h-screen > img,
+    body:has(.desktop-icon) .min-h-screen > div:first-of-type {
+      inset: auto !important;
+      top: calc(-1 * env(safe-area-inset-top, 0px)) !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: calc(100lvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    body:has(.desktop-icon) .min-h-screen > iframe,
+    #scene2 > iframe {
+      --wall-h: calc(100lvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+      top: calc(var(--wall-h) / 2 - env(safe-area-inset-top, 0px)) !important;
+      width: max(100vw, var(--wall-h) * 16 / 9) !important;
+      height: max(56.25vw, var(--wall-h)) !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+    }
     /* first-of-type is the hero's 15% black scrim. Left absolute it ends with
        the hero, and its bottom edge reads as a seam across the pinned
        wallpaper once the page scrolls. */
