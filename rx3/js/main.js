@@ -4,20 +4,12 @@ import { BEAT_FX, COLOR_FX, Engine, FX_CHANNELS, pitchLabel } from './audio/engi
 import { FolderSource, memory, R2Source } from './lib/library.js';
 import { Browser } from './ui/browser.js';
 import './ui/dropdown.js';
+import { bindKeys } from './ui/keys.js';
 import { Phone } from './ui/phone.js';
 import { Screen } from './ui/screen.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
-
-// keyboard, as in the local viewer (rx3_viewer.py), plus a few for the mixer
-const KEYS = {
-  ArrowUp: 'up', ArrowDown: 'down', Enter: 'push', Escape: 'back', Backspace: 'back',
-  '1': ['load', 0], '2': ['load', 1], q: ['play', 0], p: ['play', 1], w: ['cue', 0], o: ['cue', 1],
-  s: 'source', b: 'browse', t: 'taglist', l: 'playlist', f: 'search', m: 'menu', i: 'info', g: 'tag',
-  e: 'fx', '[': 'beat-down', ']': 'beat-up', x: 'mute', h: 'hide',
-  a: ['nudge-', 0], d: ['nudge+', 0], k: ['nudge-', 1], ';': ['nudge+', 1],
-};
 
 class App {
   constructor(engine) {
@@ -34,7 +26,7 @@ class App {
     this.screen = new Screen(this);
     this.buildControls();
     this.phone = new Phone(this);
-    this.bindKeys();
+    bindKeys(this);
     this.bindFiles();
     this.screen.render();
     this.renderControls();
@@ -334,6 +326,11 @@ class App {
       const up = () => this.key(k, d, false);
       btn.addEventListener('pointerup', up);
       btn.addEventListener('pointercancel', up);
+      btn.addEventListener('click', (ev) => { // from the keyboard (Tab, then Enter / Space)
+        if (ev.detail !== 0) return;
+        this.key(k, d, true);
+        this.key(k, d, false);
+      });
     });
     const fxSel = $('#fx-select');
     fxSel.setOptions(BEAT_FX.map((m) => m.name));
@@ -445,38 +442,12 @@ class App {
 
   status() {
     const ctx = this.engine.ctx;
-    const sound = ctx.state !== 'running' ? 'sound: click anywhere to start' : this.muted ? 'sound muted (X)' : 'sound on (X to mute)';
+    const sound = ctx.state !== 'running' ? 'sound: click anywhere to start' : this.muted ? 'sound muted (\\)' : 'sound on (\\ to mute)';
     const lat = ctx.baseLatency ? `   |   output ${Math.round((ctx.baseLatency + (ctx.outputLatency || 0)) * 1000)} ms` : '';
-    return `${sound}${lat}   |   H hides controls   |   1/2 load, Q/P play, W/O cue, E beat FX`;
+    return `${sound}${lat}   |   ? keyboard   |   \u2190/\u2192 load, Q/P play, W/O cue, 1-4/7-0 hot cues, SPACE beat FX, \` hides controls`;
   }
 
-  // ---- keyboard, files, frame loop
-
-  bindKeys() {
-    const held = new Set();
-    const map = (ev) => {
-      const k = KEYS[ev.key.length === 1 ? ev.key.toLowerCase() : ev.key];
-      return k && (Array.isArray(k) ? k : [k, 0]);
-    };
-    addEventListener('keydown', (ev) => {
-      if (ev.target.tagName === 'INPUT' && ev.target.type !== 'range') return;
-      if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
-      const k = map(ev);
-      if (!k) return;
-      ev.preventDefault();
-      const id = k.join();
-      if (held.has(id) && !['up', 'down'].includes(k[0])) return; // arrows auto-repeat to scroll
-      held.add(id);
-      this.key(k[0], k[1], true);
-    });
-    addEventListener('keyup', (ev) => {
-      const k = map(ev);
-      if (!k) return;
-      held.delete(k.join());
-      this.key(k[0], k[1], false);
-    });
-    addEventListener('pointerdown', () => this.engine.resume(), { once: true });
-  }
+  // ---- files, frame loop (the keyboard is in ui/keys.js)
 
   async pickFolder() {
     if (!window.showDirectoryPicker) return $('#folder-input').click(); // e.g. Firefox/Safari

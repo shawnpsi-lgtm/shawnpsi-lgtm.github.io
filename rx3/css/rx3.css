@@ -287,6 +287,16 @@ canvas.zoom[data-deck="1"] { top: 280px; }
 .menu .row div { display: flex; gap: 6px; }
 .menu .row button { min-width: 64px; height: 38px; background: #000; border: 1px solid #555; font-size: 16px; }
 .menu .row button.sel { background: var(--blue); border-color: var(--blue); }
+/* the ? keyboard overlay */
+.menu.help { left: 240px; top: 40px; width: 800px; max-height: 720px; overflow-y: auto; }
+.menu.help .row.keys { display: grid; grid-template-columns: 1fr 170px 170px; gap: 12px; height: 36px; font-size: 16px; }
+.menu.help kbd.wide { grid-column: 2 / 4; }
+.menu.help .row.keys.head { color: #888; font-size: 13px; height: 24px; }
+.menu.help kbd { font: 15px Menlo, monospace; color: #fff; background: #000; border: 1px solid #555; border-radius: 6px;
+  padding: 4px 8px; text-align: center; white-space: nowrap; }
+/* Tab to a control, then the arrows turn it */
+.panel button:focus-visible, .bar button:focus-visible, .bar input:focus-visible, .bar .rxs-btn:focus-visible {
+  outline: 2px solid var(--blue); outline-offset: 2px; }
 .menu .close { position: absolute; right: 12px; top: 8px; background: none; border: 0; font-size: 26px; color: #aaa; }
 
 /* ---------- panels around the screen ---------- */

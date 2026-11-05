@@ -24,14 +24,26 @@ USB2 is a folder or files from this computer (MENU → USB2, or drop files on th
 The screen works by touch/mouse like the unit; the buttons on the right are the hardware's, the bar below is
 the effects section, and the strip under that is the mixer.
 
+| | Deck 1 | Deck 2 |
+|---|---|---|
+| Hot cues A-D (Shift: delete) | 1 2 3 4 | 7 8 9 0 |
+| PLAY / CUE (hold CUE at the cue to preview) | Q / W | P / O |
+| BEAT SYNC | E | I |
+| 4-beat loop on/off, LOOP 1/2X / 2X | R, F / G | U, J / H |
+| Nudge (Shift: tempo, held) | A / D | K / ; |
+| Channel fader down / up (held) | Z / X | , / . |
+| LOAD the selected track | ← | → |
+
 | Key | | Key | |
 |---|---|---|---|
 | ↑ ↓ / Enter | browse, PUSH | Esc / Backspace | BACK |
-| 1 / 2 | LOAD deck 1 / 2 | Q / P | PLAY deck 1 / 2 |
-| W / O | CUE deck 1 / 2 (hold at the cue to preview) | A D / K ; | nudge deck 1 / 2 |
-| S B T L F | SOURCE, BROWSE, TAG LIST, PLAYLIST, SEARCH | M / I | MENU / INFO |
-| G | tag the track | E | Beat FX on/off |
-| [ ] | BEAT left/right | X / H | mute / hide the controls |
+| C / V | crossfader (held) | Space | Beat FX on/off (held: only while held) |
+| [ ] | BEAT left/right | / | SEARCH |
+| B / M / T | BROWSE view, MENU, tag the track | \\ / ` / ? | mute, hide the controls, this list |
+
+Keys are matched by position, so they sit in the same place on any keyboard layout. Every other control is reached
+with Tab: the arrows turn a focused knob (Shift: finer, Page Up/Down: coarser, Home: back to its default) and
+Enter / Space press a focused button. The keyboard lives in `js/ui/keys.js`.
 
 The effects work as on the unit:
 
