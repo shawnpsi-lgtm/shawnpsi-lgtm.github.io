@@ -17,7 +17,9 @@ npm test             # every effect against the firmware's own output (must prin
 
 Deploy by copying the folder anywhere static (for example next to `/beatfx` on shawnsingh.me). USB1 is the
 r2music library and only works on an origin listed in r2music's `TRUSTED_ORIGINS` (`https://shawnsingh.me`);
-USB2 is a folder or files from this computer (MENU → USB2, or drop files on the page).
+USB2 (named USB on screen) is a folder on this computer (MENU → ADD MUSIC → FOLDER…). UPLOAD A SONG takes song
+files one at a time or several at once: pick them there, or drop them anywhere on the page. Uploaded songs stay in
+the browser tab; nothing is sent anywhere.
 
 ## Using it
 
