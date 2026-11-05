@@ -173,6 +173,7 @@
         ['[href="project-visuallyrepresented.html"]', '', 'A Visual System for brands'],
         ['.card-wrap--tv', 'SHAWN TV', ''],
         ['[href="/sayclip/"]', '', 'Crate-dig for Audio Samples by Query'],
+        ['[href="project-r2music.html"]', '', 'Your music library, in your own bucket'],
       ];
       for (const [sel, kicker, line, tag] of items) {
         const card = document.querySelector('.grid .card-wrap' + sel + ' .card');

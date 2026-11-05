@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>r2music — Shawn Singh</title>
+  <meta name="description" content="r2music — a music library that lives in your own Cloudflare R2 bucket" />
+
+
+  <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
+  <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
+  <link rel="stylesheet" href="/assets/view-transition.css?v=1">
+  <link rel="stylesheet" href="/assets/ask.css?v=15">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" data-always-scrolled role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo" style="display:flex;align-items:center;gap:10px;">
+        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+          <defs>
+            <radialGradient id="sg" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#d9a8f5"/>
+              <stop offset="55%" stop-color="#b36fd9"/>
+              <stop offset="100%" stop-color="#9a4fc4"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="50" fill="url(#sg)"/>
+          <text x="50" y="67" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif" font-size="52" font-weight="600" fill="white" letter-spacing="-1">S</text>
+        </svg>
+        Shawn Singh
+      </a>
+
+      <ul class="nav__links" role="list">
+        <li><a href="work.html" class="active">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+      </ul>
+
+      <div class="nav__right" style="display:flex;align-items:center;gap:8px;">
+      <button class="nav__theme-toggle" aria-label="Switch to dark mode">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       CASE STUDY HERO
+       ============================================================ -->
+  <section class="case-hero" style="position: relative;">
+    <!-- Full-width hero image -->
+    <img
+      class="case-hero__img"
+      src="/images/r2music-hero.jpg"
+      alt="r2music sign-in page: Your music. Your storage."
+      style="margin-top: 48px; border-radius: 16px; border: 1px solid var(--border);"
+      onerror="this.outerHTML='<div class=\'case-hero__img--placeholder\'>r2music — /images/r2music-hero.jpg</div>'"
+    />
+
+    <!-- Scroll indicator arrow -->
+    <div style="display: flex; justify-content: center; padding: 17px 0 8px; animation: bounce 1s infinite;">
+      <svg class="scroll-arrow" fill="currentColor" width="32px" height="32px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 16a1 1 0 0 1-.64-.23l-6-5a1 1 0 1 1 1.28-1.54L12 13.71l5.36-4.32a1 1 0 0 1 1.41.15 1 1 0 0 1-.14 1.46l-6 4.83A1 1 0 0 1 12 16z"/>
+      </svg>
+    </div>
+
+    <div class="container">
+      <div class="case-hero__meta" data-reveal>
+        <a href="work.html" class="back-link">
+          <!-- Left arrow -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          All Work
+        </a>
+
+        <p class="case-hero__tag">Full-Stack / Product</p>
+        <h1 class="case-hero__title">r2music</h1>
+        <p class="case-hero__tagline">Your music. Your storage.</p>
+
+        <div class="case-hero__details">
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Role</span>
+            <span class="case-hero__detail-value">Design &amp; Engineering</span>
+          </div>
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Year</span>
+            <span class="case-hero__detail-value">2026</span>
+          </div>
+          <div class="case-hero__detail">
+            <span class="case-hero__detail-label">Tools</span>
+            <span class="case-hero__detail-value">TypeScript, Vite, Cloudflare Workers &amp; R2, Electron</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CASE STUDY SECTIONS
+       ============================================================ -->
+  <main>
+
+    <!-- Overview -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Overview</p>
+          <div class="case-section__body">
+            <p>r2music is a music library that lives in your own Cloudflare R2 bucket. Sign in with GitHub, connect your bucket, drop files in, and play them anywhere: in the browser, in a Mac app, or loaded straight onto a deck in <a href="/beatfx/">BEAT FX</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Problem -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Problem</p>
+          <div class="case-section__body">
+            <p>DJs and collectors keep their music in files, not streaming catalogs, and those files end up scattered:</p>
+            <ul style="margin-top: 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 12px;">
+              <li><strong>Libraries are stuck on one machine.</strong> The crate lives on a laptop, so it isn't there on a phone, another computer, or a gig.</li>
+              <li><strong>Cloud lockers own your files.</strong> Hosted music lockers keep your audio on their servers, under their limits and pricing, and close when the service does.</li>
+              <li><strong>DJ prep doesn't travel.</strong> Beat grids, cue points and waveforms from rekordbox stay on the drive they were analysed on.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Solution -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Solution</p>
+          <div class="case-section__body">
+            <p>Your audio never touches r2music's servers. Each user brings their own R2 bucket, and the app is a thin layer over it:</p>
+            <ul style="margin-top: 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 12px;">
+              <li><strong>Bring your own bucket.</strong> A Cloudflare Worker handles GitHub sign-in, stores each user's R2 keys encrypted, and hands the browser short-lived signed URLs. Uploads and playback go straight between the browser and the bucket.</li>
+              <li><strong>An open bucket format.</strong> Tracks are stored by the SHA-256 of their contents, so duplicates upload once. A single <code>lists.json</code> holds the library and playlists, and writers save it conditionally and merge on conflict, so two devices can edit at once without losing changes.</li>
+              <li><strong>One library, many apps.</strong> Any app that reads the bucket format can use it. BEAT FX already does: its R2 button opens a picker of your r2music library and loads the track onto the deck.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Desktop -->
+    <section class="case-section">
+      <div class="container">
+        <div class="case-section__grid" data-reveal>
+          <p class="case-section__label">Desktop</p>
+          <div class="case-section__body">
+            <p>A macOS app wraps the web app and adds what the browser can't reach: your local DJ software and drives.</p>
+            <ul style="margin-top: 16px; padding-left: 20px; display: flex; flex-direction: column; gap: 12px;">
+              <li><strong>rekordbox import.</strong> Reads the local rekordbox library, tracks and playlists, with no export step.</li>
+              <li><strong>DJ USB import and export.</strong> Plugged-in CDJ drives show up in the sidebar. Drag tracks or a list onto one to export, and it's written into rekordbox's own database format, leaving existing entries alone and backing the databases up first.</li>
+              <li><strong>Analysis comes along.</strong> Beat grids, waveforms and cues from rekordbox are kept in the bucket and written back to the drive on export, so tracks arrive ready to play on a CDJ.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA — Live Site -->
+    <section class="section" style="padding-top: 0; text-align: center;" data-reveal>
+      <div class="container">
+        <div style="padding: 64px 0; border-top: 1px solid var(--border);">
+          <p class="section-label" style="margin-bottom: 24px; border: none; padding: 0;">See it live</p>
+          <h2 style="margin-bottom: 24px;">Open r2music</h2>
+          <a href="https://r2.shawnsingh.me" target="_blank" rel="noopener noreferrer" class="btn btn--accent" style="margin: 0 auto;">
+            r2.shawnsingh.me
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       NEXT PROJECT
+       ============================================================ -->
+  <a href="project-ngc2.html" class="next-project">
+    <div class="container">
+      <p class="next-project__label">Next Project</p>
+      <div class="next-project__inner">
+        <h2 class="next-project__title">U.S. Army NGC2</h2>
+        <svg class="next-project__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </div>
+      <p class="next-project__sub">The army's next generation of command and control</p>
+    </div>
+  </a>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <p class="footer__logo">Shawn Singh</p>
+          <p class="footer__tagline">data + design — San Francisco, CA</p>
+        </div>
+        <div class="footer__links">
+          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            LinkedIn
+          </a>
+          <a href="/files/resume.pdf" class="footer__link" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Résumé
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <link rel="stylesheet" href="/assets/glass.css?v=13">
+
+  <script src="/assets/glass.js?v=14" defer></script>
+
+  <script src="/assets/chat.js?v=15"></script>
+</body>
+</html>

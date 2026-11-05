@@ -40,7 +40,7 @@
   const TITLES = {
     '/about.html': 'About', '/work.html': 'Work', '/project-cloudexa.html': 'Cloudexa',
     '/project-emmy.html': 'Emmy Award', '/project-djai.html': 'DJai', '/project-ngc2.html': 'NGC2',
-    '/project-visuallyrepresented.html': 'Visually Represented', '/shawnfluence.html': 'Shawnfluence',
+    '/project-visuallyrepresented.html': 'Visually Represented', '/project-r2music.html': 'r2music', '/shawnfluence.html': 'Shawnfluence',
     '/files/resume.pdf': 'R\u00e9sum\u00e9', '/beatfx/': 'BEAT FX', '/sayclip/': 'Sayclip',
   };
   // Any other site path gets a name from its file, so no raw path shows: /privacy.html -> Privacy.
@@ -108,6 +108,8 @@
   signin.id = 'chat-signin';
   const el = (tag, props) => Object.assign(document.createElement(tag), props);
   const reset = () => { msgs = []; chatId = null; log.textContent = ''; };
+  // glass.js puts glass behind .chat-pop; the list scrolls inside it so the glass stays put.
+  const pop = list => { const p = el('div', { className: 'chat-pop' }); p.append(list); return p; };
   // The in-house dropdown (saved chats, model): <details> gives open/close and
   // keyboard toggling for free. items are { label, ... }; onPick gets the chosen one.
   const menu = (label, items, current, onPick) => {
@@ -126,7 +128,7 @@
       });
       list.append(b);
     }
-    pick.append(cur, list);
+    pick.append(cur, pop(list));
     return pick;
   };
 
@@ -173,7 +175,7 @@
     const list = el('div', { role: 'menu' });
     list.append(out, del);
     for (const b of [out, del]) b.role = 'menuitem';
-    more.append(el('summary', { ariaLabel: 'Account', textContent: '\u22ef' }), list);
+    more.append(el('summary', { ariaLabel: 'Account', textContent: '\u22ef' }), pop(list));
     acct.append(el('span', { textContent: me.user.name || me.user.email || 'Signed in' }), pick, more);
   }
   account();

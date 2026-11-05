@@ -92,7 +92,7 @@
   min-width: 0;
   border: 1px solid color-mix(in srgb, var(--black) 12%, transparent);
   border-radius: 980px;
-  background: color-mix(in srgb, var(--bg-off) 70%, transparent);
+  background: color-mix(in srgb, var(--bg-off) 30%, transparent);   /* light, so the glass shows through */
 }
 #chat-field:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
 #chat-input {
@@ -105,6 +105,7 @@
   background: none;
   outline: none;
 }
+#chat-input::placeholder { color: var(--mid); opacity: 1; }   /* the browser grey vanished on the light field */
 #chat-model { flex: none; margin-right: 6px; font-size: var(--text-sm, .875rem); }
 #chat-model summary { padding: 5px 10px; font-weight: 500; color: var(--mid); border-color: transparent; background: none; }
 #chat-model summary:hover { color: var(--black); background: color-mix(in srgb, var(--black) 6%, transparent); }
@@ -114,7 +115,7 @@
 #chat-signin a:hover { color: var(--black); background: color-mix(in srgb, var(--black) 6%, transparent); }
 #chat-signin a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* Opens upward, inside the card, instead of down behind what follows it. */
-#chat-model [role=menu] { top: auto; bottom: calc(100% + 6px); left: auto; width: max-content; min-width: 150px; }
+#chat-model .chat-pop { top: auto; bottom: calc(100% + 6px); left: auto; width: max-content; min-width: 150px; }
 /* Phones: a shorter placeholder (chat.js) and a tighter picker leave the input room to read. */
 @media (width <= 480px) {
   #chat-model summary { padding: 5px 8px; }
@@ -166,45 +167,48 @@
 .chat-pick summary::-webkit-details-marker { display: none; }
 .chat-pick summary::after { content: '▾'; margin-left: auto; color: var(--mid); }
 .chat-pick[open] summary::after { content: '▴'; }
-.chat-pick [role=menu] {
+.chat-pop {
   position: absolute;
   z-index: 10;
   top: calc(100% + 6px);
   left: 0;
   right: 0;
+  border-radius: 20px;
+  /* Fallback until glass.js draws the glass (it clears these). */
+  background: color-mix(in srgb, var(--bg-off) 94%, transparent);
+  box-shadow: 0 8px 24px rgb(0 0 0 / .25);
+}
+.chat-pop > .glass-layer { --lg-blur: 18px; --glass-tint: .35; }   /* frostier than the pills: menu text sits on the photo */
+.chat-pick [role=menu] {
   display: grid;
-  gap: 4px;
+  gap: 2px;
   max-height: 240px;
   padding: 6px;
   overflow-y: auto;
-  border: 1px solid color-mix(in srgb, var(--black) 12%, transparent);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--bg-off) 94%, transparent);
-  box-shadow: 0 8px 24px rgb(0 0 0 / .25);
 }
 #chat :is(#chat-acct, #chat-field) .chat-pick [role=menu] :is(button, a) {
   display: block;
   width: 100%;
   height: auto;
   font: inherit;
-  padding: 6px 10px;
+  padding: 6px 12px;
   text-align: left;
   color: var(--black);
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--black) 10%, transparent);
-  background: color-mix(in srgb, var(--black) 4%, transparent);
+  border: 0;
+  border-radius: 14px;
+  background: none;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-decoration: none;
 }
-#chat :is(#chat-acct, #chat-field) .chat-pick [role=menu] :is(button, a):hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
-#chat :is(#chat-acct, #chat-field) .chat-pick [role=menu] button[aria-current] { color: var(--accent); font-weight: 600; border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+#chat :is(#chat-acct, #chat-field) .chat-pick [role=menu] :is(button, a):hover { background: color-mix(in srgb, var(--black) 10%, transparent); }
+#chat :is(#chat-acct, #chat-field) .chat-pick [role=menu] button[aria-current] { color: var(--accent); font-weight: 600; }
 /* The ⋯ account menu: a round icon button whose menu hangs off its right edge. */
 .chat-more { flex: none; }
 .chat-more summary { padding: 2px 10px; }
 .chat-more summary::after, .chat-more[open] summary::after { content: none; }
-.chat-more [role=menu] { left: auto; width: max-content; }
+.chat-more .chat-pop { left: auto; width: max-content; }
 #chat-acct a, #chat #chat-acct button {
   display: inline-block;
   width: auto;
@@ -258,7 +262,8 @@
 #ask > summary:focus-visible { outline: 2px solid var(--black); outline-offset: 2px; }
 /* Pops out of the pill with a little overshoot. */
 #ask #chat { transform-origin: top center; animation: ask-shut .2s ease-in both; }
-#ask[open] #chat { animation: ask-pop .38s cubic-bezier(.32,1.4,.52,1) both; }
+/* backwards, not both: a held opacity animation is a backdrop root, and the glass would bend nothing. */
+#ask[open] #chat { animation: ask-pop .38s cubic-bezier(.32,1.4,.52,1) backwards; }
 @keyframes ask-pop { from { opacity: 0; transform: translateY(var(--ask-dy, -12px)) scale(.6); } }
 @keyframes ask-shut { to { opacity: 0; transform: translateY(var(--ask-dy, -12px)) scale(.6); } }
 /* Closing hides the content at once; this holds it rendered while ask-shut
@@ -272,10 +277,10 @@
 #ask #chat { position: absolute; top: calc(100% + 10px); left: 50%; width: min(380px, calc(100vw - 32px)); margin-left: calc(min(380px, calc(100vw - 32px)) / -2); }
 #ask #chat-log { max-height: 50svh; }
 /* The nav popup hangs below the pill, so its model menu opens downward. */
-#ask #chat-model [role=menu] { top: calc(100% + 6px); bottom: auto; }
+#ask #chat-model .chat-pop { top: calc(100% + 6px); bottom: auto; }
 @media (width <= 640px) {
   #ask { top: auto; left: auto; right: 16px; bottom: 16px; translate: none; }
-  #ask #chat-model [role=menu] { top: auto; bottom: calc(100% + 6px); }   /* corner pill opens upward again */
+  #ask #chat-model .chat-pop { top: auto; bottom: calc(100% + 6px); }   /* corner pill opens upward again */
   #ask #chat { top: auto; bottom: calc(100% + 10px); left: auto; right: 0; margin-left: 0; transform-origin: bottom right; --ask-dy: 12px; }
   body:has(#ask) .footer { padding-bottom: 72px; }   /* keep the pill off the footer links */
 }

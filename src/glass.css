@@ -1,0 +1,67 @@
+/* Glisse draws the glass now; the element's own frosting would sit on top of it. */
+[data-glass-host] {
+  isolation: isolate;
+  background: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border-color: transparent !important;
+}
+/* The rim replaces the old inset highlights; Quick Look keeps its drop shadow. */
+[data-glass-host]:not(#quicklook > figure) { box-shadow: none !important; }
+
+/* The bundle's old glass: distortion, tint and highlight layers ahead of the content. */
+[data-glass-host] > [style*="glass-distortion"],
+[data-glass-host] > [style*="glass-distortion"] ~ .absolute { display: none; }
+
+.glass-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  transition: opacity .4s;
+  --lg-glass-bend: 0.3;
+  --lg-glass-dispersion: 0.82;
+  --lg-blur: 2px;
+  --lg-rim-shine: 0.55;
+  /* Glisse's fill colour at our own opacity: 0 is clear glass, 0.6 is Glisse's default. */
+  --glass-tint: 0.11;
+  --lg-glass: rgb(255 255 255 / var(--glass-tint));
+}
+[data-theme=dark] .glass-layer { --lg-glass: rgb(40 40 40 / var(--glass-tint)); }
+/* The nav is only 48px tall and bend scales with the short side, so it takes more of everything.
+   The Ask popover hangs off the nav on every page but home, so it matches it. */
+.nav > .glass-layer,
+#ask #chat > .glass-layer {
+  --lg-glass-bend: 0.7;
+  --lg-glass-dispersion: 0.78;
+  --lg-blur: 5px;
+  --lg-rim-shine: 0.62;
+  --glass-tint: 0.04;
+}
+.glass-layer > .lg-glass { width: 100%; height: 100%; border-radius: inherit; }
+
+/* A view-transition-name makes a backdrop root, so glass inside a named element
+   (.nav in view-transition.css, #ask #chat in ask.css) bends and frosts nothing.
+   Name the glass and the content instead, so both still hold still across pages. */
+.nav[data-glass-host] { view-transition-name: none; }
+.nav[data-glass-host] > .nav__inner { view-transition-name: nav; }
+.nav > .glass-layer > .lg-glass { view-transition-name: nav-glass; }
+#ask #chat[data-glass-host] { view-transition-name: none; }
+#ask #chat > .glass-layer > .lg-glass { view-transition-name: ask-chat; }
+
+/* The nav is clear over the hero until it scrolls. */
+.nav:not(.scrolled, [data-always-scrolled]) > .glass-layer { opacity: 0; }
+
+/* Quick Look: photos, video and PDFs are opaque, so only the title bar is glass;
+   the folder and music views are glass all over. */
+#quicklook > figure:is(:has(#ql-img:not([hidden])), :has(#ql-video:not([hidden])), :has(#ql-pdf:not([hidden]))) > .glass-layer,
+#quicklook > figure:not(:has(#ql-img:not([hidden])), :has(#ql-video:not([hidden])), :has(#ql-pdf:not([hidden]))) > figcaption > .glass-layer {
+  display: none;
+}
+
+.glass-input { display: contents; }
+#ql-vol .lg-slider { width: 124px; }
+#ql-transport .lg-slider { flex: 1; min-width: 0; }
+
+
