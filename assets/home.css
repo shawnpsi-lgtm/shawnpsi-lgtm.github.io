@@ -917,3 +917,15 @@
     @media (max-width: 640px) {
       body:has(#scene2) .nav__links { background: #1c1c1eeb; }   /* the phone menu's hard-coded light fill */
     }
+
+    /* Cloudexa card, phone layout: logo and dashboard side by side, centered in the space above the tagline */
+    @media (max-width: 640px) {
+      .card-wrap[href="project-cloudexa.html"] .cx-mark {
+        top: 38%; left: 6%; width: 33%;
+        transform: translateY(-50%);
+      }
+      .card-wrap[href="project-cloudexa.html"] .cx-shot {
+        top: 38%; bottom: auto; right: 5%; width: 52%;
+        transform: translateY(-50%);
+      }
+    }
