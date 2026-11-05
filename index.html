@@ -51,7 +51,15 @@
     }
     @media (max-width: 420px) { .live-banner__more { display: none; } }
     /* Make room for it: the floating nav sits under the banner. */
-    body:has(.live-banner) .nav { top: calc(var(--live-h) + env(safe-area-inset-top, 0px) + clamp(8px, 1.5vw, 14px)); }
+    /* It waits above the screen and slides down once the splash has gone
+       (body.splash-done, set by the script at the bottom); the nav moves down with it. */
+    .live-banner { transform: translateY(-100%); transition: transform .7s cubic-bezier(.2, .8, .2, 1); }
+    body.splash-done .live-banner { transform: none; }
+    body:has(.live-banner) .nav { transition: background .4s, box-shadow .4s, top .7s cubic-bezier(.2, .8, .2, 1); }
+    body.splash-done:has(.live-banner) .nav { top: calc(var(--live-h) + env(safe-area-inset-top, 0px) + clamp(8px, 1.5vw, 14px)); }
+    @media (prefers-reduced-motion: reduce) {
+      .live-banner, body:has(.live-banner) .nav { transition: none; }
+    }
   </style>
 </head>
 <body>
@@ -463,10 +471,18 @@
         hashed = true;
         el.scrollIntoView();
       };
+      // The r music banner slides in once the splash is gone (or straight away when it's skipped).
+      const bannerIn = () => {
+        if (document.body.classList.contains('splash-done')) return;
+        if (!document.getElementById('root').childElementCount || splashUp()) return;
+        requestAnimationFrame(() => document.body.classList.add('splash-done'));
+      };
+      setTimeout(() => document.body.classList.add('splash-done'), 15000);   // never leave it hidden
       addEventListener('DOMContentLoaded', () => {
         revealDesk();
         jumpHash();
-        new MutationObserver(() => { revealDesk(); jumpHash(); }).observe(document.getElementById('root'), { childList: true, subtree: true });
+        bannerIn();
+        new MutationObserver(() => { revealDesk(); jumpHash(); bannerIn(); }).observe(document.getElementById('root'), { childList: true, subtree: true });
       });
     })();
   </script>
