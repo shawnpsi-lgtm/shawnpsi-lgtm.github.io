@@ -228,8 +228,49 @@
       }, { threshold: .15 }).observe(card);
     };
 
+    // r2 takes the place of React's r2music card, built the same way as rx3's: the hero is rx3/hero.html with the word
+    // swapped (?word=r2), the Neon Ripple with the glass "r2", which is project-r2.html's opening view.
+    const fillR2 = () => {
+      const grid = document.querySelector('.grid');
+      const old = grid?.querySelector('.card-wrap[href="project-r2music.html"]');
+      if (!old || grid.querySelector('.card-wrap--r2')) return;
+      // Hidden by a stylesheet rule, not a style React could repaint over. It stays in the grid as rx3's anchor.
+      if (!document.getElementById('r2-card-css')) document.head.insertAdjacentHTML('beforeend',
+        '<style id="r2-card-css">.grid .card-wrap[href="project-r2music.html"]{display:none!important}</style>');
+      old.insertAdjacentHTML('beforebegin',
+        '<a href="project-r2.html" class="card-wrap card-wrap--r2" aria-label="View r2 project">' +
+          '<div class="card">' +
+            '<div class="card__img" style="position:relative;overflow:hidden;background:rgb(3,3,5)">' +
+              '<iframe src="/rx3/hero.html?word=r2&fill=.5" title="" aria-hidden="true" tabindex="-1" loading="lazy" ' +
+                'style="position:absolute;left:0;top:0;width:1000px;height:900px;border:0;pointer-events:none;' +
+                'transform-origin:0 0;transform:scale(.3)"></iframe>' +
+            '</div>' +
+            '<div class="card__overlay"><p class="card__overlay-title">r2</p>' +
+              '<p class="card__overlay-tagline">Your music, in your own bucket.</p><span class="btn btn--white">View Project</span></div>' +
+            '<div class="card-copy"><b>Your music library, in your own bucket</b></div>' +
+          '</div>' +
+          '<div class="card__info"><h3 class="card__title">r2</h3>' +
+            '<p class="card__tagline">r music: your library in your own Cloudflare R2 bucket, on every device and in rx3</p></div>' +
+        '</a>');
+      const card = grid.querySelector('.card-wrap--r2');
+      const box = card.querySelector('.card__img'), frame = box.querySelector('iframe');
+      new ResizeObserver(() => {
+        const k = box.clientWidth / 1000;
+        if (!k) return;
+        frame.style.height = Math.round(box.clientHeight / k) + 'px';
+        frame.style.transform = `scale(${k})`;
+      }).observe(box);
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      Object.assign(card.style, { opacity: 0, transform: 'translateY(24px)', transition: 'opacity .6s, transform .6s' });
+      new IntersectionObserver(([e], io) => {
+        if (!e.isIntersecting) return;
+        Object.assign(card.style, { opacity: 1, transform: 'none' });
+        io.disconnect();
+      }, { threshold: .15 }).observe(card);
+    };
+
   const fillAll = () => {
-    fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); fillSayclipBadge(); fillRx3();
+    fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); fillSayclipBadge(); fillR2(); fillRx3();
   };
   addEventListener('DOMContentLoaded', () => {
     fillAll();
