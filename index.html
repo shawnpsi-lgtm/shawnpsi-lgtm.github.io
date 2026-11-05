@@ -10,14 +10,14 @@
   <meta name="description" content="Shawn Singh — [YOUR_TITLE] based in San Francisco." />
   <link rel="icon" type="image/svg+xml" href="/shawnlogo.svg" />
 
-  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js?v=17"></script>
+  <script type="module" crossorigin src="/assets/main-CTr3rKOn.js?v=18"></script>
   <link rel="modulepreload" crossorigin href="/assets/styles-GID8uTDy.js">
   <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=39">
-  <link rel="stylesheet" href="/assets/ask.css?v=11">
+  <link rel="stylesheet" href="/assets/home.css?v=43">
+  <link rel="stylesheet" href="/assets/ask.css?v=15">
   <script src="/assets/page-transition.js?v=1"></script>
 </head>
 <body>
@@ -77,7 +77,7 @@
     })();
   </script>
 
-  <div id="quicklook" hidden>
+  <div id="quicklook" data-theme="dark" hidden>
     <figure>
       <figcaption><button id="ql-close" aria-label="Close"></button><span id="ql-name"></span><span id="ql-page" hidden></span><a id="ql-download" hidden href="/files/resume.pdf" download="resume.pdf">Download</a><span id="ql-open-music" hidden>Open with Music</span></figcaption>
       <img id="ql-img" alt="" />
@@ -241,16 +241,13 @@
       let playing = null;
       const pad = n => String(n | 0).padStart(2, '0');
       const fmt = t => pad(t / 60) + ':' + pad(t % 60);
-      // Neither engine paints the played half of a range, so --p sizes a white
-      // background layer behind the thumb. Has to be re-run on every change.
-      const fill = el => el.style.setProperty('--p', (el.max > 0 ? el.value / el.max * 100 : 0) + '%');
       const paint = () => {
         const d = player.duration || 0;
         document.getElementById('ql-elapsed').textContent = fmt(player.currentTime);
         document.getElementById('ql-total').textContent = fmt(d);
         document.getElementById('ql-total-long').textContent = (d / 60 | 0) + ':' + pad(d % 60);
-        if (!seek.matches(':active')) { seek.max = d; seek.value = player.currentTime; }
-        fill(seek);
+        // seek is the hidden native input glass.js drives; don't yank the thumb mid-drag.
+        if (!seek.parentElement.querySelector('.lg-slider input:active')) { seek.max = d; seek.value = player.currentTime; }
       };
       const stop = () => {
         player.pause();
@@ -309,9 +306,8 @@
         if (playing) playTrack(tracks[(tracks.indexOf(playing) + 1) % tracks.length]);
       });
       const vol = document.getElementById('ql-volume');
-      vol.addEventListener('input', e => { player.volume = +e.target.value; fill(vol); });
-      seek.addEventListener('input', () => { player.currentTime = +seek.value; fill(seek); });
-      fill(vol);
+      vol.addEventListener('input', e => { player.volume = +e.target.value; });
+      seek.addEventListener('input', () => { player.currentTime = +seek.value; });
 
       function open(el) {
         if (el.dataset.href) { location.href = el.dataset.href; return; }  // apps launch, no preview
@@ -491,6 +487,10 @@
     scene2();  // a reload mid-page restores scrollY without firing scroll
   </script>
 
-  <script src="/assets/chat.js?v=14"></script>
+  <link rel="stylesheet" href="/assets/glass.css?v=13">
+
+  <script src="/assets/glass.js?v=14" defer></script>
+
+  <script src="/assets/chat.js?v=15"></script>
 </body>
 </html>

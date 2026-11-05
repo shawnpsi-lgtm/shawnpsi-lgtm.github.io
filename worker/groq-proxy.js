@@ -346,10 +346,45 @@ async function health(env) {
   });
 }
 
+// /r2music/*: the demo on project-r2music.html, read straight from the r2music bucket
+// (format: github.com/shawnpsi-lgtm/r2music BUCKET_FORMAT.md). Anyone can see the
+// library's names and covers; audio is only served for tracks on the PLAYABLE list,
+// which is Shawn's own music. Everything else in the bucket stays unreachable.
+const PLAYABLE = 'shawn';
+const AUDIO = { wav: 'audio/wav', mp3: 'audio/mpeg', flac: 'audio/flac', m4a: 'audio/mp4', aif: 'audio/aiff', aiff: 'audio/aiff' };
+async function music(req, env, path) {
+  const h = { 'Access-Control-Allow-Origin': '*' };
+  const none = () => new Response('not found', { status: 404, headers: { ...h, 'Cache-Control': 'public, max-age=3600' } });
+  if (req.method !== 'GET') return new Response('method not allowed', { status: 405, headers: h });
+  const [, , kind, id] = path.split('/');
+  if (kind === 'art' && /^[0-9a-f]{64}$/.test(id)) {
+    // An empty file means "no cover". r2music can redo a cover, so it's cached for a day, not forever.
+    const o = await env.MUSIC.get(`art/${id}.jpg`);
+    return o?.size ? new Response(o.body, { headers: { ...h, 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=86400' } }) : none();
+  }
+  const lib = await env.MUSIC.get('lists.json').then(o => o?.json());
+  const list = lib?.lists.find(l => l.name === PLAYABLE);
+  if (path === '/r2music/library' && lib) {
+    const tracks = Object.fromEntries(Object.entries(lib.tracks).map(([id, t]) =>
+      [id, { name: t.name, ext: t.ext, size: t.size, addedAt: t.addedAt, duration: t.duration }]));
+    return Response.json({ tracks, list: list && { name: list.name, trackIds: list.trackIds } }, { headers: { ...h, 'Cache-Control': 'public, max-age=300' } });
+  }
+  const t = kind === 'track' && list?.trackIds.includes(id) && lib.tracks[id];
+  if (!t) return none();
+  // Range requests, so the player can start before the whole WAV arrives and can seek.
+  const o = await env.MUSIC.get(`tracks/${id}.${t.ext}`, { range: req.headers });
+  if (!o) return none();
+  const headers = { ...h, 'Content-Type': AUDIO[t.ext] || 'application/octet-stream', 'Accept-Ranges': 'bytes', 'Cache-Control': 'public, max-age=86400' };
+  if (!req.headers.has('Range') || !o.range) return new Response(o.body, { headers: { ...headers, 'Content-Length': o.size } });
+  const start = o.range.offset ?? o.size - o.range.suffix, length = o.range.length ?? o.size - start;
+  return new Response(o.body, { status: 206, headers: { ...headers, 'Content-Range': `bytes ${start}-${start + length - 1}/${o.size}`, 'Content-Length': length } });
+}
+
 export default {
   async fetch(req, env, ctx) {
     const path = new URL(req.url).pathname;
     if (path === '/health') return health(env);
+    if (path.startsWith('/r2music/')) return music(req, env, path);
     if (path.startsWith('/slack/')) return slack(req, env, ctx, path);
     if (path === '/mcp') return mcp(req);
     if (path === '/api') return api(req, env, ctx);
