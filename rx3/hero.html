@@ -48,6 +48,9 @@
 
       // Refraction and bevel scale with the letter size; frost, saturation, brightness and tint are CSS on .r2-glass.
       const tune = { refract: .36, bevel: .005, rim: 2.65 }
+      // How much of the width the word may take: .94 as on the page, or less via ?fill= so a square card can still
+      // show it at the size a desktop window does.
+      const FILL = Math.min(.94, +new URLSearchParams(location.search).get('fill') || .94)
 
       function glyphs(w, h, scale) {
         const c = document.createElement('canvas')
@@ -55,11 +58,19 @@
         const x = c.getContext('2d', { willReadFrequently: true })
         const font = getComputedStyle(document.body).fontFamily
         x.font = `700 100px ${font}`
-        const size = Math.min(100 * w * .94 / x.measureText(WORD).width, h * .7) * scale
+        const size = Math.min(100 * w * FILL / x.measureText(WORD).width, h * .7) * scale
         x.font = `700 ${size}px ${font}`
+        // Centered on the ink, not the advance box: across by the letters' left and right edges, and down by their
+        // weight, since the short r and x sit low beside the tall 3 and a box-centered word reads as sitting low.
         const m = x.measureText(WORD)
-        x.textAlign = 'center'
-        x.fillText(WORD, c.width / 2, c.height / 2 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2)
+        const cx = c.width / 2 + (m.actualBoundingBoxLeft - m.actualBoundingBoxRight) / 2
+        let cy = c.height / 2 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2
+        x.fillText(WORD, cx, cy)
+        const top = Math.max(0, Math.floor(cy - m.actualBoundingBoxAscent)), rows = Math.ceil(m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) + 1
+        const ink = x.getImageData(0, top, c.width, Math.min(rows, c.height - top)).data
+        let mass = 0, moment = 0
+        for (let i = 3; i < ink.length; i += 4) if (ink[i]) { mass += ink[i]; moment += ink[i] * (top + ((i >> 2) / c.width | 0)) }
+        if (mass) { x.clearRect(0, 0, c.width, c.height); cy += (c.height / 2 - moment / mass) * .5; x.fillText(WORD, cx, cy) }
         return { c, x, size: size / scale }
       }
 
