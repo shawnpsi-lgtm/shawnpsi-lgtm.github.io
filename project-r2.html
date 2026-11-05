@@ -202,8 +202,6 @@
       box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12), 0 0 0 1px rgb(0 0 0 / .6), 0 30px 90px rgb(0 0 0 / .55);
     }
     .r2-steps { display: grid; gap: 28px; padding: 28px; }
-    .r2-steps h2 { margin: 0; font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #98989d; }
-    .r2-step > b { display: block; margin-bottom: 6px; font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #2997ff; }
     .r2-step h3 { margin: 0 0 8px; font: 700 clamp(1.35rem, 3vw, 1.9rem)/1.15 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: -.02em; }
     .r2-step :is(p, ul) { margin: 0; padding: 0; font-size: .92rem; line-height: 1.6; color: #b8b8be; list-style: none; }
     .r2-step li + li { margin-top: 4px; }
@@ -242,7 +240,15 @@
         .r2-flow { height: 400vh; view-timeline: --r2-flow; }
         .r2-stage { position: sticky; top: 0; height: 100svh; grid-template-rows: minmax(0, 1fr); padding-bottom: 24px; }
         .r2-map { height: 100%; }
-        .r2-step { grid-area: 2 / 1; }
+        .r2-step { grid-area: 1 / 1; }
+        /* One step at a time, so each is its own card sized to its text, not one card as tall as the longest step. */
+        .r2-steps { align-self: center; padding: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+        .r2-step {
+          align-self: center; padding: 28px; border-radius: 14px;
+          background: rgb(12 16 22 / .5); -webkit-backdrop-filter: blur(40px) saturate(1.5); backdrop-filter: blur(40px) saturate(1.5);
+          box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12), 0 0 0 1px rgb(0 0 0 / .6), 0 30px 90px rgb(0 0 0 / .55);
+        }
+        @media (max-width: 800px) { .r2-step { padding: 20px; } }
         @media (max-width: 800px) { .r2-stage { grid-template-rows: auto minmax(0, 1fr); } }
 
         .r2-step, .r2-node, .r2-net path, .r2-tile { animation: r2-pop linear both; animation-timeline: --r2-flow; animation-range: contain var(--a) contain var(--b); }
@@ -448,17 +454,16 @@
   </section>
   <div class="r2-ghost" aria-hidden="true"></div>
 
-  <section class="r2-flow" aria-labelledby="r2-flow-h">
+  <section class="r2-flow" aria-label="How r music works">
     <div class="r2-stage">
       <div class="r2-steps">
-        <h2 id="r2-flow-h">How r2music works</h2>
-        <div class="r2-step" style="--a:-12%;--b:22%"><b>01 · Find</b><h3>Finds your music in rekordbox</h3>
+        <div class="r2-step" style="--a:-12%;--b:22%"><h3>Finds your music in rekordbox</h3>
           <p>The Mac app reads your rekordbox library: tracks and playlists, with their beat grids, waveforms and cues.</p></div>
-        <div class="r2-step" style="--a:24%;--b:46%"><b>02 · Upload</b><h3>Uploads it once, to your own bucket</h3>
+        <div class="r2-step" style="--a:24%;--b:46%"><h3>Uploads it once, to your own bucket</h3>
           <p>Each track goes to your Cloudflare R2 bucket once, named by its SHA-256, so nothing is stored twice. Playlists sit beside them in an open lists.json.</p></div>
-        <div class="r2-step" style="--a:48%;--b:70%"><b>03 · Sync</b><h3>Syncs to your laptop and phone</h3>
+        <div class="r2-step" style="--a:48%;--b:70%"><h3>Syncs to your laptop and phone</h3>
           <p>Both open the same library, so a playlist saved on the laptop is on your phone.</p></div>
-        <div class="r2-step" style="--a:72%;--b:78%"><b>04 · Play</b><h3>Manage, mix and stream</h3>
+        <div class="r2-step" style="--a:72%;--b:78%"><h3>Manage, mix and stream</h3>
           <ul>
             <li><strong>Files</strong>search, sort and drag into lists, as in the demo.</li>
             <li><strong>Web DJ</strong><a href="/beatfx/">BEAT FX</a> loads tracks from the bucket.</li>
