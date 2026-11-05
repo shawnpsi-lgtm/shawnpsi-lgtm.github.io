@@ -34,6 +34,13 @@
     }
 
 
+    /* Right under the title: what it's for, in big type. */
+    .rm-pitch { position: relative; display: grid; place-items: center; min-height: 80vh; padding: 72px 16px; }
+    .rm-pitch p {
+      margin: 0; max-width: 24ch; font-size: clamp(1.9rem, 4.6vw, 3.4rem); font-weight: 600; line-height: 1.15; letter-spacing: -.02em;
+      color: #fff; text-align: center; text-wrap: balance; text-shadow: 0 2px 16px rgb(0 0 0 / .5);
+    }
+    .rm-pitch span { display: block; margin-top: .5em; }
     /* Under the title: rx3's typing line, with r music's taglines, and the links. */
     .rx-desk { position: relative; display: grid; place-items: center; align-content: center; gap: 28px; min-height: 80vh; padding: 72px 16px; }
     .rx-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
@@ -238,6 +245,10 @@
       document.fonts.ready.then(build)
     })()
   </script>
+
+  <section class="rm-pitch">
+    <p>Access and manage your rekordbox library from anywhere. <span>Whether you&rsquo;re prepping for a set, growing your library or DJing live, rx3 + r2 brings music streaming and performance DJ software together.</span></p>
+  </section>
 
   <section class="rx-desk" aria-label="r music">
     <p class="rx-type" aria-label="Your music, in your own bucket, Your music, stored once, Your music, on your laptop, Your music, on your phone, Your music, in rx3, Mix with Dub Echo, Mix with Space, Mix with your rekordbox cues, Mix anywhere."><span aria-hidden="true"></span></p>
