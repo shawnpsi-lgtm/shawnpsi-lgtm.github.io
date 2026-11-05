@@ -321,14 +321,17 @@ export class Screen {
     const app = this.app;
     $('#head-title').textContent = 'SOURCE';
     this.set($('#devices'), app.sources.map((s, i) => {
-      const sub = s.status === 'ready' ? s.tracks.length + ' SONGS' : s.status === 'loading' ? 'LOADING…'
-        : s.id === 'USB2' ? 'CHOOSE A FOLDER' : s.message || 'TOUCH TO OPEN';
-      return `<li data-i="${i}" class="${app.deviceCursor === i ? 'sel' : ''}"><span class="dev-ico"><span class="usb-ico"></span>${s.id}</span>` +
+      const up = s === app.uploads;
+      const sub = s.status === 'ready' ? s.tracks.length + (s.tracks.length === 1 ? ' SONG' : ' SONGS') + (up ? ' · ADD MORE' : '')
+        : s.status === 'loading' ? 'LOADING…'
+        : up ? 'CHOOSE A SONG FILE' : s === app.usb ? 'CHOOSE A FOLDER' : s.message || 'TOUCH TO OPEN';
+      const ico = s.icon === 'upload' ? '<span class="up-ico"></span>' : '<span class="usb-ico"></span>';
+      return `<li data-i="${i}" class="${app.deviceCursor === i ? 'sel' : ''}"><span class="dev-ico">${ico}${s.id}</span>` +
         `<span class="dev-name">${esc(s.label)}</span><span class="dev-sub">${esc(sub)}</span></li>`;
     }).join('') + '<li class="empty"></li>'.repeat(Math.max(0, 6 - app.sources.length)));
     const s = app.sources[app.deviceCursor];
     const rows = [['Songs', s.status === 'ready' ? s.tracks.length : '-'], ['Playlists', s.status === 'ready' ? s.playlists.length : '-'],
-      ['Source', s.id === 'USB1' ? 'r2.shawnsingh.me' : 'Local files'],
+      ['Source', s.id === 'USB1' ? 'r2.shawnsingh.me' : s === app.uploads ? 'Uploaded files' : 'Local folder'],
       ['Status', s.status === 'ready' ? 'Ready' : s.status === 'loading' ? 'Loading' : s.message || 'Not opened']];
     this.set($('#device-info'), rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join(''));
   }

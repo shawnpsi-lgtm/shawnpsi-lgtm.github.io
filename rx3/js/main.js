@@ -1,7 +1,7 @@
 // Wires the engine, the decks, the library and the screen to the buttons, knobs and keyboard.
 import { Deck, TEMPO_RANGES } from './audio/deck.js';
 import { BEAT_FX, COLOR_FX, Engine, FX_CHANNELS, pitchLabel } from './audio/engine.js';
-import { FolderSource, memory, R2Source } from './lib/library.js';
+import { FolderSource, memory, R2Source, UploadSource } from './lib/library.js';
 import { Browser } from './ui/browser.js';
 import './ui/dropdown.js';
 import { bindKeys } from './ui/keys.js';
@@ -16,7 +16,9 @@ class App {
   constructor(engine) {
     this.engine = engine;
     this.decks = [0, 1].map((i) => new Deck(engine, i, () => this.changed()));
-    this.sources = [new R2Source(), new FolderSource()];
+    this.sources = [new R2Source(), new FolderSource(), new UploadSource()];
+    this.usb = this.sources[1];
+    this.uploads = this.sources[2];
     this.deviceCursor = 0;
     this.browser = new Browser();
     this.focus = 0;
@@ -153,7 +155,8 @@ class App {
 
   async openSource(src) {
     const s = this.screen;
-    if (src.id === 'USB2' && src.status !== 'ready') return this.pickFolder();
+    if (src === this.usb && src.status !== 'ready') return this.pickFolder();
+    if (src === this.uploads) return this.pickFiles();
     if (src.status === 'signin') return location.assign(src.signInUrl);
     if (src.status === 'connect') return window.open('https://r2.shawnsingh.me', '_blank', 'noopener');
     if (src.status !== 'ready') {
@@ -293,7 +296,7 @@ class App {
       row('DECK 1 TEMPO RANGE', ranges, this.decks[0].range, 'r0'),
       row('DECK 2 TEMPO RANGE', ranges, this.decks[1].range, 'r1'),
       row('QUANTIZE', [{ v: true, label: 'ON' }, { v: false, label: 'OFF' }], this.quantize, 'q'),
-      row('USB2 (THIS COMPUTER)', [{ v: 0, label: 'FOLDER…' }, { v: 1, label: 'FILES…' }], -1, 'usb2'),
+      row('ADD MUSIC', [{ v: 0, label: 'FOLDER…' }, { v: 1, label: 'SONGS…' }], -1, 'add'),
     ]);
     el.addEventListener('click', (ev) => {
       const b = ev.target.closest('[data-fn]');
@@ -301,7 +304,7 @@ class App {
       const v = +b.dataset.v, fn = b.dataset.fn;
       if (fn === 'r0' || fn === 'r1') this.decks[+fn[1]].setRange(TEMPO_RANGES[v]);
       if (fn === 'q') this.quantize = v === 0;
-      if (fn === 'usb2') return v ? $('#files-input').click() : this.pickFolder();
+      if (fn === 'add') return v ? this.pickFiles() : this.pickFolder();
       this.closeOverlay();
       this.menu();
       this.screen.render();
@@ -460,22 +463,34 @@ class App {
     if (!window.showDirectoryPicker) return $('#folder-input').click(); // e.g. Firefox/Safari
     let n;
     try {
-      n = await this.sources[1].pick((msg) => this.progress(msg));
+      n = await this.usb.pick((msg) => this.progress(msg));
     } catch (e) {
       if (e.name === 'AbortError') return;
-      console.error('USB2 folder pick failed', e);
+      console.error('USB folder pick failed', e);
       this.screen.toast('COULD NOT OPEN FOLDER (' + e.name + ')');
       return;
     }
     this.closeOverlay();
-    this.usb2Opened(n);
+    this.opened(this.usb, n);
   }
 
-  usb2Opened(n) {
-    const usb2 = this.sources[1];
+  /** UPLOAD A SONG: the file picker. Cancelled with songs already uploaded, it shows them instead. */
+  pickFiles() {
+    const input = $('#files-input');
+    input.oncancel = () => {
+      if (this.uploads.tracks.length) this.opened(this.uploads, this.uploads.tracks.length, false);
+    };
+    input.click();
+  }
+
+  /** A source has `n` new tracks: say so and browse it. */
+  opened(src, n, announce = true) {
     if (!n) return this.screen.toast('NO AUDIO FILES');
-    this.screen.toast(n + ' TRACKS' + (usb2.playlists.length ? ', ' + usb2.playlists.length + ' PLAYLISTS' : '') + ' ON USB2');
-    this.browser.root(usb2, 'TRACK', () => this.masterBpm());
+    if (announce) {
+      this.screen.toast(src === this.uploads ? (n === 1 ? 'SONG UPLOADED' : n + ' SONGS UPLOADED')
+        : n + ' TRACKS' + (src.playlists.length ? ', ' + src.playlists.length + ' PLAYLISTS' : '') + ' ON ' + src.id);
+    }
+    this.browser.root(src, 'TRACK', () => this.masterBpm());
     this.screen.setView('browse');
   }
 
@@ -488,12 +503,12 @@ class App {
   }
 
   bindFiles() {
-    const usb2 = this.sources[1];
-    const add = async (files) => this.usb2Opened(await usb2.add(files, (msg) => this.progress(msg)));
-    for (const id of ['#folder-input', '#files-input']) {
+    // a folder goes on USB2; songs picked or dropped one by one go on UPLOAD
+    const add = async (src, files) => this.opened(src, await src.add(files, (msg) => this.progress(msg)));
+    for (const [id, src] of [['#folder-input', this.usb], ['#files-input', this.uploads]]) {
       $(id).onchange = (ev) => {
         this.closeOverlay();
-        add(ev.target.files);
+        add(src, ev.target.files);
         ev.target.value = '';
       };
     }
@@ -515,7 +530,7 @@ class App {
       ev.preventDefault();
       depth = 0;
       drop.hidden = true;
-      add(ev.dataTransfer.files);
+      add(this.uploads, ev.dataTransfer.files);
     });
   }
 

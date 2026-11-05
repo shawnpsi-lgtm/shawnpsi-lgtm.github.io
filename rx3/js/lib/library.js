@@ -1,5 +1,6 @@
 // The "USB sticks": USB1 is the signed-in user's r2music library (r2.shawnsingh.me, the same API beatfx uses),
-// USB2 is a folder on this computer. Both produce the same track objects:
+// USB2 is a folder on this computer, and UPLOAD holds song files picked or dropped one by one. All produce the same
+// track objects:
 //   { id, title, artist, album, genre, bpm, key, duration, file(): Promise<File>, prepare?(): Promise }
 // prepare() fetches the rekordbox analysis when there is one: the beat grid (track.grid) and hot cues (track.cues).
 import { readPdb } from './pdb.js';
@@ -30,8 +31,9 @@ async function readAnlz(track, read) {
 
 class Source {
   constructor(id, label) {
-    this.id = id; // 'USB1' / 'USB2'
+    this.id = id; // 'USB1' / 'USB2' / 'FILE'
     this.label = label;
+    this.icon = 'usb';
     this.tracks = [];
     this.playlists = []; // [{ name, tracks }]
     this.status = 'empty'; // empty | loading | ready | signin | connect | error
@@ -128,8 +130,8 @@ async function pool(items, fn, n = 16) {
 }
 
 export class FolderSource extends Source {
-  constructor() {
-    super('USB2', 'THIS COMPUTER');
+  constructor(id = 'USB2', label = 'USB') {
+    super(id, label);
   }
 
   /**
@@ -227,6 +229,14 @@ export class FolderSource extends Source {
     this.tracks.sort((a, b) => a.title.localeCompare(b.title));
     this.status = 'ready';
     return added.length;
+  }
+}
+
+/** Song files the user uploads (file picker or drop). They stay in this tab: nothing leaves the computer. */
+export class UploadSource extends FolderSource {
+  constructor() {
+    super('FILE', 'UPLOAD A SONG');
+    this.icon = 'upload';
   }
 }
 
