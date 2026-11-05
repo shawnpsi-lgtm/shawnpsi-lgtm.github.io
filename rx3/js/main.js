@@ -6,6 +6,7 @@ import { Browser } from './ui/browser.js';
 import './ui/dropdown.js';
 import { bindKeys } from './ui/keys.js';
 import { Phone } from './ui/phone.js';
+import { Vkb } from './ui/vkb.js';
 import { Screen } from './ui/screen.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -26,7 +27,10 @@ class App {
     this.screen = new Screen(this);
     this.buildControls();
     this.phone = new Phone(this);
-    bindKeys(this);
+    this.vkb = new Vkb(this, bindKeys(this), $('#vkb'));
+    let view = 'keys';
+    try { view = localStorage.getItem('rx3.view') || view; } catch { /* private window */ }
+    this.setView(view);
     this.bindFiles();
     this.screen.render();
     this.renderControls();
@@ -123,8 +127,16 @@ class App {
         this.muted = !this.muted;
         e.setMaster(this.muted ? 0 : +$('#master').value);
         return this.renderControls();
-      case 'hide': return $('#app').classList.toggle('compact');
     }
+  }
+
+  /** Under the screen: the on-screen keyboard ('keys'), the FX bar and mixer ('mixer'), or nothing ('compact'). */
+  setView(v) {
+    this.view = ['keys', 'mixer', 'compact'].includes(v) ? v : 'keys';
+    const app = $('#app');
+    app.classList.toggle('mixer-view', this.view === 'mixer');
+    app.classList.toggle('compact', this.view === 'compact');
+    try { localStorage.setItem('rx3.view', this.view); } catch { /* private window */ }
   }
 
   push() {
@@ -315,7 +327,7 @@ class App {
 
   buildControls() {
     const e = this.engine;
-    // hardware buttons: press and release, so CUE can be held
+    // buttons with a data-key (the FX bar's): press and release
     $$('[data-key]').forEach((btn) => {
       const k = btn.dataset.key, d = +(btn.dataset.deck || 0);
       btn.addEventListener('pointerdown', (ev) => {
@@ -427,11 +439,6 @@ class App {
     $('#fx-pitch-v').textContent = pitchLabel(e.fx.pitch);
     $('#fx-on').classList.toggle('lit', e.fx.on);
     $$('[data-band]').forEach((b) => b.classList.toggle('lit', e.fx.bands[+b.dataset.band]));
-    $$('.panel [data-key="play"]').forEach((b) => b.classList.toggle('lit', this.decks[+b.dataset.deck].playing));
-    $$('.panel [data-key="cue"]').forEach((b) => {
-      const d = this.decks[+b.dataset.deck];
-      b.classList.toggle('lit', d.loaded && !d.playing);
-    });
     $$('.strip').forEach((el) => {
       const d = this.decks[+el.dataset.deck], t = el.querySelector('[data-f="tempo"]');
       if (document.activeElement !== t) t.value = -d.tempo;
@@ -444,7 +451,7 @@ class App {
     const ctx = this.engine.ctx;
     const sound = ctx.state !== 'running' ? 'sound: click anywhere to start' : this.muted ? 'sound muted (\\)' : 'sound on (\\ to mute)';
     const lat = ctx.baseLatency ? `   |   output ${Math.round((ctx.baseLatency + (ctx.outputLatency || 0)) * 1000)} ms` : '';
-    return `${sound}${lat}   |   ? keyboard   |   \u2190/\u2192 load, Q/P play, W/O cue, 1-4/7-0 hot cues, SPACE beat FX, \` hides controls`;
+    return `${sound}${lat}   |   \` mixer, shift+\` hide   |   ? help`;
   }
 
   // ---- files, frame loop (the keyboard is in ui/keys.js)
@@ -517,6 +524,7 @@ class App {
     let last = '';
     const tick = () => {
       this.screen.frame();
+      this.vkb.render();
       meter.style.width = Math.min(100, this.engine.peak() * 100) + '%';
       const s = this.status();
       if (s !== last) bar.textContent = last = s;

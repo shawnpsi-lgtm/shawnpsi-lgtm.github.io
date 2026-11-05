@@ -91,32 +91,7 @@
       </div>
     </main>
 
-    <!-- the hardware buttons (same layout as the local viewer) -->
-    <aside id="panel" class="panel">
-      <button data-key="source">SOURCE</button>
-      <button data-key="browse">BROWSE</button>
-      <button data-key="taglist">TAG LIST</button>
-      <button data-key="playlist">PLAYLIST</button>
-      <button data-key="search">SEARCH</button>
-      <button data-key="menu">MENU</button>
-      <button data-key="info">INFO</button>
-      <button data-key="tag">TAG TRACK</button>
-      <button data-key="back">BACK</button>
-      <div class="gap"></div>
-      <button data-key="up"><i class="tri u"></i>&nbsp; browse</button>
-      <button data-key="push">PUSH (select)</button>
-      <button data-key="down"><i class="tri d"></i>&nbsp; browse</button>
-      <div class="gap">DECK 1</div>
-      <button data-key="load" data-deck="0">LOAD</button>
-      <button data-key="cue" data-deck="0">CUE</button>
-      <button data-key="play" data-deck="0">PLAY / PAUSE</button>
-      <div class="gap">DECK 2</div>
-      <button data-key="load" data-deck="1">LOAD</button>
-      <button data-key="cue" data-deck="1">CUE</button>
-      <button data-key="play" data-deck="1">PLAY / PAUSE</button>
-    </aside>
-
-    <!-- effects bar (as in the viewer) -->
+    <!-- the mixer view (`): effects bar and mixer, for the knobs that have no key -->
     <div id="fxbar" class="bar fxbar">
       <label>BEAT FX</label>
       <rx-select id="fx-select" aria-label="Beat FX"></rx-select>
@@ -144,6 +119,9 @@
       </div>
       <div class="strip" data-deck="1"></div>
     </div>
+
+    <!-- the keyboard map, in place of the buttons: click a key or press it (` swaps in the FX bar and mixer) -->
+    <section id="vkb" class="vkb" aria-label="Keyboard controls"></section>
 
     <div id="statusbar" class="statusbar"></div>
 
