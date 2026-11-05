@@ -186,14 +186,24 @@
       }
     };
 
-    // rx3 isn't one of React's cards, so it's added here, after r2music, built like the others: the image is the rx3
+    // rx3 isn't one of React's cards, so it's added here, first in the grid, built like the others: the image is the rx3
     // landing page's hero (rx3/hero.html: the Neon Ripple with the glass "rx3"), with the caption over it, and it fades
     // in on scroll as React's cards do.
     const fillRx3 = () => {
       const grid = document.querySelector('.grid');
-      const after = grid?.querySelector('.card-wrap[href="project-r2music.html"]');
-      if (!after || grid.querySelector('.card-wrap--rx3')) return;
-      after.insertAdjacentHTML('afterend',
+      if (!grid?.querySelector('.card-wrap[href="project-ngc2.html"]') || grid.querySelector('.card-wrap--rx3')) return;
+      // rx3 and r2 open the grid, side by side above NGC2 and DJai. The bento sizes cards by position (2 wide,
+      // 3 narrow, then wide), so with two more in front the pattern moves down two: 1-4 wide, 5-7 narrow, 8+ wide.
+      // React's r2music card is hidden, r2 takes its place. Desktop only: phones are one card per row anyway.
+      if (!document.getElementById('top-cards-css')) document.head.insertAdjacentHTML('beforeend',
+        '<style id="top-cards-css">' +
+          '.grid .card-wrap[href="project-r2music.html"]{display:none!important}' +
+          '@media (width>900px){' +
+            '.grid:has(>.card-wrap--rx3:first-child)>.card-wrap:nth-child(n){grid-column:span 3}' +
+            '.grid:has(>.card-wrap--rx3:first-child)>.card-wrap:nth-child(n+5):nth-child(-n+7){grid-column:span 2}' +
+          '}' +
+        '</style>');
+      grid.insertAdjacentHTML('afterbegin',
         '<a href="project-rx3.html" class="card-wrap card-wrap--rx3" aria-label="View rx3 project">' +
           '<div class="card">' +
             '<div class="card__img" style="position:relative;overflow:hidden;background:rgb(3,3,5)">' +
@@ -228,8 +238,46 @@
       }, { threshold: .15 }).observe(card);
     };
 
+    // r2 sits beside rx3 at the top, in place of React's r2music card (hidden above), built the same way as rx3's: the hero is rx3/hero.html with the word
+    // swapped (?word=r2) and turned purple (?hue=-45), the same as project-r2.html's opening view.
+    const fillR2 = () => {
+      const grid = document.querySelector('.grid');
+      const rx3 = grid?.querySelector('.card-wrap--rx3');
+      if (!rx3 || grid.querySelector('.card-wrap--r2')) return;
+      rx3.insertAdjacentHTML('afterend',
+        '<a href="project-r2.html" class="card-wrap card-wrap--r2" aria-label="View r2 project">' +
+          '<div class="card">' +
+            '<div class="card__img" style="position:relative;overflow:hidden;background:rgb(3,3,5)">' +
+              '<iframe src="/rx3/hero.html?word=r2&hue=-45&fill=.5" title="" aria-hidden="true" tabindex="-1" loading="lazy" ' +
+                'style="position:absolute;left:0;top:0;width:1000px;height:900px;border:0;pointer-events:none;' +
+                'transform-origin:0 0;transform:scale(.3)"></iframe>' +
+            '</div>' +
+            '<div class="card__overlay"><p class="card__overlay-title">r2</p>' +
+              '<p class="card__overlay-tagline">Personalize your music streaming.</p><span class="btn btn--white">View Project</span></div>' +
+            '<div class="card-copy"><b>Personalize your music streaming</b></div>' +
+          '</div>' +
+          '<div class="card__info"><h3 class="card__title">r2</h3>' +
+            '<p class="card__tagline">Personalize your music streaming</p></div>' +
+        '</a>');
+      const card = grid.querySelector('.card-wrap--r2');
+      const box = card.querySelector('.card__img'), frame = box.querySelector('iframe');
+      new ResizeObserver(() => {
+        const k = box.clientWidth / 1000;
+        if (!k) return;
+        frame.style.height = Math.round(box.clientHeight / k) + 'px';
+        frame.style.transform = `scale(${k})`;
+      }).observe(box);
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      Object.assign(card.style, { opacity: 0, transform: 'translateY(24px)', transition: 'opacity .6s, transform .6s' });
+      new IntersectionObserver(([e], io) => {
+        if (!e.isIntersecting) return;
+        Object.assign(card.style, { opacity: 1, transform: 'none' });
+        io.disconnect();
+      }, { threshold: .15 }).observe(card);
+    };
+
   const fillAll = () => {
-    fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); fillSayclipBadge(); fillRx3();
+    fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); fillSayclipBadge(); fillRx3(); fillR2();
   };
   addEventListener('DOMContentLoaded', () => {
     fillAll();

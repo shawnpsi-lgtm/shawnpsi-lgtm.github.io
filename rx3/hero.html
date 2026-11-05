@@ -56,7 +56,14 @@
     // Draws rx3 once per size, then derives everything from the glyphs:
     // the mask, a displacement map that bends the video at the letter edges, and the rim light.
     (() => {
-      const el = document.querySelector('.r2-glass'), WORD = el.textContent.trim()
+      // ?word= swaps the word, so the same hero serves other cards (the Work page's r2 card passes word=r2).
+      const el = document.querySelector('.r2-glass')
+      const ask = new URLSearchParams(location.search).get('word')
+      if (ask && /^[\w .-]{1,12}$/.test(ask)) { el.textContent = ask; document.title = ask }
+      const WORD = el.textContent.trim()
+      // ?hue= turns the whole hero's colour (degrees), wallpaper and glass together, e.g. r2's purple is hue=-45.
+      const hue = +new URLSearchParams(location.search).get('hue')
+      if (hue) document.body.style.filter = `hue-rotate(${hue}deg)`
       const filter = document.getElementById('r2-refract')
       const img = filter.querySelector('feImage')
       const map = filter.querySelector('feDisplacementMap')
