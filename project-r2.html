@@ -187,6 +187,10 @@
       background: #0071e3; color: #fff; font-size: .95rem; text-decoration: none; transition: background .2s;
     }
     .rx-btn:hover { background: #0077ed; }
+    .rx-alt { background: rgb(255 255 255 / .1); border-color: rgb(255 255 255 / .25); }
+    .rx-alt:hover { background: rgb(255 255 255 / .18); }
+    /* The end of the page: get the Mac app, or open the web app. */
+    .r2-end { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; padding: 48px 16px 120px; }
     .rx-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     /* Under the window: where your music is, typed out and deleted, one line after another. */
     .rx-type { margin: 0; min-height: 1.3em; font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 600; letter-spacing: -.01em; color: #fff; text-align: center; text-shadow: 0 2px 12px rgb(0 0 0 / .5); }
@@ -454,7 +458,6 @@
       </div>
     </div>
     <p class="rx-type" aria-label="Your music, in your own bucket. Your music, on your laptop. Your music, on your phone. Your music, in rekordbox. Your music, in rx3. Your music, everywhere."><span aria-hidden="true"></span></p>
-    <a class="rx-btn" href="https://r2.shawnsingh.me">Open r music<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
   </section>
   <div class="r2-ghost" aria-hidden="true"></div>
 
@@ -501,6 +504,11 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <section class="r2-end" aria-label="Get r music">
+    <a class="rx-btn" href="https://github.com/shawnpsi-lgtm/r2music-releases/releases/latest/download/r2music-mac-arm64.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Mac</a>
+    <a class="rx-btn rx-alt" href="https://r2.shawnsingh.me">Open r music<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
   </section>
 
   <script>
