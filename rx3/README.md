@@ -21,17 +21,35 @@ USB2 is a folder or files from this computer (MENU → USB2, or drop files on th
 
 ## Using it
 
-The screen works by touch/mouse like the unit; the buttons on the right are the hardware's, the bar below is
-the effects section, and the strip under that is the mixer.
+The screen works by touch/mouse like the unit. Under it, on a computer, is a keyboard that shows what every key does:
+press the key, or click it. Keys light with what they drive (PLAY green, a set hot cue in its colour, a loop or the
+Beat FX on), and the fader, crossfader and level keys show their position. Deck 1's keys are blue, deck 2's purple.
+
+| | Deck 1 | Deck 2 |
+|---|---|---|
+| Hot cues A-D (Shift: delete) | 1 2 3 4 | 7 8 9 0 |
+| PLAY / CUE (hold CUE at the cue to preview) | Q / W | P / O |
+| BEAT SYNC | E | I |
+| 4-beat loop on/off, LOOP 1/2X / 2X | R, F / G | U, J / H |
+| Nudge (Shift: tempo, held) | A / D | K / ; |
+| Color FX while held (Shift: the other way) | S | L |
+| Channel fader down / up (held) | Z / X | , / . |
+| LOAD the selected track | ← | → |
 
 | Key | | Key | |
 |---|---|---|---|
 | ↑ ↓ / Enter | browse, PUSH | Esc / Backspace | BACK |
-| 1 / 2 | LOAD deck 1 / 2 | Q / P | PLAY deck 1 / 2 |
-| W / O | CUE deck 1 / 2 (hold at the cue to preview) | A D / K ; | nudge deck 1 / 2 |
-| S B T L F | SOURCE, BROWSE, TAG LIST, PLAYLIST, SEARCH | M / I | MENU / INFO |
-| G | tag the track | E | Beat FX on/off |
-| [ ] | BEAT left/right | X / H | mute / hide the controls |
+| Space | Beat FX on/off (held: only while held) | [ ] | BEAT left/right |
+| 5 / 6 | Beat FX type | - / = | Beat FX LEVEL/DEPTH (held) |
+| Y | Beat FX channel | N | Color FX type |
+| C / V | crossfader (held) | / | SEARCH |
+| B / M / T | BROWSE view, MENU, tag the track | \\ | mute |
+| ` | mixer view (Shift: screen only) | ? | key list |
+
+Keys are matched by position, so they sit in the same place on any keyboard layout. The knobs that have no key
+(EQ, TRIM, MASTER, MASTER TEMPO, Color FX PARAMETER, LOW/MID/HI) are on the mixer view: Tab to one, then the arrows
+turn it (Shift: finer, Page Up/Down: coarser, Home: back to its default). The keyboard is `js/ui/keys.js` and
+`js/ui/vkb.js`.
 
 The effects work as on the unit:
 
