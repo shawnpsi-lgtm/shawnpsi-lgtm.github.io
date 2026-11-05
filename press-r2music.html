@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>r music is live — Shawn Singh</title>
+  <meta name="description" content="r music is live: your music in your own Cloudflare R2 bucket, on your laptop and phone, and mixable in rx3, a DJ unit in your browser." />
+
+
+
+  <style>
+    .about-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 56px 0;
+    }
+
+    .about-section {
+      padding: 72px 0;
+    }
+
+    .about-col-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 64px;
+    }
+
+    .about-col-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--light);
+      padding-top: 6px;
+    }
+
+    .about-bio-large {
+      font-family: var(--serif);
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+      font-weight: 700;
+      line-height: 1.5;
+      color: var(--black);
+      max-width: 28ch;
+      margin-bottom: 32px;
+    }
+
+    .resume-cta {
+      margin-top: 40px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .resume-cta p {
+      font-size: 0.9rem;
+      color: var(--mid);
+      margin: 0;
+      max-width: none;
+    }
+
+    @media (max-width: 900px) {
+      .about-col-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    }
+
+    .press-body p:not(.about-bio-large) {
+      font-size: 1rem;
+      color: var(--mid);
+      line-height: 1.8;
+      max-width: 65ch;
+      margin-bottom: 20px;
+    }
+
+    .press-body p:last-child { margin-bottom: 0; }
+
+    .press-steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-width: 65ch;
+      counter-reset: step;
+    }
+
+    .press-steps li {
+      counter-increment: step;
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      padding: 20px 0;
+      border-top: 1px solid var(--border);
+      font-size: 1rem;
+      color: var(--mid);
+      line-height: 1.8;
+    }
+
+    .press-steps li:first-child { border-top: 0; padding-top: 0; }
+
+    .press-steps li::before {
+      content: counter(step, decimal-leading-zero);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+      padding-top: 5px;
+    }
+
+    .press-steps b { color: var(--black); font-weight: 600; }
+
+    .press-list li::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      margin-top: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      padding: 0;
+    }
+
+    .press-steps + .resume-cta { margin-top: 24px; }
+
+  </style>
+  <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
+  <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=3">
+  <link rel="stylesheet" href="/assets/ask.css?v=15">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" data-always-scrolled role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo" style="display:flex;align-items:center;gap:10px;">
+        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+          <defs>
+            <radialGradient id="sg" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#d9a8f5"/>
+              <stop offset="55%" stop-color="#b36fd9"/>
+              <stop offset="100%" stop-color="#9a4fc4"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="50" fill="url(#sg)"/>
+          <text x="50" y="67" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif" font-size="52" font-weight="600" fill="white" letter-spacing="-1">S</text>
+        </svg>
+        Shawn Singh
+      </a>
+
+      <ul class="nav__links" role="list">
+        <li><a href="work.html">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+      </ul>
+
+      <div class="nav__right" style="display:flex;align-items:center;gap:8px;">
+      <button class="nav__theme-toggle" aria-label="Switch to dark mode">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="about-hero" style="padding-top: var(--nav-height); background: var(--bg-off); border-bottom: 1px solid var(--border);">
+    <div class="about-hero__inner">
+      <div data-reveal>
+        <p class="about-eyebrow">It&rsquo;s out</p>
+        <h1 class="about-title">r music is live</h1>
+      </div>
+      <div data-reveal data-reveal-delay="80">
+        <p class="hero__sub" style="font-size: 1.05rem;">November 5, 2026<br />from Shawn</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">The short version</p>
+          <div class="press-body">
+            <p class="about-bio-large">Your music in one place you own. Play it and mix it from your laptop or your phone.</p>
+            <p>r music keeps your songs and playlists in your own cloud storage, so they&rsquo;re on every device you use. rx3 is a DJ setup in a browser tab that plays straight from it. Both are out today.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">r music</p>
+          <ul class="press-steps press-list">
+            <li><span><b>Your music, your storage.</b> Songs live in your own Cloudflare R2 bucket. Nobody else holds them.</span></li>
+            <li><span><b>Brings your rekordbox library over.</b> The Mac app grabs your songs, playlists and cues and uploads them for you.</span></li>
+            <li><span><b>Same library everywhere.</b> Make a playlist on your laptop and it&rsquo;s on your phone at r2.shawnsingh.me.</span></li>
+            <li><span><b>No duplicates.</b> Each song is uploaded once, even if it&rsquo;s in ten playlists.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">rx3</p>
+          <ul class="press-steps press-list">
+            <li><span><b>A real DJ unit in your browser.</b> It&rsquo;s the Pioneer XDJ-RX3: two decks, a mixer and the touch screen.</span></li>
+            <li><span><b>The real effects.</b> Echo, reverb, dub echo, space and the rest, ported from the unit itself.</span></li>
+            <li><span><b>No lag.</b> The sound runs on your device, not on a server.</span></li>
+            <li><span><b>Your r music library is built in.</b> It shows up as USB1, ready to load.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Get started</p>
+          <div class="press-body">
+            <ol class="press-steps">
+              <li><span><b>Make an R2 bucket</b> in your Cloudflare account if you don&rsquo;t have one yet.</span></li>
+              <li><span><b>Open r2.shawnsingh.me</b>, sign in with GitHub and connect your bucket.</span></li>
+              <li><span><b>Add your music.</b> Drop files in on the web, or get the Mac app to bring your rekordbox library.</span></li>
+              <li><span><b>Mix it.</b> Open rx3, pick USB1 and load a song onto each deck.</span></li>
+            </ol>
+            <div class="resume-cta">
+              <a href="https://r2.shawnsingh.me" class="btn btn--accent">Open r music</a>
+              <a href="https://github.com/shawnpsi-lgtm/r2music-releases/releases/latest/download/r2music-mac-arm64.zip" class="btn btn--dark">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Mac app
+              </a>
+              <a href="/rx3/" class="btn btn--dark">Open rx3</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" style="border-bottom: 1px solid var(--border);">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Good to know</p>
+          <ul class="press-steps press-list press-faq">
+            <li><span><b>What&rsquo;s R2?</b> Cloudflare&rsquo;s file storage. You make a bucket in your own Cloudflare account, and it has a free tier to start with.</span></li>
+            <li><span><b>Do I need rekordbox?</b> No. You can upload songs straight from the web app.</span></li>
+            <li><span><b>Which Macs?</b> The Mac app is for Apple Silicon. It isn&rsquo;t notarized yet, so the first time, unzip it into Applications, then go to System Settings &rarr; Privacy &amp; Security and click Open Anyway.</span></li>
+            <li><span><b>Can I try rx3 without r music?</b> Yes. Drop a song onto the page, or pick a folder on your computer as USB2. Songs you drop in stay in that tab.</span></li>
+            <li><span><b>Can I leave?</b> Anytime. Your songs are plain files in your bucket, and your playlists are in a readable lists.json next to them.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Questions?</p>
+          <div class="press-body">
+            <p>Email me at <a href="mailto:shawn@visuallyrepresented.co" style="color: var(--accent);">shawn@visuallyrepresented.co</a>. I&rsquo;d love to hear what you mix.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <p class="footer__logo">Shawn Singh</p>
+          <p class="footer__tagline">data + design — San Francisco, CA</p>
+        </div>
+        <div class="footer__links">
+          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            LinkedIn
+          </a>
+          <a href="/files/resume.pdf" class="footer__link" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Résumé
+          </a>
+          <a href="mailto:shawn@visuallyrepresented.co" class="footer__link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            shawn@visuallyrepresented.co
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <link rel="stylesheet" href="/assets/glass.css?v=13">
+
+  <script src="/assets/glass.js?v=14" defer></script>
+
+  <script src="/assets/chat.js?v=15"></script>
+</body>
+</html>
