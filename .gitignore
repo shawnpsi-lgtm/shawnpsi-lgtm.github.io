@@ -55,3 +55,6 @@ src/assets/vite.svg
 worker/.dev.vars
 .claude/settings.local.json
 ngc2-card-notes-long.txt
+
+# wrangler local cache
+worker/.wrangler/

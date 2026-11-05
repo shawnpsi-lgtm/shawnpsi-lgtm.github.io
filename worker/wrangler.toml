@@ -28,6 +28,11 @@ type = "ratelimit"
 namespace_id = "1002"
 simple = { limit = 3, period = 60 }
 
+# The r2music bucket, read by the demo on project-r2music.html (/r2music/* in groq-proxy.js).
+[[r2_buckets]]
+binding = "MUSIC"
+bucket_name = "shawnnn"
+
 # Accounts, saved chats and the usage log. Schema: worker/schema.sql.
 # Sign-in also needs secrets: SESSION_SECRET, plus GOOGLE_CLIENT_SECRET /
 # LINKEDIN_CLIENT_SECRET once each provider's client ID is added to [vars].
