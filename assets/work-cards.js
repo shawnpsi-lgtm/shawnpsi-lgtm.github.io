@@ -186,9 +186,10 @@
       }
     };
 
-    // rx3 isn't one of React's cards, so it's added here, after r2music, built like the others: the image is the rx3
-    // landing page's hero (rx3/hero.html: the Neon Ripple with the glass "rx3"), with the caption over it, and it fades
-    // in on scroll as React's cards do.
+    // rx3 isn't one of React's cards, so it's added here, after r2music, built like the others, and it fades in on
+    // scroll as React's cards do. Its image is a still of the rx3 landing page's hero (images/rx3-card.webp, captured
+    // from rx3/hero.html?fill=.7 at 1000x1030): the live hero in an iframe lost its glass in Chrome on the GPU, where the
+    // backdrop-filter was dropped and the letters showed as bare outlines.
     const fillRx3 = () => {
       const grid = document.querySelector('.grid');
       const after = grid?.querySelector('.card-wrap[href="project-r2music.html"]');
@@ -196,11 +197,7 @@
       after.insertAdjacentHTML('afterend',
         '<a href="project-rx3.html" class="card-wrap card-wrap--rx3" aria-label="View rx3 project">' +
           '<div class="card">' +
-            '<div class="card__img" style="position:relative;overflow:hidden;background:rgb(3,3,5)">' +
-              '<iframe src="/rx3/hero.html?fill=.7" title="" aria-hidden="true" tabindex="-1" loading="lazy" ' +
-                'style="position:absolute;left:0;top:0;width:1000px;height:900px;border:0;pointer-events:none;' +
-                'transform-origin:0 0;transform:scale(.3)"></iframe>' +
-            '</div>' +
+            '<img class="card__img" src="/images/rx3-card.webp" alt="" loading="lazy" width="1500" height="1545">' +
             '<div class="card__overlay"><p class="card__overlay-title">rx3</p>' +
               '<p class="card__overlay-tagline">A pro DJ unit, in a browser tab.</p><span class="btn btn--white">View Project</span></div>' +
             '<div class="card-copy"><b>A pro DJ unit, in a browser tab</b></div>' +
@@ -209,16 +206,6 @@
             '<p class="card__tagline">The Pioneer XDJ-RX3, rebuilt in the browser from its own firmware</p></div>' +
         '</a>');
       const card = grid.querySelector('.card-wrap--rx3');
-      // The hero lays itself out for the window it's in, so at card size the ripple and glass would come out coarser and
-      // the word would fill the card. It's drawn 1000px wide in the card's shape instead, with the word at the share of
-      // the width it takes on a desktop window (?fill), and scaled down: the project page's opening view, small.
-      const box = card.querySelector('.card__img'), frame = box.querySelector('iframe');
-      new ResizeObserver(() => {
-        const k = box.clientWidth / 1000;
-        if (!k) return;
-        frame.style.height = Math.round(box.clientHeight / k) + 'px';
-        frame.style.transform = `scale(${k})`;
-      }).observe(box);
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       Object.assign(card.style, { opacity: 0, transform: 'translateY(24px)', transition: 'opacity .6s, transform .6s' });
       new IntersectionObserver(([e], io) => {
