@@ -10,6 +10,62 @@
   <script type="module" src="./js/main.js"></script>
 </head>
 <body>
+  <!-- Desktop only: a banner like the homepage's "r music is live" one, on the same Wayglim background,
+       saying rx3 plays best on a phone or with a controller. The x closes it for good. -->
+  <div id="rx-tip" class="rx-tip" role="note" hidden>
+    <span class="rx-bg" aria-hidden="true"></span>
+    <svg class="rx-tip__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+    <span><b>For the best experience, use rx3 on mobile or with a controller.</b><span class="rx-tip__more"> Open <u>shawnsingh.me/rx3</u> on your phone.</span></span>
+    <button type="button" class="rx-tip__x" aria-label="Dismiss">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <style>
+    /* Shown: the banner takes the top row and the app fills what's left (the screen refits itself). */
+    body.has-tip { display: flex; flex-direction: column; }
+    body.has-tip #app { flex: 1; min-height: 0; height: auto; }
+    .rx-tip {
+      position: relative; flex: none; height: 36px; padding: 0 44px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      overflow: hidden; isolation: isolate; background: rgb(3 3 5);
+      color: #fff; font: 500 .8rem/1 -apple-system, BlinkMacSystemFont, "Inter", var(--sans); letter-spacing: -.005em; white-space: nowrap;
+      text-shadow: 0 1px 8px rgb(20 0 30 / .6); box-shadow: inset 0 -1px 0 rgb(255 255 255 / .1);
+    }
+    /* Same as the homepage banner: assets/wayglim-rx3.js mounts the Neon Ripple into .rx-bg. */
+    .rx-tip .rx-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+    .rx-tip b { font-weight: 600; }
+    .rx-tip u { text-decoration: none; font-weight: 600; -webkit-user-select: all; user-select: all; }
+    .rx-tip__icon { flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+    .rx-tip__x {
+      position: absolute; right: 8px; top: 50%; translate: 0 -50%; display: grid; place-items: center;
+      width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: none; color: #fff; opacity: .8;
+    }
+    .rx-tip__x:hover { opacity: 1; background: rgb(255 255 255 / .15); }
+    .rx-tip__x svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+    @media (max-width: 900px) { .rx-tip__more { display: none; } }
+  </style>
+  <script>
+    (() => {
+      const tip = document.getElementById('rx-tip'), KEY = 'rx3-tip-dismissed'
+      let dismissed = false
+      try { dismissed = localStorage.getItem(KEY) === '1' } catch {}
+      // Desktop = a mouse/trackpad and no touch screen. Gone for good once dismissed; hidden while a controller is connected.
+      const desktop = matchMedia('(pointer: fine)').matches && !matchMedia('(any-pointer: coarse)').matches
+      const pad = () => [...(navigator.getGamepads?.() || [])].some(Boolean)
+      if (dismissed || !desktop || pad()) return
+      const hide = () => { tip.hidden = true; document.body.classList.remove('has-tip') }
+      tip.hidden = false
+      document.body.classList.add('has-tip')
+      // Only load the background when the banner is actually shown.
+      const bg = document.createElement('script'); bg.src = '/assets/wayglim-rx3.js?v=1'; bg.defer = true
+      document.head.append(bg)
+      tip.querySelector('.rx-tip__x').addEventListener('click', () => {
+        hide()
+        try { localStorage.setItem(KEY, '1') } catch {}
+      })
+      addEventListener('gamepadconnected', hide)
+    })()
+  </script>
   <div id="app">
     <!-- phones: BROWSE / BACK / BPM / SYNC sit above the screen -->
     <div id="ph-nav" class="ph-row ph-nav">
@@ -182,45 +238,6 @@
     </section>
   </div>
 
-  <!-- Desktop only: a small, dismissable tip that rx3 plays best on a phone or with a controller. -->
-  <aside id="rx-tip" class="rx-tip" role="note" hidden>
-    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
-    <p>For the best experience, use rx3 on mobile or with a controller.<br>Open <b>shawnsingh.me/rx3</b> on your phone.</p>
-    <button type="button" aria-label="Dismiss tip">&times;</button>
-  </aside>
-  <style>
-    .rx-tip {
-      position: fixed; z-index: 50; top: 12px; right: 12px; display: flex; align-items: flex-start; gap: 10px;
-      max-width: 300px; padding: 10px 10px 10px 12px; border-radius: 10px;
-      background: rgb(20 22 28 / .92); border: 1px solid rgb(255 255 255 / .12); box-shadow: 0 10px 30px rgb(0 0 0 / .45);
-      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-      font: 12px/1.45 var(--sans); color: #d6d6db; animation: rx-tip-in .3s ease-out;
-    }
-    .rx-tip svg { flex: none; width: 18px; height: 18px; margin-top: 1px; fill: none; stroke: var(--blue); stroke-width: 2; stroke-linecap: round; }
-    .rx-tip p { margin: 0; }
-    .rx-tip b { color: #fff; font-weight: 600; -webkit-user-select: all; user-select: all; }
-    .rx-tip button { flex: none; width: 22px; height: 22px; margin: -2px -2px 0 0; padding: 0; border: 0; border-radius: 6px; background: none; color: #8e8e93; font-size: 18px; line-height: 1; }
-    .rx-tip button:hover { background: rgb(255 255 255 / .1); color: #fff; }
-    @keyframes rx-tip-in { from { opacity: 0; transform: translateY(-6px); } }
-    @media (prefers-reduced-motion: reduce) { .rx-tip { animation: none; } }
-  </style>
-  <script>
-    (() => {
-      const tip = document.getElementById('rx-tip'), KEY = 'rx3-tip-dismissed'
-      let dismissed = false
-      try { dismissed = localStorage.getItem(KEY) === '1' } catch {}
-      // Desktop = a mouse/trackpad and no touch screen. Hidden for good once dismissed or a controller connects.
-      const desktop = matchMedia('(pointer: fine)').matches && !matchMedia('(any-pointer: coarse)').matches
-      const pad = () => [...(navigator.getGamepads?.() || [])].some(Boolean)
-      if (dismissed || !desktop || pad()) return
-      tip.hidden = false
-      tip.querySelector('button').addEventListener('click', () => {
-        tip.hidden = true
-        try { localStorage.setItem(KEY, '1') } catch {}
-      })
-      addEventListener('gamepadconnected', () => { tip.hidden = true })
-    })()
-  </script>
 
   <input id="folder-input" type="file" webkitdirectory multiple hidden>
   <input id="files-input" type="file" accept="audio/*,.mp3,.wav,.aif,.aiff,.m4a,.flac,.ogg" multiple hidden>
