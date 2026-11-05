@@ -115,9 +115,17 @@
       background: rgb(255 255 255 / .1); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
       color: #fff; font-size: .95rem; white-space: nowrap; text-decoration: none; transition: background .2s, border-color .2s;
     }
+    .rx-btn .short { display: none; }
+    @media (max-width: 560px) { .rx-btn .short { display: inline; } }
     .rx-btn:hover { background: rgb(255 255 255 / .18); border-color: rgb(255 255 255 / .35); }
     .rx-btn svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    @media (max-width: 560px) { .rm-actions { grid-template-columns: minmax(0, 1fr); width: min(320px, 100%); } }
+    /* Phones: still one even row, just smaller, and the download reads "Mac app". */
+    @media (max-width: 560px) {
+      .rm-actions { gap: 8px; margin-top: 20px; }
+      .rx-btn { gap: 5px; height: 36px; padding: 0 10px; font-size: .8rem; }
+      .rx-btn svg { width: 13px; height: 13px; }
+      .rx-btn .long { display: none; }
+    }
     /* Under the window: what you can mix with, typed out and deleted, one line after another. */
     .rx-type { margin: 0; min-height: 1.3em; font-size: clamp(1.15rem, 2.4vw, 1.5rem); font-weight: 500; letter-spacing: -.01em; color: #fff; text-align: center; text-shadow: 0 2px 12px rgb(0 0 0 / .5); }
     .rx-type span::after { content: ''; display: inline-block; width: 2px; height: 1em; margin-left: 3px; vertical-align: -.12em; background: #0a84ff; animation: rx-caret 1s steps(1) infinite; }
@@ -322,7 +330,7 @@
     <div class="rm-actions">
       <a class="rx-btn" href="project-r2music.html">Open r2<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
       <a class="rx-btn" href="project-rx3.html">Open rx3<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
-      <a class="rx-btn" href="https://github.com/shawnpsi-lgtm/r2music-releases/releases/latest/download/r2music-mac-arm64.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Mac</a>
+      <a class="rx-btn" href="https://github.com/shawnpsi-lgtm/r2music-releases/releases/latest/download/r2music-mac-arm64.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span><span class="long">Download for </span>Mac<span class="short"> app</span></span></a>
     </div>
   </section>
 
