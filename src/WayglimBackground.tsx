@@ -52,15 +52,15 @@ const WAYGLIM_SETTINGS = {
     "balanceX": 0,
     "balanceY": 0,
     "bend": 48,
-    "chromaSplit": 24,
+    "chromaSplit": 0,
     "cornerRadius": 12,
     "curve": "line",
     "curveDepth": 0,
     "customColors": [
       [
-        1,
-        0.1686,
-        0.8392
+        0.7451,
+        0.2353,
+        1
       ],
       [
         0.4784,
@@ -68,14 +68,14 @@ const WAYGLIM_SETTINGS = {
         1
       ],
       [
-        0,
-        0.898,
+        0.5765,
+        0.3412,
         1
       ],
       [
-        1,
-        0.3725,
-        0.6353
+        0.8549,
+        0.4392,
+        1
       ]
     ],
     "effectArea": "core",
