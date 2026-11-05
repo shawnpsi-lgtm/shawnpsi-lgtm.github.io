@@ -60,7 +60,7 @@ the waveform and drag the file straight into a folder or DAW like Ableton.
 Free Mac app (Apple Silicon), downloadable from its card on the site, plus a
 web version. Inspired by Yoink.
 
-r2music — /project-r2music.html · live at r2.shawnsingh.me · 2026 · TypeScript,
+r2music — /project-r2.html · live at r2.shawnsingh.me · 2026 · TypeScript,
 Vite, Cloudflare Workers & R2, Electron. Music library that lives in your own
 Cloudflare R2 bucket: sign in with GitHub, connect your bucket, drop files in.
 The Worker stores R2 keys encrypted and signs short-lived URLs, so audio goes
