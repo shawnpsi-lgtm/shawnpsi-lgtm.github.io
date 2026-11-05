@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>r2music — Shawn Singh</title>
   <meta name="description" content="r2music — a music library that lives in your own Cloudflare R2 bucket" />
 
@@ -15,10 +15,14 @@
   <link rel="stylesheet" href="/assets/ask.css?v=15">
   <style>
     body { background: #000; }
-    /* The homepage's tahoeDay wallpaper, cropped to cover like the hero's. */
+    /* The homepage's tahoeDay wallpaper, cropped to cover like the hero's.
+       Sized to the large viewport plus the safe areas so iOS Safari shows it
+       behind the status bar and toolbar instead of black bands. */
     .r2-video {
-      position: fixed; top: 50%; left: 50%; width: 100vw; height: 56.25vw;
-      min-width: 177.78svh; min-height: 100svh; transform: translate(-50%, -50%);
+      --wall-h: calc(100lvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+      position: fixed; top: calc(var(--wall-h) / 2 - env(safe-area-inset-top, 0px)); left: 50%;
+      width: max(100vw, var(--wall-h) * 16 / 9); height: max(56.25vw, var(--wall-h));
+      transform: translate(-50%, -50%);
       border: 0; pointer-events: none;
     }
     /* Glass in the shape of the word: the script masks this to the letters and
