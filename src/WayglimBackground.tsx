@@ -257,16 +257,19 @@ export type WayglimBackgroundProps = {
   label?: string;
   paused?: boolean;
   style?: CSSProperties;
+  /** Studio params to change on this mount only, e.g. { spread: 25 }. */
+  params?: Record<string, unknown>;
 };
 
-export default function WayglimBackground({ className, style, layout = "fill", paused = false, label }: WayglimBackgroundProps) {
+export default function WayglimBackground({ className, style, layout = "fill", paused = false, label, params }: WayglimBackgroundProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<{ destroy(): void; setPaused(paused: boolean): void } | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return undefined;
-    const player = mountWayglim(container, WAYGLIM_SETTINGS);
+    const settings = params ? { ...WAYGLIM_SETTINGS, params: { ...WAYGLIM_SETTINGS.params, ...params } } : WAYGLIM_SETTINGS;
+    const player = mountWayglim(container, settings);
     playerRef.current = player;
     return () => {
       player.destroy();
