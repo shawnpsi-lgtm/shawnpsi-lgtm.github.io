@@ -51,8 +51,155 @@
       .js-reveal .reveal.in { opacity: 1; transform: none; }
     }
 
+    /* Between the opening and the diagram: r2 itself, the working demo from project-r2.html on the real library.
+       Sizes and colours are the r2music web app's own. */
+    .r2-desk { position: relative; display: grid; place-items: center; padding: 4vh 16px 6vh; }
+    .r2-app {
+      --accent: #0071e3; --bg: #19191b; --black: #f5f5f7; --dark: #e5e5ea; --mid: #98989d; --light: #636366; --border: #3a3a3c;
+      position: relative; display: flex; width: min(1170px, 100%); height: min(800px, calc(100svh - 200px)); min-height: 520px;
+      overflow: hidden; border-radius: 14px; color: var(--black); font-size: 16px; line-height: 1.6;
+      user-select: none; -webkit-user-select: none;
+      background: rgb(12 16 22 / .5); -webkit-backdrop-filter: blur(40px) saturate(1.5); backdrop-filter: blur(40px) saturate(1.5);
+      box-shadow: 0 0 0 1px rgb(0 0 0 / .6), 0 30px 90px rgb(0 0 0 / .55);
+    }
+    .r2-app::after { content: ''; position: absolute; z-index: 6; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12); pointer-events: none; }
+    .r2-app [contenteditable] { user-select: text; -webkit-user-select: text; }
+    .r2-app svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .r2-app p { max-width: none; }
+
+    .r2-side { flex: none; width: 260px; display: flex; flex-direction: column; gap: 2px; padding: 18px 12px 96px; }
+    .r2-lights { display: flex; gap: 9px; margin: 0 6px 16px; }
+    .r2-lights i { width: 14px; height: 14px; border-radius: 50%; background: #ff5f57; }
+    .r2-lights i + i { background: #febc2e; }
+    .r2-lights i + i + i { background: #28c840; }
+    .r2-logo { display: flex; align-items: center; gap: 10px; padding: 4px 10px 8px; font-size: 1.05rem; font-weight: 600; letter-spacing: -.01em; }
+    .r2-logo svg { stroke: none; }
+    .r2-group { display: flex; align-items: center; gap: 8px; margin: 18px 0 4px; padding: 0 4px 0 10px; font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--light); list-style: none; cursor: default; }
+    .r2-group::-webkit-details-marker { display: none; }
+    .r2-group svg { width: 10px; height: 10px; stroke-width: 2.6; transition: rotate .2s; }
+    [open] > .r2-group svg { rotate: 90deg; }
+    .r2-group button { margin-left: auto; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--mid); font: inherit; font-size: 1.1rem; letter-spacing: 0; cursor: pointer; }
+    .r2-group button:hover { background: rgb(255 255 255 / .08); color: var(--black); }
+    .r2-hint { margin: 0 10px 6px; font-size: .8rem; line-height: 1.5; color: var(--mid); }
+    .r2-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; border: 0; border-radius: 8px; background: none; color: var(--dark); font: inherit; font-size: .88rem; text-align: left; }
+    .r2-item span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .r2-item em { font-style: normal; font-size: .75rem; color: var(--light); font-variant-numeric: tabular-nums; }
+    button.r2-item:hover { background: rgb(255 255 255 / .05); }
+    .r2-item.on { background: rgb(255 255 255 / .15); color: var(--black); }
+    .r2-item.drop { background: var(--accent); color: #fff; }
+    .r2-item.drop em { color: #fff; }
+    .r2-lists { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; scrollbar-width: none; }
+    .r2-upload { margin-top: 8px; }
+    .r2-foot { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; padding-top: 12px; border-top: 1px solid rgb(255 255 255 / .1); }
+    .r2-who { display: flex; align-items: center; gap: 8px; padding: 0 4px 0 6px; font-size: .82rem; color: var(--dark); }
+    .r2-who img { width: 24px; height: 24px; border-radius: 50%; }
+    .r2-who span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .r2-who i { display: grid; place-items: center; width: 30px; height: 30px; color: var(--mid); }
+
+    .r2-btn { display: inline-flex; align-items: center; justify-content: center; padding: 9px 20px; border: 1px solid var(--border); border-radius: 980px; background: none; color: var(--black); font: inherit; font-size: .82rem; white-space: nowrap; cursor: pointer; transition: background .2s, border-color .2s; }
+    .r2-btn:hover { background: #1c1c1e; border-color: var(--light); }
+    .r2-commit:not(:disabled) { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .r2-commit:disabled { cursor: default; background: rgb(255 255 255 / .04); border-color: rgb(255 255 255 / .08); color: rgb(255 255 255 / .4); }
+    .r2-ico { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--mid); cursor: pointer; }
+    .r2-ico:hover { background: rgb(255 255 255 / .08); color: var(--black); }
+    .r2-ico svg { width: 18px; height: 18px; }
+    .r2-menu { display: none; }
+
+    .r2-panes { flex: 1; min-width: 0; display: flex; }
+    .r2-pane { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 0 20px; background: var(--bg); outline: none; }
+    .r2-pane + .r2-pane { border-left: 1px solid var(--border); }
+    /* Split view: a blue line over the pane the sidebar and keys act on. */
+    .r2-panes:has(> :nth-child(2)) > .focus::before { content: ''; position: absolute; top: 0; left: 20px; right: 20px; height: 2px; background: var(--accent); }
+    .r2-top { display: flex; align-items: center; gap: 8px; padding: 14px 0 10px; }
+    /* Name and size on one line, so the header is a single row. */
+    .r2-title { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 10px; }
+    .r2-title h2 { margin: 0; flex: 0 1 auto; min-width: 0; font: 700 1.3rem/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: -.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; outline: none; }
+    .r2-title h2[contenteditable] { text-overflow: clip; box-shadow: 0 2px 0 var(--accent); }
+    .r2-title p { flex: 0 1000 auto; min-width: 0; margin: 0; font-size: .78rem; line-height: 1.6; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .r2-top .r2-btn { padding: 4px 12px; font-size: .76rem; }
+    /* Search and count share a row. */
+    .r2-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .r2-search {
+      flex: 0 1 220px; min-width: 120px; padding: 4px 12px 4px 30px; font: inherit; font-size: .8rem; color: var(--black); border: 1px solid var(--border); border-radius: 980px; outline: none;
+      background: #1c1c1e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398989d' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-4-4'/%3E%3C/svg%3E") no-repeat 11px center / 13px;
+    }
+    .r2-search:focus { border-color: var(--accent); }
+    .r2-count { flex: 1; min-width: 0; margin: 0; font-size: .76rem; line-height: 1.6; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .r2-scroll { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -20px; padding: 0 20px 84px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    .r2-finder { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: .8rem; }
+    .r2-finder th { position: sticky; top: 0; z-index: 1; padding: 6px 10px; text-align: left; font-size: .64rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--light); background: var(--bg); border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; cursor: pointer; }
+    .r2-finder th:first-child { width: 34px; cursor: default; }
+    .r2-finder th:nth-child(3) { width: 30%; }
+    .r2-finder th:nth-child(4) { width: 60px; }
+    .r2-finder th:nth-child(5) { width: 70px; }
+    .r2-finder th[data-k]:hover, .r2-finder th.sorted { color: var(--black); }
+    .r2-finder th.sorted::after { content: ' ▲'; }
+    .r2-finder th.sorted.desc::after { content: ' ▼'; }
+    .r2-finder td { height: 28px; padding: 0 10px; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .r2-finder td.name { color: var(--black); }
+    .r2-finder td.time { font-variant-numeric: tabular-nums; }
+    .r2-finder td.art { padding: 0; }
+    .r2-finder td.art { position: relative; }
+    .r2-finder td.art span { display: block; width: 28px; height: 28px; }
+    .r2-finder td.art img { width: 28px; height: 28px; object-fit: cover; }
+    /* Play on hover, for the tracks that have audio. */
+    .r2-finder td.art button { position: absolute; left: 3px; top: 50%; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: var(--black); color: var(--bg); transform: translateY(-50%); opacity: 0; cursor: pointer; }
+    .r2-finder td.art button svg { width: 12px; height: 12px; margin-left: 1px; fill: currentColor; stroke: none; }
+    .r2-finder tr:hover td.art button, .r2-finder td.art button:focus-visible { opacity: 1; }
+    @media (hover: none) { .r2-finder td.art button { opacity: 1; } }
+    .r2-finder tr.now td.name { color: #2997ff; }
+    .r2-finder tr.now.sel td.name { color: #fff; }
+    .r2-finder tbody tr:nth-child(even) { background: rgb(255 255 255 / .024); }
+    .r2-finder tbody tr:hover { background: rgb(255 255 255 / .063); }
+    .r2-finder tbody tr.sel { background: var(--accent); }
+    .r2-finder tr.sel td { color: #fff; }
+    .r2-kind { display: inline-block; padding: 0 5px; border-radius: 4px; font-size: .6rem; font-weight: 600; letter-spacing: .06em; line-height: 16px; color: var(--mid); border: 1px solid var(--border); }
+    .r2-kind.ll { color: #e8c46a; border-color: #e8c46a55; background: #e8c46a14; }
+    .sel .r2-kind { color: #fff; border-color: #ffffff66; background: none; }
+    .r2-empty { margin: 48px 0; font-size: .9rem; color: var(--mid); text-align: center; }
+    .r2-empty:empty { display: none; }
+
+    .r2-player {
+      position: absolute; z-index: 4; left: 24px; right: 24px; bottom: 14px; display: flex; align-items: center; gap: 16px; padding: 4px 8px 4px 28px;
+      border-radius: 22px; border: 1px solid rgb(255 255 255 / .12); background: rgb(28 28 30 / .55);
+      -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+      box-shadow: 0 1px 2px #0006, 0 10px 28px #0005, inset 0 1px 0 #ffffff14;
+    }
+    .r2-pp { flex: none; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: var(--black); color: var(--bg); cursor: pointer; }
+    .r2-pp:hover { background: #fff; }
+    .r2-pp:disabled { opacity: .4; cursor: default; }
+    .r2-pp svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
+    .r2-pp .r2-pause, .playing .r2-pp .r2-play { display: none; }
+    .playing .r2-pp .r2-pause { display: block; }
+    .r2-np { flex: 1; min-width: 0; display: flex; align-items: center; gap: 20px; }
+    .r2-now { flex: 0 1 260px; min-width: 0; font-size: .85rem; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .r2-seek { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; font-size: .72rem; color: var(--mid); font-variant-numeric: tabular-nums; }
+    .r2-seek b { font-weight: inherit; }
+    .r2-seek i { --p: 0%; position: relative; flex: 1; height: 4px; border-radius: 2px; background: linear-gradient(var(--black), var(--black)) 0 / var(--p) 100% no-repeat, var(--border); cursor: pointer; touch-action: none; }
+    .r2-seek i::before { content: ''; position: absolute; inset: -8px 0; }
+    /* Outside the window: a drag image can't come from inside a clipped, backdrop-filtered box. */
+    .r2-ghost { position: fixed; top: -100px; left: 0; padding: 6px 12px; border-radius: 8px; background: #0071e3; color: #fff; font: 600 13px/1.6 -apple-system, BlinkMacSystemFont, sans-serif; white-space: nowrap; }
+
+    /* Narrower: one pane at a time, then the sidebar becomes a drawer, as in the app. */
+    @media (max-width: 900px) {
+      .r2-pane:not(.focus), .r2-split { display: none; }
+      .r2-pane.r2-pane { border: 0; }
+      .r2-panes > .focus::before { display: none; }
+    }
+    @media (max-width: 700px) {
+      .r2-side { position: absolute; z-index: 5; inset: 0 auto 0 0; width: min(82%, 260px); padding-bottom: 84px; background: rgb(24 28 34 / .97); transform: translateX(-102%); transition: transform .25s ease; box-shadow: 10px 0 40px #0008; }
+      .r2-app.drawer .r2-side { transform: none; }
+      .r2-menu { display: inline-grid; margin-left: -8px; }
+      .r2-top .r2-btn { padding: 4px 10px; }
+      .r2-finder th:nth-child(5), .r2-finder td:nth-child(5) { display: none; }
+      .r2-player { left: 12px; right: 12px; padding: 8px 16px 8px 8px; gap: 12px; }
+      .r2-np { flex-direction: column; align-items: stretch; gap: 2px; }
+      .r2-now { flex: none; font-size: .8rem; }
+    }
+
+
     /* How it works: r2music's flow diagram, with rx3 on the end, and a short caption for each step. */
-    .rm-flow { position: relative; display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 560px); justify-content: center; align-items: center; gap: 24px 56px; padding: 10vh 16px 56px; color: #f5f5f7; }
+    .rm-flow { position: relative; display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 560px); justify-content: center; align-items: stretch; gap: 24px 56px; padding: 10vh 16px 56px; color: #f5f5f7; }
     .rm-panel, .rm-board {
       border-radius: 14px; background: rgb(12 16 22 / .5); -webkit-backdrop-filter: blur(40px) saturate(1.5); backdrop-filter: blur(40px) saturate(1.5);
       box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12), 0 0 0 1px rgb(0 0 0 / .6), 0 30px 90px rgb(0 0 0 / .55);
@@ -63,7 +210,9 @@
     .rm-steps li { counter-increment: rm; display: grid; grid-template-columns: 28px 1fr; font-size: .9rem; line-height: 1.6; color: #b8b8be; }
     .rm-steps li::before { content: counter(rm, decimal-leading-zero); font-size: .72rem; font-weight: 600; letter-spacing: .1em; color: #2997ff; padding-top: 2px; }
     .rm-steps b { font-weight: 600; color: #f5f5f7; }
-    .rm-board { position: relative; width: min(560px, 100%); aspect-ratio: 1; container-type: inline-size; }
+    /* The card stretches to the steps panel's height; the drawing inside stays square and sits in the middle. */
+    .rm-board { display: grid; align-items: center; width: min(560px, 100%); }
+    .rm-map { position: relative; width: 100%; aspect-ratio: 1; container-type: inline-size; }
     .rm-net { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: rgb(255 255 255 / .3); stroke-width: .5; }
     .rm-net path { stroke-dasharray: 1 2; }
     .rm-net .rm-dots { stroke: #2997ff; stroke-width: 1.2; stroke-linecap: round; stroke-dasharray: 0 .1; animation: rm-dash .8s linear infinite; }
@@ -287,6 +436,40 @@
     <p class="rx-type" aria-label="Your music, in your own bucket, Your music, stored once, Your music, on your laptop, Your music, on your phone, Your music, in rx3, Mix with Dub Echo, Mix with Space, Mix with your rekordbox cues, Mix anywhere."><span aria-hidden="true"></span></p>
   </section>
 
+  <section class="r2-desk reveal" aria-label="r2, live">
+    <div class="r2-app">
+      <aside class="r2-side">
+        <div class="r2-lights" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="r2-logo"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="r2-lg" cx="40%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9a8f5"/><stop offset="55%" stop-color="#b36fd9"/><stop offset="100%" stop-color="#9a4fc4"/></radialGradient></defs><circle cx="50" cy="50" r="50" fill="url(#r2-lg)"/><text x="50" y="67" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="52" font-weight="600" fill="#fff">r</text></svg>r2music</div>
+        <details>
+          <summary class="r2-group"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>Rekordbox</summary>
+          <p class="r2-hint">The Mac app lists your rekordbox library and playlists here.</p>
+        </details>
+        <button class="r2-item" data-list=""><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>Library</span><em></em></button>
+        <div class="r2-group">Lists<button data-act="new" aria-label="New list">+</button></div>
+        <div class="r2-lists"></div>
+        <div class="r2-item r2-upload" title="No music yet: uploads are off in this demo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg><span>Upload files</span></div>
+        <div class="r2-foot">
+          <div class="r2-who">
+            <img src="https://github.com/shawnpsi-lgtm.png?size=48" alt="" width="24" height="24"><span>shawnpsi-lgtm</span>
+            <i title="R2 keys"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4M21 2l-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg></i>
+            <i title="Sign out"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></i>
+          </div>
+          <button class="r2-btn r2-commit" data-act="commit" disabled>All changes saved</button>
+        </div>
+      </aside>
+      <div class="r2-panes"></div>
+      <div class="r2-player">
+        <button class="r2-pp" data-act="pp" aria-label="Play" disabled><svg class="r2-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><svg class="r2-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
+        <div class="r2-np">
+          <span class="r2-now">Nothing playing</span>
+          <span class="r2-seek"><b>0:00</b><i></i><b>0:00</b></span>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="r2-ghost" aria-hidden="true"></div>
+
   <section class="rm-flow" aria-label="How r music works">
     <div class="rm-panel">
       <p class="rm-lede">Whether you&rsquo;re prepping for a set, growing your library or DJing live, rx3 + r2 brings music streaming and performance DJ software together.</p>
@@ -298,6 +481,7 @@
       </ol>
     </div>
     <div class="rm-board" aria-hidden="true">
+      <div class="rm-map">
       <svg class="rm-net" viewBox="0 0 100 100">
         <path pathLength="1" d="M50 11V38" style="--d:.35s"/>
         <path pathLength="1" d="M50 38C50 50 27 50 27 62" style="--d:.85s"/>
@@ -318,6 +502,7 @@
       <div class="rm-node" style="left:17%;top:88%;--d:1.6s"><svg viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>Files<small>lists, upload</small></div>
       <div class="rm-node rx" style="left:50%;top:88%;--d:1.6s"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/></svg>rx3<small>mix it, as USB1</small></div>
       <div class="rm-node" style="left:83%;top:88%;--d:1.6s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4z"/></svg>Stream<small>signed URLs</small></div>
+      </div>
     </div>
   </section>
 
@@ -374,6 +559,297 @@
       flow.classList.add('js')
       const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { flow.classList.add('in'); io.disconnect() } }, { threshold: .3 })
       io.observe(flow)
+    })()
+  </script>
+
+  <script>
+    // The r2music demo, on the real library: it's read from the r2music bucket through the site's worker
+    // (/r2music/* in worker/groq-proxy.js). The "shawn" list is Shawn's own music and plays; the rest of the
+    // library is names and covers only. Edits to lists stay in this tab.
+    (() => {
+      const API = 'https://groq-chat.shawnpsi.workers.dev/r2music'
+      const pane = list => ({ list, q: '', sel: new Set(), anchor: null, sort: null })
+      let tracks = {}, libIds = [], lists = [], playable = new Set(), status = 'Loading the library…'
+      let panes = [pane(null)], focused = 0, dirty = false, drag = null, now = null
+      const noArt = new Set()
+
+      const app = document.querySelector('.r2-app'), panesEl = app.querySelector('.r2-panes')
+      const lib = app.querySelector('[data-list=""]'), listsEl = app.querySelector('.r2-lists')
+      const commit = app.querySelector('.r2-commit'), ghost = document.querySelector('.r2-ghost')
+      const pp = app.querySelector('.r2-pp'), nowEl = app.querySelector('.r2-now'), bar = app.querySelector('.r2-seek i')
+      const [cur, dur] = app.querySelectorAll('.r2-seek b')
+      const audio = new Audio()
+
+      const esc = s => s.replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`)
+      const time = s => isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : ''
+      const LOSSLESS = new Set(['flac', 'wav', 'aif', 'aiff'])
+      const size = ids => {
+        const b = ids.reduce((n, id) => n + tracks[id].size, 0)
+        return b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : `${(b / 1e6).toFixed(1)} MB`
+      }
+      // As in the app: "ANOTR - Strobe" is artist ANOTR, title Strobe.
+      const parseName = name => {
+        const clean = name.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim()
+        const m = clean.match(/^(.+?)\s+[-–—]\s+(.+)$/)
+        return m ? { artist: m[1], title: m[2] } : { artist: '', title: clean }
+      }
+      // A stable gradient per track, under the cover (or instead of one).
+      const swatch = name => {
+        let h = 0
+        for (const c of name) h = (h * 31 + c.charCodeAt(0)) % 360
+        return `background: linear-gradient(135deg, hsl(${h} 65% 52%), hsl(${(h + 50) % 360} 70% 30%))`
+      }
+      const ico = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`
+      const FOLDER = 'M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z'
+      const all = p => p.list ? p.list.ids : libIds
+      const at = el => [...panesEl.children].indexOf(el.closest('.r2-pane'))
+
+      function visible(p) {
+        const q = p.q.trim().toLowerCase()
+        const v = all(p).filter(id => tracks[id].name.toLowerCase().includes(q))
+        if (p.sort) {
+          const { k, dir } = p.sort, val = id => k === 'time' ? tracks[id].duration ?? 0 : tracks[id][k]
+          v.sort((a, b) => { const x = val(a), y = val(b); return dir * (typeof x === 'string' ? x.localeCompare(y, undefined, { numeric: true }) : x - y) })
+        }
+        return v
+      }
+
+      const shell = () => {
+        const el = document.createElement('section')
+        el.className = 'r2-pane'
+        el.tabIndex = -1   // clicks focus the pane, so ⌘A, ⌫, space and Esc reach it
+        el.innerHTML = `<header class="r2-top"></header>
+          <div class="r2-bar"><input class="r2-search" type="search" placeholder="Search" aria-label="Search tracks" autocomplete="off">
+          <p class="r2-count"></p></div>
+          <div class="r2-scroll"><table class="r2-finder">
+            <thead><tr><th></th><th data-k="title">Title</th><th data-k="artist">Artist</th><th data-k="time">Time</th><th data-k="kind">Kind</th></tr></thead>
+            <tbody></tbody></table><p class="r2-empty"></p></div>`
+        return el
+      }
+
+      const row = (id, p) => {
+        const t = tracks[id], cls = [p.sel.has(id) && 'sel', id === now && 'now'].filter(Boolean).join(' ')
+        return `<tr data-id="${id}" draggable="true"${cls ? ` class="${cls}"` : ''}>
+          <td class="art"><span style="${swatch(t.name)}">${noArt.has(id) ? '' : `<img src="${API}/art/${id}" loading="lazy" alt="">`}</span>${playable.has(id) ? `<button data-act="play" aria-label="Play ${esc(t.title)}">${ico('M8 5v14l11-7z')}</button>` : ''}</td>
+          <td class="name">${esc(t.title)}</td><td>${esc(t.artist)}</td><td class="time">${time(t.duration)}</td>
+          <td><span class="r2-kind${LOSSLESS.has(t.ext) ? ' ll' : ''}">${esc(t.kind)}</span></td></tr>`
+      }
+
+      // Pane elements are kept between paints so each keeps its scroll and search focus.
+      function paint() {
+        const curList = panes[focused].list
+        lib.classList.toggle('on', !curList)
+        lib.querySelector('em').textContent = libIds.length || ''
+        listsEl.innerHTML = lists.map((l, i) =>
+          `<button class="r2-item${l === curList ? ' on' : ''}" data-list="${i}">${ico(FOLDER)}<span>${esc(l.name)}</span><em>${l.ids.length}</em></button>`).join('')
+        commit.disabled = !dirty
+        commit.textContent = dirty ? 'Save changes' : 'All changes saved'
+
+        while (panesEl.children.length < panes.length) panesEl.append(shell())
+        while (panesEl.children.length > panes.length) panesEl.lastChild.remove()
+        panes.forEach((p, i) => {
+          const el = panesEl.children[i], ids = all(p), v = visible(p)
+          for (const id of p.sel) if (!ids.includes(id)) p.sel.delete(id)
+          el.classList.toggle('focus', i === focused)
+          el.querySelector('.r2-top').innerHTML = `
+            <button class="r2-ico r2-menu" data-act="menu" aria-label="Lists">${ico('M4 6h16M4 12h16M4 18h16')}</button>
+            <div class="r2-title"><h2>${esc(p.list ? p.list.name : 'Library')}</h2><p>${ids.length} tracks · ${size(ids)}</p></div>
+            ${p.list ? '<button class="r2-btn" data-act="rename">Rename</button><button class="r2-btn" data-act="delete">Delete list</button>' : ''}
+            <button class="r2-ico r2-split" data-act="split" aria-label="${panes.length > 1 ? 'Close split view' : 'Split view'}">${ico('M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM12 3v18')}</button>
+            ${panes.length > 1 ? `<button class="r2-ico" data-act="close" aria-label="Close pane">${ico('M18 6 6 18M6 6l12 12')}</button>` : ''}`
+          const q = el.querySelector('.r2-search')
+          if (q !== document.activeElement) q.value = p.q
+          el.querySelector('.r2-count').textContent = p.sel.size
+            ? `${p.sel.size} selected · drag onto a list${p.list ? ', or ⌫ to remove' : ''}`
+            : `${v.length} of ${ids.length} · click, ⌘-click or ⇧-click to select`
+          el.querySelectorAll('th[data-k]').forEach(th => {
+            th.classList.toggle('sorted', p.sort?.k === th.dataset.k)
+            th.classList.toggle('desc', p.sort?.dir === -1)
+          })
+          el.querySelector('tbody').innerHTML = v.map(id => row(id, p)).join('')
+          el.querySelector('.r2-empty').textContent = status || (v.length ? '' : ids.length ? 'No matches.' : 'Drag tracks here from the Library.')
+        })
+      }
+
+      function rename(i) {
+        const h = panesEl.children[i].querySelector('h2')
+        h.contentEditable = 'true'
+        h.spellcheck = false
+        h.focus()
+        getSelection().selectAllChildren(h)
+      }
+
+      // The same id again toggles pause; the end of a track moves on down the playable list.
+      function play(id) {
+        if (id === now) return audio.paused ? audio.play().catch(() => {}) : audio.pause()
+        now = id
+        audio.src = `${API}/track/${id}`
+        audio.play().catch(() => {})
+        const t = tracks[id]
+        nowEl.textContent = t.artist ? `${t.title} · ${t.artist}` : t.title
+        paint()
+      }
+      audio.onplay = audio.onpause = () => {
+        app.classList.toggle('playing', !audio.paused)
+        pp.setAttribute('aria-label', audio.paused ? 'Play' : 'Pause')
+      }
+      audio.ontimeupdate = audio.ondurationchange = () => {
+        cur.textContent = time(audio.currentTime) || '0:00'
+        dur.textContent = time(audio.duration) || '0:00'
+        bar.style.setProperty('--p', `${audio.currentTime / audio.duration * 100 || 0}%`)
+      }
+      audio.onended = () => { const ids = [...playable], next = ids[ids.indexOf(now) + 1]; if (next) play(next) }
+      audio.onerror = () => { nowEl.textContent = 'Couldn’t play that track' }
+      const seek = e => { if (audio.duration) audio.currentTime = Math.min(1, Math.max(0, (e.clientX - bar.getBoundingClientRect().left) / bar.offsetWidth)) * audio.duration }
+      bar.addEventListener('pointerdown', e => { bar.setPointerCapture(e.pointerId); seek(e) })
+      bar.addEventListener('pointermove', e => { if (bar.hasPointerCapture(e.pointerId)) seek(e) })
+
+      app.addEventListener('click', e => {
+        const t = e.target
+        if (t.closest('[contenteditable], .r2-seek')) return
+        if (!t.closest('.r2-side, [data-act=menu]')) app.classList.remove('drawer')
+        if (t.closest('.r2-pane')) focused = at(t)
+        const p = panes[focused], act = t.closest('[data-act]')?.dataset.act
+        const item = t.closest('[data-list]'), tr = t.closest('tr[data-id]'), th = t.closest('th[data-k]')
+        let fresh = false
+        if (item) {
+          panes[focused] = pane(lists[item.dataset.list] ?? null)
+          app.classList.remove('drawer')
+          fresh = true
+        } else if (act === 'menu') app.classList.toggle('drawer')
+        else if (act === 'play') return play(tr.dataset.id)
+        else if (act === 'pp') return play(now ?? [...playable][0])
+        else if (act === 'new') {
+          let name = 'untitled list', n = 1
+          while (lists.some(l => l.name === name)) name = `untitled list ${++n}`
+          lists.push({ name, ids: [] })
+          panes[focused] = pane(lists.at(-1))
+          dirty = fresh = true
+        } else if (act === 'delete') {
+          lists.splice(lists.indexOf(p.list), 1)
+          panes = panes.map(q => q.list === p.list ? pane(null) : q)
+          dirty = fresh = true
+        } else if (act === 'split') {
+          if (panes.length > 1) panes.splice(1 - focused, 1)
+          else panes.push(pane(p.list))
+          focused = panes.length - 1
+          fresh = true
+        } else if (act === 'close') {
+          panes.splice(focused, 1)
+          focused = 0
+        } else if (act === 'commit') dirty = false
+        else if (th) {
+          const k = th.dataset.k
+          p.sort = p.sort?.k === k ? { k, dir: -p.sort.dir } : { k, dir: 1 }
+        } else if (tr) {
+          const id = tr.dataset.id, v = visible(p)
+          if (e.shiftKey && v.includes(p.anchor)) {
+            const [a, b] = [v.indexOf(p.anchor), v.indexOf(id)].sort((x, y) => x - y)
+            p.sel = new Set(v.slice(a, b + 1))
+          } else {
+            if (e.metaKey || e.ctrlKey) p.sel.has(id) ? p.sel.delete(id) : p.sel.add(id)
+            else p.sel = new Set([id])
+            p.anchor = id
+          }
+        } else if (t.closest('.r2-scroll')) p.sel.clear()
+        paint()
+        if (fresh) panesEl.children[focused].querySelector('.r2-scroll').scrollTop = 0
+        if (act === 'rename' || act === 'new') rename(focused)
+      })
+
+      app.addEventListener('dblclick', e => {
+        const id = e.target.closest('tr[data-id]')?.dataset.id
+        if (playable.has(id)) play(id)
+      })
+
+      app.addEventListener('input', e => {
+        if (!e.target.matches('.r2-search')) return
+        focused = at(e.target)
+        panes[focused].q = e.target.value
+        paint()
+      })
+
+      app.addEventListener('keydown', e => {
+        const t = e.target, p = panes[focused]
+        if (t.isContentEditable) {
+          if (e.key !== 'Enter' && e.key !== 'Escape') return
+          e.preventDefault()
+          if (e.key === 'Escape') t.textContent = panes[at(t)].list.name
+          t.blur()
+          return
+        }
+        if (t.matches('input, button')) return
+        if (e.key === 'a' && (e.metaKey || e.ctrlKey)) p.sel = new Set(visible(p))
+        else if ((e.key === 'Backspace' || e.key === 'Delete') && p.list && p.sel.size) {
+          p.list.ids = p.list.ids.filter(id => !p.sel.has(id))
+          dirty = true
+        } else if (e.key === 'Escape') p.sel.clear()
+        else if (e.key === ' ' && now) { e.preventDefault(); return play(now) }
+        else return
+        e.preventDefault()
+        paint()
+      })
+
+      // Leaving the title saves the rename; an empty name keeps the old one.
+      app.addEventListener('focusout', e => {
+        if (!e.target.isContentEditable) return
+        const l = panes[at(e.target)].list, name = e.target.textContent.trim()
+        if (name && name !== l.name) { l.name = name; dirty = true }
+        paint()
+      })
+
+      // Tracks without a cover (or with an empty one) keep their gradient.
+      app.addEventListener('error', e => {
+        if (!e.target.matches?.('td.art img')) return
+        noArt.add(e.target.closest('tr').dataset.id)
+        e.target.remove()
+      }, true)
+
+      app.addEventListener('dragstart', e => {
+        const tr = e.target.closest?.('tr[data-id]')
+        if (!tr) return
+        const p = panes[at(tr)], id = tr.dataset.id
+        drag = p.sel.has(id) ? [...p.sel] : [id]
+        ghost.textContent = drag.length > 1 ? `${drag.length} tracks` : tracks[id].title
+        e.dataTransfer.setData('text/plain', ghost.textContent)
+        e.dataTransfer.effectAllowed = 'copy'
+        e.dataTransfer.setDragImage(ghost, -10, -10)
+      })
+      app.addEventListener('dragover', e => {
+        const item = drag && e.target.closest?.('.r2-lists [data-list]')
+        app.querySelectorAll('.drop').forEach(x => x !== item && x.classList.remove('drop'))
+        if (!item) return
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'copy'
+        item.classList.add('drop')
+      })
+      app.addEventListener('drop', e => {
+        const item = drag && e.target.closest?.('.r2-lists [data-list]')
+        if (!item) return
+        e.preventDefault()
+        const l = lists[item.dataset.list], add = drag.filter(id => !l.ids.includes(id))
+        l.ids.push(...add)
+        if (add.length) dirty = true
+        drag = null
+        paint()
+      })
+      app.addEventListener('dragend', () => {
+        drag = null
+        app.querySelectorAll('.drop').forEach(x => x.classList.remove('drop'))
+      })
+
+      paint()
+      // Opens like the screenshot: the playable list on the left, the whole library on the right, by title.
+      fetch(`${API}/library`).then(r => r.ok ? r.json() : Promise.reject()).then(data => {
+        for (const [id, t] of Object.entries(data.tracks)) tracks[id] = { ...t, ...parseName(t.name), kind: t.ext.toUpperCase() }
+        libIds = Object.keys(tracks).sort((a, b) => tracks[b].addedAt - tracks[a].addedAt)
+        if (data.list) lists = [{ name: data.list.name, ids: data.list.trackIds.filter(id => tracks[id]) }]
+        playable = new Set(lists[0]?.ids)
+        pp.disabled = !playable.size
+        panes = [pane(lists[0] ?? null), { ...pane(null), sort: { k: 'title', dir: -1 } }]
+        focused = 1
+        status = ''
+      }).catch(() => { status = 'Couldn’t load the library.' }).finally(paint)
     })()
   </script>
 
