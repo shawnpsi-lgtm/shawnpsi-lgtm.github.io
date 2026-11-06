@@ -34,6 +34,21 @@
     }
 
 
+    /* A quiet cue at the foot of the title screen that scrolls down to the release itself. */
+    .rm-more {
+      position: absolute; left: 50%; top: calc(100svh - 88px); z-index: 2; transform: translateX(-50%);
+      display: grid; justify-items: center; gap: 4px; padding: 8px 14px;
+      color: rgb(255 255 255 / .78); font-size: .78rem; font-weight: 500; letter-spacing: .02em; text-decoration: none;
+      text-shadow: 0 1px 12px rgb(0 0 0 / .5); transition: color .2s;
+    }
+    .rm-more:hover, .rm-more:focus-visible { color: #fff; }
+    .rm-more svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    @media (prefers-reduced-motion: no-preference) {
+      html { scroll-behavior: smooth; }
+      .rm-more svg { animation: rm-bob 2.4s ease-in-out infinite; }
+      @keyframes rm-bob { 0%, 100% { transform: none; } 50% { transform: translateY(4px); } }
+    }
+
     /* Under the title: one line on what it's for, with rx3's typing line beneath it. A soft dark pool
        sits behind free-floating text so it reads calmly over the brightest part of the ripple. */
     .rm-intro { position: relative; isolation: isolate; display: grid; justify-items: center; gap: 22px; padding: 18vh 16px 14vh; text-align: center; }
@@ -330,6 +345,7 @@
 
   <script src="/assets/wayglim-rx3.js?v=2" defer></script>
   <h1 class="r2-glass">rx3 + r2</h1>
+  <a class="rm-more" href="#release">View the release<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <filter id="r2-refract" x="0" y="0" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feImage x="0" y="0" preserveAspectRatio="none" result="map" />
@@ -433,7 +449,7 @@
     })()
   </script>
 
-  <section class="rm-intro reveal">
+  <section class="rm-intro reveal" id="release">
     <p class="rm-pitch">Access, manage, and DJ your rekordbox library from anywhere, on any device.</p>
     <p class="rx-type" aria-label="Your music, in your own bucket, Your music, stored once, Your music, on your laptop, Your music, on your phone, Your music, in rx3, Mix with Dub Echo, Mix with Space, Mix with your rekordbox cues, Mix anywhere."><span aria-hidden="true"></span></p>
   </section>
