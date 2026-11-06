@@ -63,20 +63,20 @@
 /* glass.tsx pins a static host to relative; the phone menu must stay absolute. */
 @media (width <= 640px) { .nav__links[data-glass-host] { position: absolute !important; } }
 
-/* The S: a glass bead in place of the purple gradient disc. Bend scales with the short side,
-   and this one is 24px, so it takes a lot; a violet fill keeps the old colour and the S legible. */
+/* The S: a clear glass bead in place of the purple gradient disc, the same glass as the nav.
+   Bend scales with the short side, and this one is 24px, so it takes a lot. With no fill
+   colour behind it, the S takes the logo text's colour so it reads in both themes. */
 .nav__mark { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; }
 .nav__mark > svg circle { fill: transparent !important; }
-.nav__mark > svg text { fill: #fff !important; }
-.nav__mark > :not(.glass-layer) { text-shadow: 0 1px 2px rgb(60 0 90 / .35); }
+.nav__mark > svg text { fill: currentColor !important; }
+.nav__mark > span:not(.glass-layer) { color: inherit !important; }
 .nav__mark > .glass-layer {
   --lg-glass-bend: 1;
   --lg-glass-dispersion: 0.9;
   --lg-blur: 1px;
   --lg-rim-shine: 0.9;
-  --lg-glass: rgb(170 100 220 / .42);
+  --glass-tint: 0.08;
 }
-[data-theme=dark] .nav__mark > .glass-layer { --lg-glass: rgb(195 135 240 / .5); }
 
 /* The nav is clear over the hero until it scrolls. */
 .nav:not(.scrolled, [data-always-scrolled]) > .glass-layer { opacity: 0; }
