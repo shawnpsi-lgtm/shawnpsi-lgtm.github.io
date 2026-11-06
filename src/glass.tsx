@@ -9,7 +9,7 @@ import './glass.css'
 
 // #glass-distortion: the homepage bundle's old SVG-filter glass (dock, hero pills).
 // #root: project pages use .section-label as a plain heading, not a pill.
-const SURFACES = '.nav, #root .section-label, div:has(> [style*="glass-distortion"]), #chat, .chat-pop, #connect, #quicklook > figure, #quicklook > figure > figcaption, #ql-vol, #ql-transport'
+const SURFACES = '.nav, .nav__links, .nav__mark, #root .section-label, div:has(> [style*="glass-distortion"]), #chat, .chat-pop, #connect, #quicklook > figure, #quicklook > figure > figcaption, #ql-vol, #ql-transport'
 // Not Glisse's own range input inside each Slider.
 const INPUTS = 'input[type=checkbox][role=switch], input[type=range]:not(.lg-slider input)'
 
@@ -61,10 +61,35 @@ function input(el: HTMLInputElement) {
   createRoot(host).render(<Bridge el={el} />)
 }
 
+// The S mark: static pages draw it as an SVG and the homepage bundle as a span with a gradient.
+// Glass needs an HTML box, so wrap the SVG; the span already is one.
+function mark(el: Element) {
+  if (el.tagName.toLowerCase() === 'svg') {
+    const box = document.createElement('span')
+    el.replaceWith(box)
+    box.append(el)
+    el = box
+  }
+  el.classList.add('nav__mark')
+}
+
+// .nav__inner holds still across pages, but a view-transition-name makes it a backdrop root,
+// so glass inside it (the S, the phone menu) would bend and frost nothing. Name it only while
+// a page transition runs. Before this script runs, .nav itself carries the name (view-transition.css).
+function holdNav(vt: { finished: Promise<unknown> } | null | undefined) {
+  const inner = document.querySelector<HTMLElement>('.nav[data-glass-host] > .nav__inner')
+  if (!vt || !inner) return
+  inner.style.viewTransitionName = 'nav'
+  vt.finished.finally(() => { inner.style.viewTransitionName = '' })
+}
+for (const type of ['pageswap', 'pagereveal'])
+  addEventListener(type, e => holdNav((e as Event & { viewTransition?: { finished: Promise<unknown> } }).viewTransition))
+
 // The homepage bundle and chat.js render some targets after load, so keep looking.
 let queued = false
 function scan() {
   queued = false
+  document.querySelectorAll('.nav__logo > svg:first-child, .nav__logo > span:first-child:not(.nav__mark)').forEach(mark)
   document.querySelectorAll<HTMLElement>(SURFACES).forEach(surface)
   document.querySelectorAll<HTMLInputElement>(INPUTS).forEach(input)
 }
