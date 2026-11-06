@@ -43,8 +43,19 @@
     .live-banner__eq i:nth-child(3) { animation-delay: -.7s; }
     .live-banner__eq i:nth-child(4) { animation-delay: -.2s; }
     @keyframes live-eq { from { transform: scaleY(.3); } to { transform: scaleY(1); } }
+    /* The link fills the bar (its ::after covers it), so the whole strip still opens the announcement;
+       the x sits on top at the right and dismisses it. */
+    .live-banner__link { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
+    .live-banner__link::after { content: ''; position: absolute; inset: 0; }
     .live-banner__arrow { transition: transform .2s; }
-    .live-banner:hover .live-banner__arrow { transform: translateX(3px); }
+    .live-banner__link:hover .live-banner__arrow { transform: translateX(3px); }
+    .live-banner__close {
+      position: absolute; z-index: 1; right: max(8px, env(safe-area-inset-right, 0px)); bottom: calc((var(--live-h) - 28px) / 2);
+      display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%;
+      background: none; color: #fff; opacity: .8; cursor: pointer; transition: background .2s, opacity .2s;
+    }
+    .live-banner__close:hover { opacity: 1; background: rgb(255 255 255 / .16); }
+    .live-banner__close:focus-visible { opacity: 1; outline: 2px solid #fff; outline-offset: -2px; }
     .live-banner b { font-weight: 600; }
     @media (prefers-reduced-motion: reduce) {
       .live-banner__eq i { animation: none; }
@@ -55,20 +66,38 @@
        (body.splash-done, set by the script at the bottom); the nav moves down with it. */
     .live-banner { transform: translateY(-100%); transition: transform .7s cubic-bezier(.2, .8, .2, 1); }
     body.splash-done .live-banner { transform: none; }
+    /* Dismissed (the x, remembered in this browser): it slides back up and the nav returns to the top. */
+    body.live-closed .live-banner { transform: translateY(-100%); visibility: hidden; transition: transform .5s cubic-bezier(.2, .8, .2, 1), visibility 0s .5s; }
     body:has(.live-banner) .nav { transition: background .4s, box-shadow .4s, top .7s cubic-bezier(.2, .8, .2, 1); }
-    body.splash-done:has(.live-banner) .nav { top: calc(var(--live-h) + env(safe-area-inset-top, 0px) + clamp(8px, 1.5vw, 14px)); }
+    body.splash-done:not(.live-closed):has(.live-banner) .nav { top: calc(var(--live-h) + env(safe-area-inset-top, 0px) + clamp(8px, 1.5vw, 14px)); }
     @media (prefers-reduced-motion: reduce) {
       .live-banner, body:has(.live-banner) .nav { transition: none; }
     }
   </style>
 </head>
 <body>
-  <a class="live-banner" href="press-r2music.html">
+  <div class="live-banner">
     <span class="rx-bg" aria-hidden="true"></span>
-    <span class="live-banner__eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-    <span><b>r music is live.</b><span class="live-banner__more"> Read the announcement</span></span>
-    <svg class="live-banner__arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-  </a>
+    <a class="live-banner__link" href="press-r2music.html">
+      <span class="live-banner__eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span><b>r music is live.</b><span class="live-banner__more"> Read the announcement</span></span>
+      <svg class="live-banner__arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <button class="live-banner__close" type="button" aria-label="Dismiss announcement">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <script>
+    // The banner's x: hides it and remembers that in this browser, so it stays closed on later visits.
+    (() => {
+      const KEY = 'live-banner-closed:r-music'
+      try { if (localStorage.getItem(KEY)) document.body.classList.add('live-closed') } catch {}
+      document.querySelector('.live-banner__close').addEventListener('click', () => {
+        document.body.classList.add('live-closed')
+        try { localStorage.setItem(KEY, '1') } catch {}
+      })
+    })()
+  </script>
   <figure id="desktop-folder" class="desktop-icon desktop-file">
     <img src="/images/folder-icon-macos.png" alt="Folder" draggable="false" />
     <figcaption>untitled folder</figcaption>
