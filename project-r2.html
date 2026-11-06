@@ -191,6 +191,7 @@
     .rx-alt:hover { background: rgb(255 255 255 / .18); }
     /* The end of the page: get the Mac app, or open the web app. */
     .r2-end { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; padding: 48px 16px 120px; }
+    .r2-end small { box-sizing: border-box; flex-basis: 100%; padding-inline: max(0px, calc(50% - 23ch)); margin-top: 4px; font-size: .75rem; line-height: 1.6; color: #98989d; text-align: center; }
     .rx-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     /* Under the window: where your music is, typed out and deleted, one line after another. */
     .rx-type { margin: 0; min-height: 1.3em; font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 600; letter-spacing: -.01em; color: #fff; text-align: center; text-shadow: 0 2px 12px rgb(0 0 0 / .5); }
@@ -509,6 +510,7 @@
   <section class="r2-end" aria-label="Get r music">
     <a class="rx-btn" href="https://github.com/shawnpsi-lgtm/r2music-releases/releases/latest/download/r2music-mac-arm64.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Mac</a>
     <a class="rx-btn rx-alt" href="https://r2.shawnsingh.me">Open r music<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+    <small>v1.0.0 · Apple Silicon · 105 MB. Not notarized yet, so the first time, unzip it into Applications and choose Open Anyway in System Settings → Privacy &amp; Security.</small>
   </section>
 
   <script>
