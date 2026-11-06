@@ -9,7 +9,7 @@ import './glass.css'
 
 // #glass-distortion: the homepage bundle's old SVG-filter glass (dock, hero pills).
 // #root: project pages use .section-label as a plain heading, not a pill.
-const SURFACES = '.nav, #root .section-label, div:has(> [style*="glass-distortion"]), #chat, .chat-pop, #connect, #quicklook > figure, #quicklook > figure > figcaption, #ql-vol, #ql-transport'
+const SURFACES = '.nav, .nav__links, #root .section-label, div:has(> [style*="glass-distortion"]), #chat, .chat-pop, #connect, #quicklook > figure, #quicklook > figure > figcaption, #ql-vol, #ql-transport'
 // Not Glisse's own range input inside each Slider.
 const INPUTS = 'input[type=checkbox][role=switch], input[type=range]:not(.lg-slider input)'
 

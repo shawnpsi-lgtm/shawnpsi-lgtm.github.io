@@ -50,6 +50,22 @@
 #ask #chat[data-glass-host] { view-transition-name: none; }
 #ask #chat > .glass-layer > .lg-glass { view-transition-name: ask-chat; }
 
+/* The phone menu drops from the nav, so it's the same glass, a touch frostier so the
+   links stay legible over the page. On wider screens the links sit inline in the nav. */
+.nav > .nav__inner > .nav__links > .glass-layer {
+  --lg-glass-bend: 0.5;
+  --lg-glass-dispersion: 0.78;
+  --lg-blur: 14px;
+  --lg-rim-shine: 0.62;
+  --glass-tint: 0.22;
+}
+@media (width > 640px) { .nav__links > .glass-layer { display: none; } }
+/* glass.tsx pins a static host to relative; the phone menu must stay absolute. */
+@media (width <= 640px) { .nav__links[data-glass-host] { position: absolute !important; } }
+/* .nav__inner's view-transition-name is a backdrop root, which would leave the open
+   menu's glass bending nothing, so drop the name while the menu is open. */
+.nav[data-glass-host] > .nav__inner:has(> .nav__links.open) { view-transition-name: none; }
+
 /* The nav is clear over the hero until it scrolls. */
 .nav:not(.scrolled, [data-always-scrolled]) > .glass-layer { opacity: 0; }
 
