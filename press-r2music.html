@@ -69,6 +69,24 @@
     /* Between the opening and the diagram: r2 itself, the working demo from project-r2.html on the real library.
        Sizes and colours are the r2music web app's own. */
     .r2-desk { position: relative; display: grid; place-items: center; padding: 4vh 16px 6vh; }
+    /* Pinned reveal: the desk is a tall scroll track, the window sits fixed in a full-screen stage inside it,
+       and scrolling (not time) brings it up from small and tilted back to full size. --p (0..1) comes from the script below.
+       Only where the window fits a screen and motion is welcome; everywhere else it's the plain fade-in above. */
+    .r2-stage { display: contents; }
+    @media (prefers-reduced-motion: no-preference) and (min-height: 700px) {
+      .js-reveal .r2-desk.reveal { opacity: 1; transform: none; }
+      .r2-desk { --p: 0; display: block; height: 240svh; padding: 0 16px; }
+      .r2-stage { position: sticky; top: 0; display: grid; place-items: center; height: 100svh; padding-top: 56px; perspective: 1600px; }
+      .r2-desk .r2-app {
+        transform-origin: 50% 100%;
+        transform: translateY(calc((1 - var(--p)) * 14svh)) rotateX(calc((1 - var(--p)) * 22deg)) scale(calc(.72 + .28 * var(--p)));
+        opacity: calc(.25 + .75 * var(--p));
+        border-radius: calc(14px + (1 - var(--p)) * 16px);
+        will-change: transform, opacity;
+      }
+      /* Settled: no transform at all, so text is crisp and clicks land exactly. */
+      .r2-desk.set .r2-app { transform: none; opacity: 1; border-radius: 14px; will-change: auto; }
+    }
     .r2-app {
       --accent: #0071e3; --bg: #19191b; --black: #f5f5f7; --dark: #e5e5ea; --mid: #98989d; --light: #636366; --border: #3a3a3c;
       position: relative; display: flex; width: min(1170px, 100%); height: min(940px, calc(100svh - 140px)); min-height: 600px;
@@ -455,6 +473,7 @@
   </section>
 
   <section class="r2-desk reveal" aria-label="r2, live">
+    <div class="r2-stage">
     <div class="r2-app">
       <aside class="r2-side">
         <div class="r2-lights" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -485,8 +504,30 @@
         </div>
       </div>
     </div>
+    </div>
   </section>
   <div class="r2-ghost" aria-hidden="true"></div>
+  <script>
+    // Pinned reveal for the r2 window: maps scroll through the desk's track to --p, 0 to 1. It starts as the
+    // track comes up the screen and is done 60% of the way through the pinned stretch, so the window then
+    // holds still, full size, for a while before it scrolls on.
+    (() => {
+      const desk = document.querySelector('.r2-desk')
+      let queued = false
+      const paint = () => {
+        queued = false
+        const r = desk.getBoundingClientRect(), vh = innerHeight
+        const from = vh * .4, to = -(r.height - vh) * .6
+        const p = to >= from ? 1 : Math.min(1, Math.max(0, (from - r.top) / (from - to)))
+        desk.style.setProperty('--p', p.toFixed(4))
+        desk.classList.toggle('set', p >= 1)
+      }
+      const ask = () => { if (!queued) { queued = true; requestAnimationFrame(paint) } }
+      addEventListener('scroll', ask, { passive: true })
+      addEventListener('resize', ask)
+      paint()
+    })()
+  </script>
 
   <section class="rm-flow" aria-labelledby="rm-flow-h">
     <h2 class="rm-label" id="rm-flow-h">How it works</h2>
