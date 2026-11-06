@@ -43,9 +43,9 @@
 
 /* A view-transition-name makes a backdrop root, so glass inside a named element
    (.nav in view-transition.css, #ask #chat in ask.css) bends and frosts nothing.
-   Name the glass and the content instead, so both still hold still across pages. */
+   Name the glass and the content instead, so both still hold still across pages
+   (the content, .nav__inner, only during a transition: glass.tsx, holdNav). */
 .nav[data-glass-host] { view-transition-name: none; }
-.nav[data-glass-host] > .nav__inner { view-transition-name: nav; }
 .nav > .glass-layer > .lg-glass { view-transition-name: nav-glass; }
 #ask #chat[data-glass-host] { view-transition-name: none; }
 #ask #chat > .glass-layer > .lg-glass { view-transition-name: ask-chat; }
@@ -62,9 +62,21 @@
 @media (width > 640px) { .nav__links > .glass-layer { display: none; } }
 /* glass.tsx pins a static host to relative; the phone menu must stay absolute. */
 @media (width <= 640px) { .nav__links[data-glass-host] { position: absolute !important; } }
-/* .nav__inner's view-transition-name is a backdrop root, which would leave the open
-   menu's glass bending nothing, so drop the name while the menu is open. */
-.nav[data-glass-host] > .nav__inner:has(> .nav__links.open) { view-transition-name: none; }
+
+/* The S: a glass bead in place of the purple gradient disc. Bend scales with the short side,
+   and this one is 24px, so it takes a lot; a violet fill keeps the old colour and the S legible. */
+.nav__mark { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; }
+.nav__mark > svg circle { fill: transparent !important; }
+.nav__mark > svg text { fill: #fff !important; }
+.nav__mark > :not(.glass-layer) { text-shadow: 0 1px 2px rgb(60 0 90 / .35); }
+.nav__mark > .glass-layer {
+  --lg-glass-bend: 1;
+  --lg-glass-dispersion: 0.9;
+  --lg-blur: 1px;
+  --lg-rim-shine: 0.9;
+  --lg-glass: rgb(170 100 220 / .42);
+}
+[data-theme=dark] .nav__mark > .glass-layer { --lg-glass: rgb(195 135 240 / .5); }
 
 /* The nav is clear over the hero until it scrolls. */
 .nav:not(.scrolled, [data-always-scrolled]) > .glass-layer { opacity: 0; }
