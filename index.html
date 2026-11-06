@@ -66,7 +66,7 @@
        (body.splash-done, set by the script at the bottom); the nav moves down with it. */
     .live-banner { transform: translateY(-100%); transition: transform .7s cubic-bezier(.2, .8, .2, 1); }
     body.splash-done .live-banner { transform: none; }
-    /* Dismissed (the x, remembered in this browser): it slides back up and the nav returns to the top. */
+    /* Dismissed (the x, until the next reload): it slides back up and the nav returns to the top. */
     body.live-closed .live-banner { transform: translateY(-100%); visibility: hidden; transition: transform .5s cubic-bezier(.2, .8, .2, 1), visibility 0s .5s; }
     body:has(.live-banner) .nav { transition: background .4s, box-shadow .4s, top .7s cubic-bezier(.2, .8, .2, 1); }
     body.splash-done:not(.live-closed):has(.live-banner) .nav { top: calc(var(--live-h) + env(safe-area-inset-top, 0px) + clamp(8px, 1.5vw, 14px)); }
@@ -88,13 +88,11 @@
     </button>
   </div>
   <script>
-    // The banner's x: hides it and remembers that in this browser, so it stays closed on later visits.
+    // The banner's x: hides it for this page view only, so it comes back on every reload.
     (() => {
-      const KEY = 'live-banner-closed:r-music'
-      try { if (localStorage.getItem(KEY)) document.body.classList.add('live-closed') } catch {}
+      try { localStorage.removeItem('live-banner-closed:r-music') } catch {}   // drop the old "stay closed" flag
       document.querySelector('.live-banner__close').addEventListener('click', () => {
         document.body.classList.add('live-closed')
-        try { localStorage.setItem(KEY, '1') } catch {}
       })
     })()
   </script>
