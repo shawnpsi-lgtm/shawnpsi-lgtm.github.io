@@ -933,10 +933,19 @@
     }
     body:has(#scene2) .footer__link:hover,
     body:has(#scene2) .footer__careers:hover { color: #fff; text-decoration: underline; }
+    /* Phones: one line instead of a tall stack: name and Careers on the left,
+       the three links as icons on the right. The tagline is dropped and the link
+       labels shrink to nothing, but stay in the DOM so screen readers still say them. */
     @media (max-width: 640px) {
-      body:has(#scene2) .footer__inner { gap: 14px; }
-      body:has(#scene2) .footer__links { gap: 0; }
-      body:has(#scene2) .footer__link { min-height: 30px; font-size: .875rem; }   /* finger-sized tap targets */
+      body:has(#scene2) .footer__inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      body:has(#scene2) .footer__inner > div:first-child { display: flex; align-items: baseline; gap: 14px; min-width: 0; white-space: nowrap; }
+      body:has(#scene2) .footer__logo { margin: 0; }
+      body:has(#scene2) .footer__tagline { display: none; }
+      body:has(#scene2) .footer__careers { margin: 0; }
+      body:has(#scene2) .footer__links { flex-direction: row; align-items: center; gap: 2px; }
+      body:has(#scene2) .footer__link { font-size: 0; gap: 0; justify-content: center; width: 40px; height: 40px; border-radius: 50%; }   /* finger-sized tap targets */
+      body:has(#scene2) .footer__link svg { width: 18px; height: 18px; }
+      body:has(#scene2) .footer__link:hover { background: rgb(255 255 255 / .14); text-decoration: none; }
     }
 
     /* Cloudexa card, phone layout: logo and dashboard side by side, centered in the space above the tagline */
