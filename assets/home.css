@@ -918,6 +918,27 @@
       body:has(#scene2) .nav__links { background: #1c1c1eeb; }   /* the phone menu's hard-coded light fill */
     }
 
+    /* Footer over the pinned wallpaper: grey links vanished into bright video
+       (most of all on phones, where it stacks into one tall column). A scrim
+       fading up from the bottom, plus light text in either theme, keeps it legible. */
+    body:has(#scene2) .footer {
+      --black: #f5f5f7; --mid: rgb(255 255 255 / .82);
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      text-shadow: 0 1px 8px rgb(0 0 0 / .4);
+    }
+    /* The scrim reaches above the footer box so it fades in without adding height. */
+    body:has(#scene2) .footer::before {
+      content: ""; position: absolute; z-index: -1; inset: -80px 0 0; pointer-events: none;
+      background: linear-gradient(to bottom, rgb(0 0 0 / 0), rgb(0 0 0 / .5) 40%, rgb(0 0 0 / .72));
+    }
+    body:has(#scene2) .footer__link:hover,
+    body:has(#scene2) .footer__careers:hover { color: #fff; text-decoration: underline; }
+    @media (max-width: 640px) {
+      body:has(#scene2) .footer__inner { gap: 14px; }
+      body:has(#scene2) .footer__links { gap: 0; }
+      body:has(#scene2) .footer__link { min-height: 30px; font-size: .875rem; }   /* finger-sized tap targets */
+    }
+
     /* Cloudexa card, phone layout: logo and dashboard side by side, centered in the space above the tagline */
     @media (max-width: 640px) {
       .card-wrap[href="project-cloudexa.html"] .cx-mark {
