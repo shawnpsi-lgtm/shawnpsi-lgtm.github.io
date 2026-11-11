@@ -103,16 +103,23 @@
     .chant__pin{position:relative;height:auto;padding:48px clamp(16px,4vw,48px)}
     .ink-words span{color:var(--ink);transition:none}
   }
-  .problem{margin:0 0 clamp(88px,10vw,148px);padding-top:26px;border-top:1px solid var(--line)}
-  .problem__copy{margin-bottom:36px}
-  .problem__kicker{font-size:12px;letter-spacing:.18em;color:var(--muted);margin:0 0 16px}
-  .problem h2{margin:0;font-size:clamp(32px,4.2vw,58px);line-height:1.02;font-weight:400;letter-spacing:-.035em}
+  /* Full-bleed band: the box-shadow paints the band past main's padding, clip-path trims it vertically */
+  .problem{
+    --band:#121310;--ink:#f0f1eb;--bg:var(--band);--muted:#a2a49b;
+    position:relative;box-sizing:border-box;min-height:100svh;
+    display:flex;flex-direction:column;justify-content:center;
+    margin:0 0 clamp(88px,10vw,148px);padding:clamp(96px,8vw,140px) 0;
+    color:var(--ink);background:var(--band);
+    box-shadow:0 0 0 100vmax var(--band);clip-path:inset(0 -100vmax)
+  }
+  .problem__copy{margin-bottom:clamp(40px,5vw,72px)}
+  .problem h2{margin:0;font-size:clamp(36px,6vw,88px);line-height:1.02;font-weight:400;letter-spacing:-.035em}
   .problem__copy>p{margin:0;max-width:60ch;color:var(--muted);font-size:1rem;line-height:1.75}
-  .problem__flow{position:relative;display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;color:#f2f2ee;background:#090a08;border:1px solid #ffffff1f}
-  .problem__node{position:relative;z-index:1;padding:clamp(22px,2.4vw,32px) clamp(22px,2.8vw,40px) clamp(26px,2.6vw,36px);display:flex;flex-direction:column}
+  .problem__flow{position:relative;display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;color:#f2f2ee;background:#ffffff05;border:1px solid #ffffff1f}
+  .problem__node{position:relative;z-index:1;padding:clamp(28px,3.2vw,48px);display:flex;flex-direction:column}
   .problem__node + .problem__node{border-left:1px solid #ffffff14}
-  .problem__viz{position:relative;height:180px;margin:0 0 22px;display:flex;align-items:center}
-  .problem__docs{width:148px;height:118px;display:block;overflow:visible}
+  .problem__viz{--art:140px;position:relative;height:200px;margin:0 0 36px;display:flex;align-items:flex-end}
+  .problem__docs{height:var(--art);width:calc(var(--art)*148/101);display:block;overflow:visible}
   .problem__sheet{animation:sheet-fan 6.8s ease-in-out infinite}
   .problem__sheet:nth-child(1){--fx:-16px;--fy:8px}
   .problem__sheet:nth-child(2){--fx:18px;--fy:6px}
@@ -122,13 +129,13 @@
     animation:rule-rewrite 3.6s ease-in-out infinite alternate;
     animation-delay:calc(var(--i)*-.55s)
   }
-  .problem__extract{width:168px;height:100px;display:block}
+  .problem__extract{height:var(--art);width:calc(var(--art)*60/86);display:block;overflow:visible}
   .problem__extract circle{
     animation:sort-unsort 6.8s ease-in-out infinite;
     animation-delay:calc(var(--i)*-20ms)
   }
-  .problem__sync{width:min(100%,248px);display:flex;flex-direction:column;gap:14px;padding:8px 0 8px 12px;border-left:1px solid #ffffff30}
-  .problem__sync div{position:relative;height:11px;background:#ffffff12;overflow:hidden}
+  .problem__sync{box-sizing:border-box;width:min(100%,320px);height:var(--art);display:flex;flex-direction:column;justify-content:space-evenly;padding-left:12px;border-left:1px solid #ffffff30}
+  .problem__sync div{position:relative;height:12px;background:#ffffff12;overflow:hidden}
   .problem__sync b{position:absolute;inset:0 auto 0 0;width:var(--w);background:#e8e9e3;animation:bar-glide 2.8s ease-in-out infinite alternate}
   .problem__sync div:nth-child(2) b{background:#9a9b96;animation-duration:3.4s;animation-delay:-.9s}
   .problem__sync div:nth-child(3) b{background:#6a6b66;animation-duration:4s;animation-delay:-1.6s}
@@ -144,8 +151,8 @@
     86%,100%{translate:var(--dx) var(--dy)}
   }
   @keyframes bar-glide{to{left:calc(100% - var(--w))}}
-  .problem__node strong{font-size:clamp(20px,2.1vw,30px);font-weight:500;letter-spacing:-.03em;line-height:1.15}
-  .problem__node>span{color:#aeb0aa;font-size:13px;line-height:1.5;margin-top:8px}
+  .problem__node strong{font-size:clamp(22px,2.2vw,32px);font-weight:500;letter-spacing:-.03em;line-height:1.15}
+  .problem__node>span{color:#aeb0aa;font-size:15px;line-height:1.5;margin-top:10px}
   .pipe__kicker{font-size:12px;letter-spacing:.18em;color:var(--muted);margin:0 0 16px}
   h2.pipe__title{margin:0 0 16px;font-size:clamp(28px,3.6vw,46px);line-height:1.06;
     font-weight:400;letter-spacing:-.025em;max-width:22ch}
@@ -185,7 +192,9 @@
     .footer__inner{grid-template-columns:1fr;gap:32px}
     .footer__links{align-items:flex-start}
     .players,.pipe__cols{grid-template-columns:1fr}
+    .problem{min-height:0;padding:96px 0}
     .problem__flow{grid-template-columns:1fr}
+    .problem__viz{--art:96px;height:120px;margin-bottom:24px}
     .problem__node{min-height:0}
     .problem__node + .problem__node{border-left:0;border-top:1px solid #ffffff14}
     .players article{min-height:0}
@@ -215,13 +224,11 @@
   }
   @media (max-width:640px){
     main,.hero .copy,.footer .container,.next-project .container{padding-left:24px;padding-right:24px}
-    .problem{scroll-margin-top:var(--nav-height);padding-top:8px}
+    .problem{scroll-margin-top:var(--nav-height);padding:64px 0}
     .problem__copy{margin-bottom:16px}
-    .problem h2{font-size:26px;line-height:1.2}
+    .problem h2{font-size:32px;line-height:1.1}
     .problem__node{padding:22px 22px 24px}
-    .problem__viz{height:84px;margin-bottom:12px}
-    .problem__docs{width:112px;height:90px}
-    .problem__extract{width:132px;height:80px}
+    .problem__viz{--art:64px;height:76px;margin-bottom:16px}
     .problem__node strong{font-size:17px;line-height:1.3}
     .nav__toggle{display:flex}
     .nav__right{margin-left:auto}
@@ -245,7 +252,10 @@
   body.boot-cover main,
   body.boot-cover .next-project,
   body.boot-cover footer{visibility:hidden}
-  body.case-ready nav,
+  /* nav: fill backwards only. A fill that holds after the end keeps the
+     opacity animation in effect, which makes the nav a backdrop root and
+     leaves glass.js's layer with nothing behind it to refract. */
+  body.case-ready nav{animation:case-in .8s cubic-bezier(.2,.8,.2,1) backwards}
   body.case-ready .copy{animation:case-in .8s cubic-bezier(.2,.8,.2,1) both}
   .splash{
     position:fixed;inset:0;z-index:200;overflow:hidden;
@@ -375,15 +385,12 @@
 
   <section class="problem" aria-labelledby="problem-title">
     <div class="problem__copy">
-      <div>
-        <p class="problem__kicker">THE PROBLEM</p>
-        <h2 id="problem-title" class="ink-words"><span>Plans</span> <span>are</span> <span>readable.</span><br><span>Operations</span> <span>aren’t.</span></h2>
-      </div>
+      <h2 id="problem-title" class="ink-words"><span>From</span> <span>plans</span> <span>to</span> <span>operations.</span></h2>
     </div>
     <div class="problem__flow" aria-label="Dense, format-ambiguous military data is processed by an agnostic extraction pipeline into structured mission plans">
       <article class="problem__node">
         <div class="problem__viz" aria-hidden="true">
-          <svg class="problem__docs" viewBox="0 0 148 118" fill="none">
+          <svg class="problem__docs" viewBox="-3 9 148 101" fill="none">
             <g class="problem__sheet">
               <g transform="rotate(-13 44 62)">
                 <rect x="6" y="20" width="62" height="82" fill="#11120f" stroke="#fff" stroke-opacity=".32"/>
@@ -421,7 +428,7 @@
       </article>
       <article class="problem__node">
         <div class="problem__viz" aria-hidden="true">
-          <svg class="problem__extract" viewBox="0 0 168 100" fill="#e8e9e3">
+          <svg class="problem__extract" viewBox="54 7 60 86" fill="#e8e9e3">
             <circle cx="56"  cy="22" r="1.8" fill-opacity=".95" style="--dx:18px;--dy:-1px;--i:0"/>
             <circle cx="70"  cy="22" r="1.8" fill-opacity=".5"  style="--dx:21px;--dy:-7px;--i:7"/>
             <circle cx="84"  cy="22" r="1.8" fill-opacity=".8"  style="--dx:-2px;--dy:15px;--i:3"/>
@@ -636,17 +643,17 @@
   // kind: omit = baseline, 'add' = new vs last FRAGO, 'mod' = changed
   const ROWS = [
     { unit: 'TF Rogue', tasks: [
-      { label: 'Avengers, ASSEMBLE!!',  start: [0, .06], end: [0, .92] },
-      { label: 'Clear OBJ Scarif — HULK SMASH',  start: [1, 0],   end: [2, 1] },
-      { label: 'ACCIO Death Star plans!',  start: [3, .04], end: [3, .95], kind: 'mod' },
+      { label: 'Assemble at RP Tower',  start: [0, .06], end: [0, .92] },
+      { label: 'Clear OBJ Scarif',  start: [1, 0],   end: [2, 1] },
+      { label: 'Recover plans from Citadel vault',  start: [3, .04], end: [3, .95], kind: 'mod' },
     ]},
-    { unit: 'TF Dumbledore', tasks: [
-      { label: 'I solemnly swear… Marauder’s Map sweep',      start: [1, .38], end: [2, 1] },
-      { label: 'Block ISD Gate w/ Cap’s shield',    start: [3, 0],   end: [3, 1], kind: 'add' },
+    { unit: 'TF Phoenix', tasks: [
+      { label: 'Recon sweep, NAI Marauder',      start: [1, .38], end: [2, 1] },
+      { label: 'Hold shield gate',    start: [3, 0],   end: [3, 1], kind: 'add' },
     ]},
-    { unit: 'TF Stark', tasks: [
-      { label: 'Emplace Iron Man’s ion cannon (by Hagrid)', start: [2, 0],  end: [2, 1] },
-      { label: 'EXPECTO PATRONUM covering fire',     start: [3, .48], end: [4, 1], kind: 'add' },
+    { unit: 'TF Jarvis', tasks: [
+      { label: 'Emplace ion cannon, BP Hogsmeade', start: [2, 0],  end: [2, 1] },
+      { label: 'Support by fire, c/s Patronus',     start: [3, .48], end: [4, 1], kind: 'add' },
     ]},
   ];
 
