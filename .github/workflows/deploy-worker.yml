@@ -1,0 +1,42 @@
+# Deploys the Shawn AI worker (worker/) to Cloudflare when it changes on main.
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   an API token with the "Edit Cloudflare Workers" template
+#                          plus D1 edit (the worker binds the shawn-ai database)
+#   CLOUDFLARE_ACCOUNT_ID  the account the groq-chat worker lives in
+# Worker secrets (GROQ_API_KEY, Slack, Google) stay as set with `wrangler secret put`;
+# a deploy doesn't touch them.
+name: Deploy worker
+
+on:
+  push:
+    branches: [main]
+    paths: ['worker/**', '.github/workflows/deploy-worker.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test the worker's guards
+        run: node worker/test-proxy.mjs
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          command: deploy --config worker/wrangler.toml

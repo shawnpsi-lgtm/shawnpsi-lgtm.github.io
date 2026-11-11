@@ -65,9 +65,18 @@ Vite, Cloudflare Workers & R2, Electron. Music library that lives in your own
 Cloudflare R2 bucket: sign in with GitHub, connect your bucket, drop files in.
 The Worker stores R2 keys encrypted and signs short-lived URLs, so audio goes
 straight between browser and bucket. Open bucket format (tracks by SHA-256,
-lists.json for library and playlists); BEAT FX loads tracks from it. macOS app
+lists.json for library and playlists); rx3 loads it as USB1. macOS app
 adds rekordbox library import and DJ USB import/export, keeping beat grids,
-waveforms and cues.
+waveforms and cues. Launched with rx3: announcement at /press-r2music.html.
+
+rx3 — /project-rx3.html · app at /rx3/ · 2026 · Web Audio, JavaScript, static
+files. The Pioneer XDJ-RX3 rebuilt in the browser from its own firmware: touch
+screen (SOURCE, BROWSE, playing view), buttons, two decks and the mixer. Beat FX
+(Echo, Reverb, Flanger, Phaser, Filter, Trans, plus Drum and Noise from BEAT FX)
+and all six Sound Color FX (Space, Dub Echo, Sweep, Noise, Crush, Filter) are
+ported from the firmware and tested against its output. All on-device, no server
+in the audio path. USB1 is your r2music library, USB2 a local folder; or drop
+song files on the page. Keyboard shortcuts for every control on a computer.
 
 OTHER EXPERIENCE
 Avenues Consulting Group — founding executive board member, Aug 2023–present.
