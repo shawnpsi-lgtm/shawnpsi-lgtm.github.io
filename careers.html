@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Careers — Shawn Singh</title>
+  <meta name="description" content="Open roles: Shawn AI FDE Intern (Summer 2027). Build at the frontier of AI and work with customers to deliver business solutions." />
+
+
+
+  <style>
+    .about-section { padding: 72px 0; }
+    .about-col-grid { display: grid; grid-template-columns: 220px 1fr; gap: 64px; }
+    .about-col-label { font-size: .75rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--light); padding-top: 6px; }
+    .job .case-section__label, .apply .case-section__label { position: static; }
+    .apply .check input.invalid { outline: 2px solid #e5484d; outline-offset: 2px; }
+    @media (max-width: 900px) { .about-col-grid { grid-template-columns: 1fr; gap: 24px; } }
+    .careers-roles { list-style: none; border-top: 1px solid var(--border); }
+    .careers-role { border-bottom: 1px solid var(--border); }
+    .careers-role a { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; padding: 22px 0; transition: color .2s; }
+    .careers-role a:hover .careers-role__title { color: var(--accent); }
+    .careers-role__title { font-family: var(--serif); font-size: 1.25rem; font-weight: 700; color: var(--black); transition: color .2s; }
+    .careers-role__meta { color: var(--mid); font-size: .85rem; white-space: nowrap; }
+    .careers-count { color: var(--mid); font-size: .9rem; margin-bottom: 20px; }
+
+    .job { padding: 72px 0; border-top: 1px solid var(--border); background: var(--bg-off); }
+    .job .case-hero__details { margin-top: 24px; }
+    .job__title { font-size: clamp(1.8rem, 4vw, 2.8rem); color: var(--black); margin-bottom: 8px; }
+    .job__body { max-width: 70ch; color: var(--mid); line-height: 1.75; }
+    .job__body p { margin: 0 0 16px; max-width: none; }
+    .job__body h3 { font-size: 1rem; color: var(--black); margin: 32px 0 10px; letter-spacing: 0; }
+    .job__body ul { padding-left: 20px; margin: 0 0 16px; }
+    .job__body li { margin-bottom: 6px; }
+    .job__body b { color: var(--black); }
+
+    .apply { padding: 72px 0 96px; border-top: 1px solid var(--border); }
+    .apply h2 { font-size: clamp(1.4rem, 3vw, 2rem); color: var(--black); margin-bottom: 6px; }
+    .apply__note { color: var(--mid); font-size: .85rem; margin-bottom: 36px; }
+    .apply__note .req { margin-left: 0; }
+    .apply form { max-width: 760px; }
+    .apply fieldset { border: none; padding: 0; margin: 0 0 40px; }
+    .apply legend { font-size: .75rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--light); padding-bottom: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border); width: 100%; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 20px; }
+    .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .field--full { grid-column: 1 / -1; }
+    .field__label { font-size: .85rem; font-weight: 500; color: var(--black); line-height: 1.4; }
+    .req { color: #e5484d; margin-left: 2px; }
+    .hint { font-size: .78rem; color: var(--mid); line-height: 1.5; }
+    .apply input[type=text], .apply input[type=email], .apply input[type=tel], .apply input[type=url], .apply select, .apply textarea {
+      width: 100%; font: inherit; font-size: .92rem; color: var(--black); background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 12px; transition: border-color .2s, box-shadow .2s; }
+    .apply textarea { min-height: 180px; resize: vertical; }
+    .apply select { appearance: none; -webkit-appearance: none; padding-right: 36px; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; }
+    .apply input:focus, .apply select:focus, .apply textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+    .apply .invalid { border-color: #e5484d !important; }
+    .upload { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .upload__btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border: 1px solid var(--border); border-radius: 980px; font-size: .82rem; color: var(--black); background: var(--bg); cursor: pointer; transition: border-color .2s; }
+    .upload__btn:hover { border-color: var(--accent); }
+    .upload__btn:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+    .upload__btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .upload__alt { background: none; border: none; color: var(--accent); font: inherit; font-size: .82rem; cursor: pointer; padding: 0; }
+    .upload__name { font-size: .82rem; color: var(--mid); overflow-wrap: anywhere; }
+    .consent { font-size: .82rem; color: var(--mid); line-height: 1.6; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; max-height: 220px; overflow: auto; }
+    .consent p { font-size: inherit; margin: 0 0 10px; max-width: none; }
+    .consent p:last-child { margin: 0; }
+    .consent a, .eeo a { color: var(--accent); }
+    .check { display: flex; align-items: center; gap: 10px; font-size: .9rem; color: var(--black); cursor: pointer; }
+    .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+    .eeo { font-size: .82rem; color: var(--mid); line-height: 1.6; margin-bottom: 20px; }
+    .eeo p { font-size: inherit; margin: 0 0 10px; max-width: 70ch; }
+    .apply__submit { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .apply__submit .btn { font-size: .92rem; padding: 12px 28px; }
+    .apply__submit .btn[disabled] { opacity: .6; cursor: progress; }
+    .apply__status { font-size: .88rem; color: var(--mid); margin: 0; }
+    .apply__status.error { color: #e5484d; }
+    .apply__done { display: none; padding: 32px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg-off); max-width: 760px; }
+    .apply__done h3 { color: var(--black); margin-bottom: 8px; }
+    .apply.sent form { display: none; }
+    .apply.sent .apply__done { display: block; }
+    @media (max-width: 640px) {
+      .fields { grid-template-columns: 1fr; }
+      .careers-role a { flex-direction: column; gap: 4px; }
+      .careers-role__meta { white-space: normal; }
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
+  <script type="module" crossorigin src="/assets/script-C-RUBg2h.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-D4DcCPTH.css?v=9">
+  <link rel="stylesheet" href="/assets/ask.css?v=15">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav scrolled" data-always-scrolled role="navigation" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo" style="display:flex;align-items:center;gap:10px;">
+        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+          <defs>
+            <radialGradient id="sg" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#d9a8f5"/>
+              <stop offset="55%" stop-color="#b36fd9"/>
+              <stop offset="100%" stop-color="#9a4fc4"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="50" fill="url(#sg)"/>
+          <text x="50" y="67" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif" font-size="52" font-weight="600" fill="white" letter-spacing="-1">S</text>
+        </svg>
+        Shawn Singh
+      </a>
+
+      <ul class="nav__links" role="list">
+        <li><a href="work.html">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="mailto:shawn@visuallyrepresented.co">Contact</a></li>
+      </ul>
+
+      <div class="nav__right" style="display:flex;align-items:center;gap:8px;">
+      <button class="nav__theme-toggle" aria-label="Switch to dark mode">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+
+      <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="about-hero" style="padding-top: var(--nav-height); background: var(--bg-off); border-bottom: 1px solid var(--border);">
+    <div class="about-hero__inner">
+      <div data-reveal>
+        <p class="about-eyebrow">Careers</p>
+        <h1 class="about-title">Build the frontier</h1>
+      </div>
+      <div data-reveal data-reveal-delay="80">
+        <p class="hero__sub" style="font-size: 1.05rem;">Build at the frontier of AI, and work with customers to turn it into real business solutions.</p>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section class="about-section">
+      <div class="container">
+        <div class="about-col-grid" data-reveal>
+          <p class="about-col-label">Open roles</p>
+          <div>
+            <p class="careers-count">1 open role</p>
+            <ul class="careers-roles" role="list">
+              <li class="careers-role">
+                <a href="#job">
+                  <span class="careers-role__title">Shawn AI FDE Intern (Summer 27)</span>
+                  <span class="careers-role__meta">Internship · San Francisco, CA</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="job" id="job">
+      <div class="container">
+        <div class="case-section__grid">
+          <p class="case-section__label">Internships</p>
+          <div>
+            <h2 class="job__title">Shawn AI FDE Intern (Summer 27)</h2>
+            <div class="case-hero__details">
+              <div class="case-hero__detail"><span class="case-hero__detail-label">Location</span><span class="case-hero__detail-value">San Francisco, CA</span></div>
+              <div class="case-hero__detail"><span class="case-hero__detail-label">Team</span><span class="case-hero__detail-value">Forward Deployed Engineering</span></div>
+              <div class="case-hero__detail"><span class="case-hero__detail-label">Term</span><span class="case-hero__detail-value">Summer 2027</span></div>
+            </div>
+            <div class="job__body" style="margin-top: 40px;">
+              <p>AI is changing what a business can build, and most of that value is still waiting to be delivered. Closing the gap takes engineers who can work at the frontier of what models can do and sit next to the people who need it working.</p>
+              <p>We're looking for a <b>Forward Deployed Engineer Intern</b> to join for Summer 2027. You'll be embedded with customers: learning how their business runs, finding the problems worth solving, and designing, building and deploying AI solutions that go into production and change how they work.</p>
+              <h3>Responsibilities</h3>
+              <ul>
+                <li>Work directly with customers to understand their operations, data and goals, and turn them into clear technical plans.</li>
+                <li>Design, build and deploy end-to-end AI applications, from data pipelines and model integration to the interfaces people use every day.</li>
+                <li>Prototype quickly at the frontier of what current models can do, then harden what works for production.</li>
+                <li>Integrate solutions with customers' existing systems, tools and workflows.</li>
+                <li>Measure results against business outcomes, iterate on feedback, and bring what you learn in the field back into how we build.</li>
+                <li>Communicate progress, tradeoffs and results to both technical and non-technical stakeholders.</li>
+              </ul>
+              <h3>Qualifications</h3>
+              <ul>
+                <li>Pursuing a Bachelor's or Master's in Computer Science, Data Science, Engineering or a related field.</li>
+                <li>Strong programming skills in Python, JavaScript/TypeScript or another modern language.</li>
+                <li>Solid foundations in data structures, algorithms and working with data.</li>
+                <li>Hands-on experience building with LLMs or other machine learning tools.</li>
+                <li>A customer-first mindset: you like understanding the problem as much as building the solution.</li>
+                <li>Clear written and verbal communication, and comfort working autonomously in ambiguous situations.</li>
+              </ul>
+              <h3>Nice to have</h3>
+              <ul>
+                <li>Experience shipping software to real users, through an internship, a startup or a project people actually use.</li>
+                <li>Familiarity with cloud platforms, APIs and databases.</li>
+                <li>Interest in how businesses operate across industries like finance, healthcare, energy or manufacturing.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="apply" id="apply">
+      <div class="container">
+        <div class="case-section__grid">
+          <p class="case-section__label">Apply</p>
+          <div>
+            <h2>Apply for this job</h2>
+            <p class="apply__note"><span class="req">*</span> indicates a required field</p>
+            <form id="apply-form" novalidate>
+              <input type="hidden" name="job" value="shawn-ai-fde-intern-summer-27">
+              <fieldset>
+                <legend>Your details</legend>
+                <div class="fields">
+          <label class="field"><span class="field__label">First Name<span class="req" aria-hidden="true">*</span></span>
+            <input type="text" name="first_name" autocomplete="given-name" maxlength="300" required></label>
+          <label class="field"><span class="field__label">Last Name<span class="req" aria-hidden="true">*</span></span>
+            <input type="text" name="last_name" autocomplete="family-name" maxlength="300" required></label>
+          <label class="field"><span class="field__label">Email<span class="req" aria-hidden="true">*</span></span>
+            <input type="email" name="email" autocomplete="email" maxlength="300" required></label>
+          <label class="field"><span class="field__label">Phone<span class="req" aria-hidden="true">*</span></span>
+            <input type="tel" name="phone" autocomplete="tel" maxlength="300" required></label>
+          <label class="field field--full"><span class="field__label">Location (City)<span class="req" aria-hidden="true">*</span></span>
+            <input type="text" name="location" autocomplete="address-level2" placeholder="e.g. San Francisco, CA" maxlength="300" required></label>
+                  <div class="field field--full">
+                    <span class="field__label" id="resume-label">Resume/CV<span class="req" aria-hidden="true">*</span></span>
+                    <div class="upload" id="resume-upload">
+                      <label class="upload__btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Attach<input type="file" name="resume" accept=".pdf,.doc,.docx,.txt,.rtf" aria-labelledby="resume-label"></label>
+                      <button type="button" class="upload__alt" id="resume-manual">Enter manually</button>
+                      <span class="upload__name" id="resume-name"></span>
+                    </div>
+                    <textarea name="resume_text" id="resume-text" maxlength="20000" placeholder="Paste your resume here" aria-labelledby="resume-label" hidden></textarea>
+                    <span class="hint">Accepted file types: pdf, doc, docx, txt, rtf. Max 5 MB.</span>
+                  </div>
+          <label class="field field--full"><span class="field__label">LinkedIn Profile<span class="req" aria-hidden="true">*</span></span>
+            <input type="url" name="linkedin" placeholder="https://www.linkedin.com/in/…" maxlength="300" required></label>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>Questions</legend>
+                <div class="fields">
+          <label class="field field--full"><span class="field__label">Are you able to work in person in San Francisco, CA, full-time, for Summer 2027?<span class="req" aria-hidden="true">*</span></span>
+            <select name="in_person" required><option value="" selected disabled>Select…</option><option>Yes</option><option>No</option></select></label>
+          <label class="field field--full"><span class="field__label">What is your expected graduation month and year?<span class="req" aria-hidden="true">*</span></span>
+            <select name="graduation" required><option value="" selected disabled>Select…</option><option>December 2026</option><option>May/June 2027</option><option>December 2027</option><option>May/June 2028</option><option>December 2028</option><option>January 2029 or later</option></select></label>
+          <label class="field field--full"><span class="field__label">How did you hear about Shawn AI?<span class="req" aria-hidden="true">*</span></span>
+            <select name="heard" required><option value="" selected disabled>Select…</option><option>Shawn AI chat</option><option>shawnsingh.me</option><option>LinkedIn</option><option>Slack</option><option>Friend</option><option>Event or class</option><option>Job board</option><option>Other</option></select></label>
+          <label class="field field--full"><span class="field__label">Were you referred to this role by someone you know?<span class="req" aria-hidden="true">*</span></span>
+            <select name="referred" required><option value="" selected disabled>Select…</option><option>Yes</option><option>No</option></select></label>
+          <label class="field field--full"><span class="field__label">What is the full name of your referrer? (If you selected no, please type: N/A)</span>
+            <input type="text" name="referrer" maxlength="300"></label>
+          <label class="field field--full"><span class="field__label">Do you now or will you in the future require immigration sponsorship to work in the United States?<span class="req" aria-hidden="true">*</span></span>
+            <select name="sponsorship" required><option value="" selected disabled>Select…</option><option>Yes</option><option>No</option></select></label>
+                  <div class="field field--full">
+                    <span class="field__label">Applicant privacy notice<span class="req" aria-hidden="true">*</span></span>
+                    <div class="consent">
+                      <p>By checking "I Accept", you confirm that you have read this notice. Shawn Singh collects the information in this application (your details, resume and answers) only to review your application for this role and to contact you about it.</p>
+                      <p>Your application is stored in a private Cloudflare database and file store that only Shawn can read. It is never sold, shared with third parties for their own use, or used to train AI models. No hiring decision is made by an automated system: a person reads every application.</p>
+                      <p>Applications are kept for up to 12 months after the role is filled, then deleted. You can ask to see, correct or delete your application at any time by emailing <a href="mailto:shawn@visuallyrepresented.co">shawn@visuallyrepresented.co</a>. See also the site's <a href="/privacy.html">privacy policy</a>.</p>
+                    </div>
+                    <label class="check"><input type="checkbox" name="privacy_accept" value="I Accept" required> I Accept</label>
+                  </div>
+          <label class="field field--full"><span class="field__label">Do you consent to receiving follow-up communication via text message (SMS) about your application at the phone number you provided?<span class="req" aria-hidden="true">*</span></span>
+            <select name="sms_consent" required><option value="" selected disabled>Select…</option><option>Yes</option><option>No</option></select></label>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>Voluntary Self-Identification</legend>
+                <div class="eeo">
+                  <p>To help us understand who applies, we invite candidates to answer the questions below. Completion is entirely voluntary. Whatever your decision, it will not be considered in the hiring process or thereafter, and anything you provide is kept confidential and separate from how your application is reviewed.</p>
+                  <p>We do not discriminate on the basis of any protected status under applicable law.</p>
+                </div>
+                <div class="fields">
+          <label class="field field--full"><span class="field__label">Gender</span>
+            <select name="gender"><option value="" selected>Select…</option><option>Female</option><option>Male</option><option>Decline To Self Identify</option></select></label>
+          <label class="field field--full"><span class="field__label">Race</span>
+            <select name="race"><option value="" selected>Select…</option><option>American Indian or Alaskan Native</option><option>Asian</option><option>Black or African American</option><option>Hispanic or Latino</option><option>Native Hawaiian or Other Pacific Islander</option><option>White</option><option>Two or More Races</option><option>Decline To Self Identify</option></select></label>
+          <label class="field field--full"><span class="field__label">Veteran Status</span>
+            <select name="veteran_status"><option value="" selected>Select…</option><option>I am not a protected veteran</option><option>I identify as one or more of the classifications of a protected veteran</option><option>I don't wish to answer</option></select></label>
+                </div>
+              </fieldset>
+
+              <div class="apply__submit">
+                <button type="submit" class="btn btn--accent" id="apply-submit">Submit application</button>
+                <p class="apply__status" id="apply-status" role="status" aria-live="polite"></p>
+              </div>
+            </form>
+            <div class="apply__done" tabindex="-1" id="apply-done">
+              <h3>Thanks for applying</h3>
+              <p>Your application for <b>Shawn AI FDE Intern (Summer 27)</b> was received. If it's a fit, you'll hear back by email.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div>
+          <p class="footer__logo">Shawn Singh</p>
+          <p class="footer__tagline">data + design — San Francisco, CA</p>
+          <a href="/careers" class="footer__careers">Careers</a>
+        </div>
+        <div class="footer__links">
+          <a href="https://www.linkedin.com/in/shawn-singh-72221a203/" class="footer__link" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            LinkedIn
+          </a>
+          <a href="/files/resume.pdf" class="footer__link" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Résumé
+          </a>
+          <a href="mailto:shawn@visuallyrepresented.co" class="footer__link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            shawn@visuallyrepresented.co
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  (() => {
+    const API = 'https://groq-chat.shawnpsi.workers.dev/careers/apply';
+    const MAX = 5 * 1024 * 1024, EXT = /\.(pdf|docx?|txt|rtf)$/i;
+    const form = document.getElementById('apply-form');
+    const file = form.elements.resume, text = document.getElementById('resume-text');
+    const name = document.getElementById('resume-name'), manual = document.getElementById('resume-manual');
+    const status = document.getElementById('apply-status'), submit = document.getElementById('apply-submit');
+    const say = (msg, err) => { status.textContent = msg; status.classList.toggle('error', !!err); };
+
+    manual.addEventListener('click', () => {
+      const on = text.hidden;
+      text.hidden = !on;
+      manual.textContent = on ? 'Attach a file instead' : 'Enter manually';
+      if (on) { file.value = ''; name.textContent = ''; text.focus(); }
+    });
+    file.addEventListener('change', () => {
+      const f = file.files[0];
+      name.textContent = f ? f.name : '';
+      if (f) { text.hidden = true; text.value = ''; manual.textContent = 'Enter manually'; }
+    });
+    form.addEventListener('input', e => e.target.classList?.remove('invalid'));
+    form.addEventListener('change', e => e.target.classList?.remove('invalid'));
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      form.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+      let bad = [...form.querySelectorAll('[required]')].filter(el => !el.checkValidity());
+      const f = file.files[0], pasted = text.value.trim();
+      const resumeBad = !f && !pasted;
+      if (resumeBad) bad.push(text.hidden ? document.querySelector('.upload__btn') : text);
+      if (bad.length) {
+        bad.forEach(el => el.classList.add('invalid'));
+        (bad[0].querySelector?.('input') || bad[0]).focus();
+        return say(resumeBad && bad.length === 1 ? 'Please attach your resume or enter it manually.' : 'Please fill in the highlighted fields.', true);
+      }
+      if (f && (!EXT.test(f.name) || f.size > MAX)) {
+        document.querySelector('.upload__btn').classList.add('invalid');
+        return say('Resume must be a pdf, doc, docx, txt or rtf file under 5 MB.', true);
+      }
+      submit.disabled = true; say('Submitting…');
+      try {
+        const r = await fetch(API, { method: 'POST', body: new FormData(form) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.error || 'Something went wrong.');
+        document.getElementById('apply').classList.add('sent');
+        document.getElementById('apply-done').focus();
+      } catch (err) {
+        say((err.message || 'Something went wrong.') + ' You can also email shawn@visuallyrepresented.co.', true);
+        submit.disabled = false;
+      }
+    });
+  })();
+  </script>
+  <link rel="stylesheet" href="/assets/glass.css?v=16">
+
+  <script src="/assets/glass.js?v=16" defer></script>
+
+  <script src="/assets/chat.js?v=15"></script>
+</body>
+</html>

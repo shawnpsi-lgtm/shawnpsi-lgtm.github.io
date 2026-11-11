@@ -199,3 +199,38 @@ console.log('health ok');
   assert.ok(binds.length && binds.every(([sql, a]) => /user_id = \?/.test(sql) && a[0] === 9));
   console.log('auth ok');
 }
+
+// /careers/apply: validates the form, stores the row and puts the resume in R2.
+{
+  const rows = [], puts = [];
+  const cenv = {
+    API_LIMITER: { limit: async () => ({ success: true }) },
+    DB: { prepare: sql => ({ bind: (...a) => ({ run: async () => rows.push([sql, a]) }) }) },
+    MUSIC: { put: async (k, _b, o) => puts.push([k, o]) },
+  };
+  const form = (over = {}, file) => {
+    const f = new FormData();
+    const base = { job: 'shawn-ai-fde-intern-summer-27', first_name: 'Ada', last_name: 'L', email: 'a@b.co', phone: '1',
+      location: 'SF', linkedin: 'https://linkedin.com/in/a', in_person: 'Yes', graduation: 'May/June 2027', heard: 'LinkedIn',
+      referred: 'No', referrer: 'N/A', sponsorship: 'No', privacy_accept: 'I Accept', sms_consent: 'No', resume_text: 'my resume', ...over };
+    for (const [k, v] of Object.entries(base)) if (v !== undefined) f.set(k, v);
+    if (file) f.set('resume', file);
+    return f;
+  };
+  const send = (f, origin = 'https://shawnsingh.me') =>
+    worker.fetch(new Request('https://w/careers/apply', { method: 'POST', headers: { Origin: origin }, body: f }), cenv);
+  assert.equal((await send(form(), 'https://evil.test')).status, 403);
+  assert.equal((await send(form({ email: undefined }))).status, 400);
+  assert.equal((await send(form({ privacy_accept: undefined }))).status, 400);
+  assert.equal((await send(form({ job: 'nope' }))).status, 400);
+  assert.equal((await send(form({ resume_text: undefined }))).status, 400);
+  assert.equal((await send(form({ resume_text: undefined }, new File(['x'], 'r.exe')))).status, 400);
+  assert.equal(rows.length, 0);
+  assert.equal((await send(form())).status, 200);
+  assert.equal(rows.length, 1);
+  assert.equal(JSON.parse(rows[0][1][4]).graduation, 'May/June 2027');
+  assert.equal((await send(form({ resume_text: undefined }, new File(['%PDF'], 'cv.pdf')))).status, 200);
+  assert.match(puts[0][0], /^applications\/.+\.pdf$/);
+  assert.equal(rows[1][1][5], puts[0][0]);
+  console.log('apply ok');
+}

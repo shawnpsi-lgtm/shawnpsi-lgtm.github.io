@@ -380,6 +380,46 @@ async function music(req, env, path) {
   return new Response(o.body, { status: 206, headers: { ...headers, 'Content-Range': `bytes ${start}-${start + length - 1}/${o.size}`, 'Content-Length': length } });
 }
 
+// /careers/apply: the form on careers.html. Each application is a D1 row; the
+// resume file, if attached, goes to the R2 bucket under applications/, which
+// music() never serves (it only reads tracks/ ids from the library).
+// Read them with: npx wrangler d1 execute shawn-ai --remote --command "SELECT * FROM applications"
+const JOBS = new Set(['shawn-ai-fde-intern-summer-27']);
+const REQUIRED = ['first_name', 'last_name', 'email', 'phone', 'location', 'linkedin', 'in_person',
+  'graduation', 'heard', 'referred', 'sponsorship', 'privacy_accept', 'sms_consent'];
+const OPTIONAL = ['referrer', 'gender', 'race', 'veteran_status'];
+const RESUME_TYPES = { pdf: 'application/pdf', doc: 'application/msword', txt: 'text/plain', rtf: 'application/rtf',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
+async function apply(req, env, origin) {
+  if (req.method !== 'POST') return fail('method not allowed', 405, origin);
+  const ip = req.headers.get('CF-Connecting-IP') || 'anon';
+  if (!(await env.API_LIMITER.limit({ key: 'apply:' + ip })).success) return fail('Too many submissions — give it a minute.', 429, origin);
+  let f;
+  try { f = await req.formData(); } catch { return fail('bad request', 400, origin); }
+  const val = k => { const v = f.get(k); return typeof v === 'string' ? v.trim().slice(0, 300) : ''; };
+  const job = val('job');
+  if (!JOBS.has(job)) return fail('Unknown role.', 400, origin);
+  const data = {};
+  for (const k of REQUIRED) if (!(data[k] = val(k))) return fail('Please fill in every required field.', 400, origin);
+  for (const k of OPTIONAL) data[k] = val(k);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return fail('Please enter a valid email.', 400, origin);
+  if (data.privacy_accept !== 'I Accept') return fail('Please accept the privacy notice.', 400, origin);
+
+  const file = f.get('resume'), pasted = (f.get('resume_text') || '').toString().trim().slice(0, 20000);
+  const hasFile = file && typeof file !== 'string' && file.size > 0;
+  if (!hasFile && !pasted) return fail('Please attach your resume or enter it manually.', 400, origin);
+  let key = null;
+  if (hasFile) {
+    const ext = (file.name.match(/\.([a-z]+)$/i)?.[1] || '').toLowerCase();
+    if (!RESUME_TYPES[ext] || file.size > 5 * 1024 * 1024) return fail('Resume must be a pdf, doc, docx, txt or rtf file under 5 MB.', 400, origin);
+    key = `applications/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    await env.MUSIC.put(key, file.stream(), { httpMetadata: { contentType: RESUME_TYPES[ext] }, customMetadata: { name: file.name.slice(0, 200) } });
+  }
+  await env.DB.prepare('INSERT INTO applications (ts, job, name, email, data, resume_key, resume_text) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(Date.now(), job, `${data.first_name} ${data.last_name}`, data.email, JSON.stringify(data), key, pasted || null).run();
+  return new Response(JSON.stringify({ ok: true }), { headers: cors(origin) });
+}
+
 export default {
   async fetch(req, env, ctx) {
     const path = new URL(req.url).pathname;
@@ -397,6 +437,7 @@ export default {
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors(origin) });
     if (path === '/me' || path.startsWith('/chats/')) return account(req, env, path, origin);
     if (path === '/usage') return usage(req, env, origin);
+    if (path === '/careers/apply') return apply(req, env, origin);
     if (req.method !== 'POST') return fail('method not allowed', 405, origin);
 
     // Signed-in visitors are limited per account, so recruiters sharing an
