@@ -103,14 +103,22 @@
     .chant__pin{position:relative;height:auto;padding:48px clamp(16px,4vw,48px)}
     .ink-words span{color:var(--ink);transition:none}
   }
-  .problem{margin:0 0 clamp(88px,10vw,148px);padding-top:26px;border-top:1px solid var(--line)}
-  .problem__copy{margin-bottom:36px}
-  .problem h2{margin:0;font-size:clamp(32px,4.2vw,58px);line-height:1.02;font-weight:400;letter-spacing:-.035em}
+  /* Full-bleed band: the box-shadow paints the band past main's padding, clip-path trims it vertically */
+  .problem{
+    --band:#121310;--ink:#f0f1eb;--bg:var(--band);--muted:#a2a49b;
+    position:relative;box-sizing:border-box;min-height:100svh;
+    display:flex;flex-direction:column;justify-content:center;
+    margin:0 0 clamp(88px,10vw,148px);padding:clamp(96px,8vw,140px) 0;
+    color:var(--ink);background:var(--band);
+    box-shadow:0 0 0 100vmax var(--band);clip-path:inset(0 -100vmax)
+  }
+  .problem__copy{margin-bottom:clamp(40px,5vw,72px)}
+  .problem h2{margin:0;font-size:clamp(36px,6vw,88px);line-height:1.02;font-weight:400;letter-spacing:-.035em}
   .problem__copy>p{margin:0;max-width:60ch;color:var(--muted);font-size:1rem;line-height:1.75}
-  .problem__flow{position:relative;display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;color:#f2f2ee;background:#090a08;border:1px solid #ffffff1f}
-  .problem__node{position:relative;z-index:1;padding:clamp(22px,2.4vw,32px) clamp(22px,2.8vw,40px) clamp(26px,2.6vw,36px);display:flex;flex-direction:column}
+  .problem__flow{position:relative;display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;color:#f2f2ee;background:#ffffff05;border:1px solid #ffffff1f}
+  .problem__node{position:relative;z-index:1;padding:clamp(28px,3.2vw,48px);display:flex;flex-direction:column}
   .problem__node + .problem__node{border-left:1px solid #ffffff14}
-  .problem__viz{--art:96px;position:relative;height:120px;margin:0 0 28px;display:flex;align-items:flex-end}
+  .problem__viz{--art:140px;position:relative;height:200px;margin:0 0 36px;display:flex;align-items:flex-end}
   .problem__docs{height:var(--art);width:calc(var(--art)*148/101);display:block;overflow:visible}
   .problem__sheet{animation:sheet-fan 6.8s ease-in-out infinite}
   .problem__sheet:nth-child(1){--fx:-16px;--fy:8px}
@@ -126,7 +134,7 @@
     animation:sort-unsort 6.8s ease-in-out infinite;
     animation-delay:calc(var(--i)*-20ms)
   }
-  .problem__sync{box-sizing:border-box;width:min(100%,248px);height:var(--art);display:flex;flex-direction:column;justify-content:space-evenly;padding-left:12px;border-left:1px solid #ffffff30}
+  .problem__sync{box-sizing:border-box;width:min(100%,320px);height:var(--art);display:flex;flex-direction:column;justify-content:space-evenly;padding-left:12px;border-left:1px solid #ffffff30}
   .problem__sync div{position:relative;height:12px;background:#ffffff12;overflow:hidden}
   .problem__sync b{position:absolute;inset:0 auto 0 0;width:var(--w);background:#e8e9e3;animation:bar-glide 2.8s ease-in-out infinite alternate}
   .problem__sync div:nth-child(2) b{background:#9a9b96;animation-duration:3.4s;animation-delay:-.9s}
@@ -143,8 +151,8 @@
     86%,100%{translate:var(--dx) var(--dy)}
   }
   @keyframes bar-glide{to{left:calc(100% - var(--w))}}
-  .problem__node strong{font-size:clamp(20px,2.1vw,30px);font-weight:500;letter-spacing:-.03em;line-height:1.15}
-  .problem__node>span{color:#aeb0aa;font-size:13px;line-height:1.5;margin-top:8px}
+  .problem__node strong{font-size:clamp(22px,2.2vw,32px);font-weight:500;letter-spacing:-.03em;line-height:1.15}
+  .problem__node>span{color:#aeb0aa;font-size:15px;line-height:1.5;margin-top:10px}
   .pipe__kicker{font-size:12px;letter-spacing:.18em;color:var(--muted);margin:0 0 16px}
   h2.pipe__title{margin:0 0 16px;font-size:clamp(28px,3.6vw,46px);line-height:1.06;
     font-weight:400;letter-spacing:-.025em;max-width:22ch}
@@ -184,7 +192,9 @@
     .footer__inner{grid-template-columns:1fr;gap:32px}
     .footer__links{align-items:flex-start}
     .players,.pipe__cols{grid-template-columns:1fr}
+    .problem{min-height:0;padding:96px 0}
     .problem__flow{grid-template-columns:1fr}
+    .problem__viz{--art:96px;height:120px;margin-bottom:24px}
     .problem__node{min-height:0}
     .problem__node + .problem__node{border-left:0;border-top:1px solid #ffffff14}
     .players article{min-height:0}
@@ -214,9 +224,9 @@
   }
   @media (max-width:640px){
     main,.hero .copy,.footer .container,.next-project .container{padding-left:24px;padding-right:24px}
-    .problem{scroll-margin-top:var(--nav-height);padding-top:8px}
+    .problem{scroll-margin-top:var(--nav-height);padding:64px 0}
     .problem__copy{margin-bottom:16px}
-    .problem h2{font-size:26px;line-height:1.2}
+    .problem h2{font-size:32px;line-height:1.1}
     .problem__node{padding:22px 22px 24px}
     .problem__viz{--art:64px;height:76px;margin-bottom:16px}
     .problem__node strong{font-size:17px;line-height:1.3}
