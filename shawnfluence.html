@@ -286,7 +286,7 @@ const STATUS = { done: loz('Shipped', 'green'), live: loz('Live', 'blue'), activ
 
 // Page tree. parent: null = top level.
 const PAGES = [
-  { id: 'home', title: 'Shawn Singh', emoji: '👋', parent: null, updated: 'Sep 28, 2026', labels: ['portfolio', 'data-science', 'design'], body: () => `
+  { id: 'home', title: 'Shawn Singh', emoji: '👋', parent: null, updated: 'Nov 11, 2026', labels: ['portfolio', 'data-science', 'design'], body: () => `
     ${panel('info', `<p><b>Welcome to Shawnfluence.</b> This space is where Shawn Singh documents his projects the way a team documents theirs: one page per project, with status, stack and decisions.</p>`)}
     <h2>About</h2>
     <p><b>data + design.</b> Data Scientist at <b>C3 AI</b> and founder of <b>Visually Represented Studios</b>, based in San Francisco. BS in Data Science &amp; Cognitive Science from USC (May 2026), Dean's Honor List 5×.</p>
@@ -301,9 +301,62 @@ const PAGES = [
     ${panel('note', `<p>Prefer the real thing? See <a href="/work.html">Work</a> and <a href="/about.html">About</a> on shawnsingh.me, or ask <a href="#" data-ask="">Shawn AI</a>.</p>`)}
   ` },
 
-  { id: 'projects', title: 'Projects', emoji: '📁', parent: null, updated: 'Sep 28, 2026', labels: ['index'], body: () => `
+  { id: 'projects', title: 'Projects', emoji: '📁', parent: null, updated: 'Nov 11, 2026', labels: ['index'], body: () => `
     <p>Every project gets a page. Status, stack and scope are in the properties table at the top of each one.</p>
     ${children('projects')}
+  ` },
+
+  { id: 'rx3', title: 'rx3', emoji: '💿', parent: 'projects', area: 'Web Audio / DJ', year: 2026, status: 'live', updated: 'Nov 5, 2026', read: 2,
+    cover: '#4BCE97', labels: ['web-audio', 'dj', 'pioneer', 'firmware'],
+    summary: 'The Pioneer XDJ-RX3, rebuilt in the browser from its own firmware.', body: p => `
+    ${props([['Status', STATUS.live], ['Type', 'Web app'], ['Link', '<a href="/rx3/">shawnsingh.me/rx3</a>'], ['Stack', stack('Web Audio API, JavaScript, Static files')]])}
+    ${toc(p)}
+    <h2>Overview</h2>
+    <p>An XDJ-RX3 for the browser: the unit's touch screen (SOURCE, BROWSE and the playing view), its buttons, two decks and the mixer. Everything runs on the device in Web Audio, so there is no server in the audio path and no added latency.</p>
+    <h2>Effects</h2>
+    <p>Ported from the RX3's own firmware, along with the firmware's Beat FX and Color FX managers that switch them. A test suite checks every effect against the firmware's own output.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Section</th><th>Effects</th></tr></thead>
+      <tbody>
+        <tr><td>Beat FX</td><td>Echo, Reverb, Flanger, Phaser, Filter, Trans, plus Drum and Noise from <a href="#beatfx">BEAT FX</a></td></tr>
+        <tr><td>Sound Color FX</td><td>Space, Dub Echo, Sweep, Noise, Crush, Filter</td></tr>
+      </tbody>
+    </table></div>
+    <h2>Music sources</h2>
+    <ul>
+      <li><b>USB1</b>: your <a href="#r2">r2</a> library, streamed from your own bucket.</li>
+      <li><b>USB2</b>: a folder on your computer.</li>
+      <li><b>Upload a song</b>: drop files on the page. They stay in the browser tab.</li>
+    </ul>
+    <h2>Controls</h2>
+    <p>The screen works by touch or mouse like the unit. On a computer, an on-screen keyboard shows what every key does (hot cues, play/cue, beat sync, loops, nudge, faders, FX), matched by position so it works on any layout.</p>
+    ${img('/images/rx3.jpg', 'rx3 in the browser')}
+    ${panel('note', `<p>Launched alongside r2. Read the <a href="/press-r2music.html">rx3 + r2 announcement</a>.</p>`)}
+    ${caseLink('/project-rx3.html')}
+  ` },
+
+  { id: 'r2', title: 'r2', emoji: '☁️', parent: 'projects', area: 'Music streaming / Mac app', year: 2026, status: 'live', updated: 'Nov 5, 2026', read: 2,
+    cover: '#9F8FEF', labels: ['cloudflare-r2', 'rekordbox', 'macos', 'music'],
+    summary: 'Your music library, in your own bucket.', body: p => `
+    ${props([['Status', STATUS.live], ['Platforms', 'Web, Mac (Apple Silicon)'], ['Link', '<a href="https://r2.shawnsingh.me">r2.shawnsingh.me</a>'], ['Stack', stack('TypeScript, Vite, Cloudflare Workers, Cloudflare R2, Electron')]])}
+    ${toc(p)}
+    <h2>Overview</h2>
+    <p>r music keeps your music library in your own Cloudflare R2 bucket, so you can access, manage and DJ your rekordbox library from anywhere, on any device. Sign in with GitHub, connect your bucket and drop files in.</p>
+    <h2>How it works</h2>
+    <ol>
+      <li><b>Find.</b> The Mac app reads your rekordbox library: tracks and playlists, with their beat grids, waveforms and cues.</li>
+      <li><b>Upload once.</b> Each track goes to your bucket once, named by its SHA-256, so nothing is stored twice. Playlists sit beside them in an open <code>lists.json</code>.</li>
+      <li><b>Sync.</b> Your laptop and phone open the same bucket, so a playlist saved on the laptop is already on your phone.</li>
+      <li><b>Play.</b> Sort and upload in Files, stream over signed URLs, or open <a href="#rx3">rx3</a>, where your library is USB1, and mix.</li>
+    </ol>
+    <h2>Security</h2>
+    <p>The Worker stores R2 keys encrypted and signs short-lived URLs, so audio goes straight between the browser and the bucket.</p>
+    <h2>Mac app</h2>
+    <p>Adds rekordbox library import and DJ USB import/export. v1.0.0, Apple Silicon. <a href="https://github.com/shawnpsi-lgtm/r2music-releases/releases/latest/download/r2music-mac-arm64.zip">Download for Mac</a>.</p>
+    ${panel('warn', `<p>Not notarized yet. The first time, unzip it into Applications and choose Open Anyway in System Settings → Privacy &amp; Security.</p>`)}
+    ${img('/images/r2music-hero.jpg', 'r music')}
+    ${panel('note', `<p>Read the <a href="/press-r2music.html">rx3 + r2 announcement</a>.</p>`)}
+    ${caseLink('/project-r2.html')}
   ` },
 
   { id: 'cloudexa', title: 'Cloudexa', emoji: '🏦', parent: 'projects', area: 'Data Science / Frontend', year: 2025, status: 'done', updated: 'Aug 22, 2025', read: 3,
@@ -571,7 +624,8 @@ let aiMsgs = [];
 const MARK = document.querySelector('.ai-head .rovo-mark').outerHTML;
 // The model cites the site's case-study URLs; point those at the pages here.
 const HERE = { '/project-cloudexa.html': 'cloudexa', '/project-ngc2.html': 'ngc2', '/project-djai.html': 'djai',
-  '/project-emmy.html': 'emmy', '/project-visuallyrepresented.html': 'visuallyrepresented', '/beatfx/': 'beatfx', '/sayclip/': 'sayclip', '/shawnfluence.html': 'home' };
+  '/project-emmy.html': 'emmy', '/project-visuallyrepresented.html': 'visuallyrepresented', '/beatfx/': 'beatfx', '/sayclip/': 'sayclip',
+  '/project-rx3.html': 'rx3', '/rx3/': 'rx3', '/project-r2.html': 'r2', '/press-r2music.html': 'r2', '/shawnfluence.html': 'home' };
 const LINK = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s)*<>]*[^\s)*<>.,;:!?'"]|\/[\w./-]+\.html\b)/g;
 
 function linkify(el, text) {   // DOM nodes, never innerHTML: this is model output
