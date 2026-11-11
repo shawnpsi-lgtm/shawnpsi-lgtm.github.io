@@ -88,6 +88,7 @@ h1{font-size:29px;line-height:32px;font-weight:600;letter-spacing:-.01em;margin:
 .body ul,.body ol{margin:12px 0 0;padding-left:24px;font-size:16px;line-height:24px}
 .body li+li{margin-top:4px}
 .body img{display:block;max-width:100%;margin:24px auto 0;border-radius:3px;box-shadow:0 0 0 1px var(--border)}
+.body iframe.demo{display:block;width:100%;aspect-ratio:16/10;margin:24px auto 0;border:0;border-radius:3px;background:#000;box-shadow:0 0 0 1px var(--border);pointer-events:none}
 .body figcaption{text-align:center;color:var(--subtlest);font-size:12px;margin-top:6px}
 .panel{display:flex;gap:10px;padding:12px 16px;margin:16px 0 0;border-radius:3px;font-size:16px;line-height:24px}
 .panel p:first-child{margin-top:0}
@@ -330,7 +331,7 @@ const PAGES = [
     </ul>
     <h2>Controls</h2>
     <p>The screen works by touch or mouse like the unit. On a computer, an on-screen keyboard shows what every key does (hot cues, play/cue, beat sync, loops, nudge, faders, FX), matched by position so it works on any layout.</p>
-    ${img('/images/rx3.jpg', 'rx3 in the browser')}
+    <figure style="margin:0"><iframe class="demo" src="/rx3/demo.html" title="rx3 playing two tracks" loading="lazy" tabindex="-1"></iframe><figcaption>rx3 in the browser</figcaption></figure>
     ${panel('note', `<p>Launched alongside r2. Read the <a href="/press-r2music.html">rx3 + r2 announcement</a>.</p>`)}
     ${caseLink('/project-rx3.html')}
   ` },
