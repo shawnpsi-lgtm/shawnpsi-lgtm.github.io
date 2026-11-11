@@ -245,7 +245,10 @@
   body.boot-cover main,
   body.boot-cover .next-project,
   body.boot-cover footer{visibility:hidden}
-  body.case-ready nav,
+  /* nav: fill backwards only. A fill that holds after the end keeps the
+     opacity animation in effect, which makes the nav a backdrop root and
+     leaves glass.js's layer with nothing behind it to refract. */
+  body.case-ready nav{animation:case-in .8s cubic-bezier(.2,.8,.2,1) backwards}
   body.case-ready .copy{animation:case-in .8s cubic-bezier(.2,.8,.2,1) both}
   .splash{
     position:fixed;inset:0;z-index:200;overflow:hidden;
