@@ -859,7 +859,8 @@
         to { opacity: 1; transform: none; }
       }
     }
-    #chat-title::after {
+    #chat-title::after,
+    #chat-title .ct-typed::after {
       content: "";
       display: inline-block;
       width: .06em;
@@ -873,6 +874,38 @@
     @media (prefers-reduced-motion: reduce) {
       #chat-title { animation: none; opacity: 1; transform: none; }
       #chat-title::after { animation: none; }
+    }
+
+    /* Boot-up intro (index.html adds body.chat-intro, then #scene2.chat-go once
+       it's half in view). The title types out, the box opens from a pill and
+       frosts over the wallpaper, then the connect bar fades in left to right.
+       While typing, the caret rides the typed span and the untyped letters hold
+       their space invisibly, so the centred heading never shifts. */
+    #chat-title:has(.ct-typed)::after { display: none; }
+    #chat-title .ct-rest { visibility: hidden; }
+    .chat-intro #chat {
+      opacity: 0;
+      clip-path: inset(0 calc(50% - 26px) round 26px);
+      -webkit-backdrop-filter: blur(0) saturate(100%);
+      backdrop-filter: blur(0) saturate(100%);
+      transition: opacity .3s ease, clip-path .7s cubic-bezier(.2, .8, .2, 1),
+        backdrop-filter .9s ease, -webkit-backdrop-filter .9s ease;
+    }
+    .chat-intro #scene2.chat-go #chat {
+      opacity: 1;
+      clip-path: inset(0 0 round 26px);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      backdrop-filter: blur(16px) saturate(180%);
+    }
+    .chat-intro #connect,
+    .chat-intro #connect > * { opacity: 0; }
+    .chat-intro #connect > * { transform: translateY(6px); }
+    .chat-intro #scene2.chat-go #connect { opacity: 1; transition: opacity .4s ease .45s; }
+    .chat-intro #scene2.chat-go #connect > * {
+      opacity: 1;
+      transform: none;
+      transition: opacity .35s ease, transform .35s ease;
+      transition-delay: calc(.55s + var(--i, 0) * 60ms);
     }
     /* One frosted bar instead of six separate pills: each pill blurred a different
        patch of the wallpaper, so the row looked ragged. */
