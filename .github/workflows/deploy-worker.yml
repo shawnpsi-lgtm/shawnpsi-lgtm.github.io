@@ -33,6 +33,17 @@ jobs:
       - name: Test the worker's guards
         run: node worker/test-proxy.mjs
 
+      # Every statement in schema.sql is CREATE ... IF NOT EXISTS, so this is safe to
+      # run on each deploy and creates new tables (e.g. applications) before the code
+      # that writes to them goes live.
+      - name: Apply D1 schema
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          command: d1 execute shawn-ai --remote --file worker/schema.sql
+
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
