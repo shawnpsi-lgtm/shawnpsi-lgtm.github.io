@@ -35,3 +35,15 @@ CREATE TABLE IF NOT EXISTS usage (
 );
 CREATE INDEX IF NOT EXISTS usage_ts ON usage(ts);
 CREATE INDEX IF NOT EXISTS usage_user ON usage(user_id, ts);
+-- Applications from careers.html. The resume file, if any, is in R2 at resume_key.
+CREATE TABLE IF NOT EXISTS applications (
+  id INTEGER PRIMARY KEY,
+  ts INTEGER NOT NULL,
+  job TEXT NOT NULL,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  data TEXT NOT NULL,              -- every form answer, as JSON
+  resume_key TEXT,                 -- R2 key under applications/, or null if pasted
+  resume_text TEXT                 -- the pasted resume, or null if a file was attached
+);
+CREATE INDEX IF NOT EXISTS applications_ts ON applications(ts);
