@@ -10,6 +10,9 @@ const HISTORY = +(process.env.HISTORY || 6);   // turns kept, as the worker's sl
 const NO = /contact|don.t have|not (on|in|listed|available)|isn.t (on|listed)|can.t help|only (answer|help)/i;
 const EMMY = 'Shawn won a 2022 NSPA Emmy in Animation / Graphics / Special Effects as compositor and motion designer.';
 const Q = [
+  // Greetings get a greeting back, not "I'm sorry, I can't help with that."
+  { q: 'Wassup', not: NO },
+  { q: 'hey', not: NO },
   { q: 'What is Cloudexa?', want: /BBVA/ },
   { q: 'How many ATMs did Cloudexa monitor?', want: /14[,.\s]?500/ },
   { q: 'Where did Shawn go to school?', want: /USC/ },
