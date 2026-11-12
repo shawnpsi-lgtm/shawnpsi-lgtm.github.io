@@ -284,3 +284,20 @@
   #ask #chat { top: auto; bottom: calc(100% + 10px); left: auto; right: 0; margin-left: 0; transform-origin: bottom right; --ask-dy: 12px; }
   body:has(#ask) .footer { padding-bottom: 72px; }   /* keep the pill off the footer links */
 }
+
+/* Site footer on phones (every page): one line instead of a tall stack.
+   Name and Careers on the left, LinkedIn/résumé/email as icon buttons on the right.
+   The tagline is dropped and link labels shrink to nothing, but stay in the DOM so
+   screen readers still say them. Selectors are scoped under .footer to beat the
+   page stylesheets; the homepage's body:has(#scene2) rules in home.css still win. */
+@media (max-width: 640px) {
+  .footer .footer__inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .footer .footer__inner > div:first-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; min-width: 0; white-space: nowrap; }   /* Careers drops under the name on the narrowest phones */
+  .footer .footer__logo { margin: 0; }
+  .footer .footer__tagline { display: none; }
+  .footer .footer__careers { margin: 0; }
+  .footer .footer__links { flex-direction: row; flex-shrink: 0; align-items: center; gap: 2px; }
+  .footer .footer__link { font-size: 0; gap: 0; justify-content: center; width: 40px; height: 40px; border-radius: 50%; }   /* finger-sized tap targets */
+  .footer .footer__link svg { width: 18px; height: 18px; }
+  .footer .footer__link:hover { background: color-mix(in srgb, currentColor 14%, transparent); text-decoration: none; }
+}
