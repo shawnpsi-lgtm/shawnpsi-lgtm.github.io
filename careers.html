@@ -84,6 +84,19 @@
       .fields { grid-template-columns: 1fr; }
       .careers-role a { flex-direction: column; gap: 4px; }
       .careers-role__meta { white-space: normal; }
+      /* Footer on phones: one line instead of a tall stack, matching the homepage.
+         Name and Careers on the left, the three links as icon buttons on the right.
+         The tagline is dropped and link labels shrink to nothing, but stay in the
+         DOM so screen readers still say them. */
+      .footer .footer__inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .footer .footer__inner > div:first-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; min-width: 0; white-space: nowrap; }   /* Careers drops under the name on the narrowest phones */
+      .footer .footer__logo { margin: 0; }
+      .footer .footer__tagline { display: none; }
+      .footer .footer__careers { margin: 0; }
+      .footer .footer__links { flex-direction: row; flex-shrink: 0; align-items: center; gap: 2px; }
+      .footer .footer__link { font-size: 0; gap: 0; justify-content: center; width: 40px; height: 40px; border-radius: 50%; }   /* finger-sized tap targets */
+      .footer .footer__link svg { width: 18px; height: 18px; }
+      .footer .footer__link:hover { background: color-mix(in srgb, var(--black) 8%, transparent); }
     }
   </style>
   <script type="module" crossorigin src="/assets/styles-GID8uTDy.js"></script>
