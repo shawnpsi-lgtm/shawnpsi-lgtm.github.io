@@ -1,7 +1,7 @@
 // Wires the engine, the decks, the library and the screen to the buttons, knobs and keyboard.
 import { Deck, TEMPO_RANGES } from './audio/deck.js';
 import { BEAT_FX, COLOR_FX, Engine, FX_CHANNELS, pitchLabel } from './audio/engine.js';
-import { FolderSource, memory, R2Source, UploadSource } from './lib/library.js';
+import { DemoSource, FolderSource, memory, R2Source, UploadSource } from './lib/library.js';
 import { Browser } from './ui/browser.js';
 import './ui/dropdown.js';
 import { bindKeys } from './ui/keys.js';
@@ -16,10 +16,11 @@ class App {
   constructor(engine) {
     this.engine = engine;
     this.decks = [0, 1].map((i) => new Deck(engine, i, () => this.changed()));
-    this.sources = [new R2Source(), new FolderSource(), new UploadSource()];
+    this.sources = [new R2Source(), new FolderSource(), new UploadSource(), new DemoSource()];
     this.usb = this.sources[1];
     this.uploads = this.sources[2];
-    this.deviceCursor = 0;
+    this.demos = this.sources[3];
+    this.deviceCursor = 3; // SOURCE starts on the demos, the folder rx3 opens on
     this.browser = new Browser();
     this.focus = 0;
     this.quantize = true;
@@ -38,6 +39,19 @@ class App {
     this.renderControls();
     this.loop();
     this.sources[0].open().then(() => this.screen.render());
+    this.home();
+  }
+
+  /**
+   * The home screen: Shawn's demos, open in BROWSE as one folder of songs. SOURCE shows (with the demos highlighted)
+   * until the list arrives; if the visitor has already moved off it by then, they're left where they are.
+   */
+  async home() {
+    await this.demos.open();
+    if (this.demos.status === 'ready' && this.screen.view === 'source' && this.deviceCursor === this.sources.indexOf(this.demos)) {
+      return this.openSource(this.demos);
+    }
+    this.screen.render();
   }
 
   changed() {
@@ -101,7 +115,10 @@ class App {
       }
       case 'back':
         if (this.closeOverlay()) return;
-        if (s.view === 'browse' && !b.back()) return s.setView('source');
+        if (s.view === 'browse' && !b.back()) { // the top of a source: back to SOURCE, on the source it came from
+          if (this.sources.includes(b.source)) this.deviceCursor = this.sources.indexOf(b.source);
+          return s.setView('source');
+        }
         return s.render();
       case 'up': case 'down': {
         const d = name === 'up' ? -1 : 1;
@@ -166,7 +183,8 @@ class App {
       s.render();
       if (src.status !== 'ready') return s.toast(src.message || 'COULD NOT OPEN');
     }
-    this.browser.root(src, 'TRACK', () => this.masterBpm());
+    if (src === this.demos) this.browser.folder(src, src.folder.name); // straight into the songs
+    else this.browser.root(src, 'TRACK', () => this.masterBpm());
     s.setView('browse');
   }
 

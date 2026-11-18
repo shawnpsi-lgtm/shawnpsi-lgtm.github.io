@@ -12,7 +12,8 @@ function trackItems(tracks) {
   return tracks.map((t) => ({ label: t.title, meta: t.artist, track: t }));
 }
 
-function grouped(tracks, key, none, head) {
+/** ordered: keep the tracks in the source's own order inside each group (the demos' list), not A-Z. */
+function grouped(tracks, key, none, head, ordered = false) {
   const groups = new Map();
   for (const t of tracks) {
     const k = t[key] || none;
@@ -20,7 +21,8 @@ function grouped(tracks, key, none, head) {
     groups.get(k).push(t);
   }
   return [...groups.keys()].sort((a, b) => (a === none) - (b === none) || String(a).localeCompare(String(b)))
-    .map((k) => ({ label: k, meta: groups.get(k).length, open: () => ({ title: k, head, items: trackItems(groups.get(k).sort(byTitle)) }) }));
+    .map((k) => ({ label: k, meta: groups.get(k).length,
+      open: () => ({ title: k, head, items: trackItems(ordered ? groups.get(k) : groups.get(k).sort(byTitle)) }) }));
 }
 
 /** masterBpm(): the BPM to match in MATCHING (the master deck's). */
@@ -30,7 +32,7 @@ export function categoryList(source, cat, masterBpm) {
     case 'ARTIST': return { title: 'ARTIST', head: 'ARTIST', items: grouped(tracks, 'artist', '(no artist)', 'TRACK') };
     case 'ALBUMS': return { title: 'ALBUMS', head: 'ALBUM', items: grouped(tracks, 'album', '(no album)', 'TRACK') };
     case 'KEY': return { title: 'KEY', head: 'KEY', items: grouped(tracks, 'key', '(no key)', 'TRACK') };
-    case 'FOLDER': return { title: 'FOLDER', head: 'FOLDER', items: grouped(tracks, 'folder', source.label, 'TRACK') };
+    case 'FOLDER': return { title: 'FOLDER', head: 'FOLDER', items: grouped(tracks, 'folder', source.label, 'TRACK', source.ordered) };
     case 'PLAYLIST': return {
       title: 'PLAYLIST', head: 'PLAYLIST',
       items: source.playlists.map((p) => ({ label: p.name, meta: p.tracks.length,
@@ -74,6 +76,19 @@ export class Browser {
     this.category = cat;
     this.stack = [];
     this.open(categoryList(source, cat, masterBpm));
+  }
+
+  /**
+   * One folder's songs as the top level, under the FOLDER icon: rx3's home screen (the demos). BACK from here goes
+   * to SOURCE, not up to the folder list.
+   */
+  folder(source, name) {
+    this.source = source;
+    this.category = 'FOLDER';
+    this.stack = [];
+    const list = categoryList(source, 'FOLDER').items.find((it) => it.label === name)?.open() || { title: name, head: 'TRACK', items: [] };
+    list.fixed = true; // refresh() would put the folder list back in its place
+    this.open(list);
   }
 
   special(list) { // TAG LIST, SEARCH: not tied to a category icon
@@ -124,7 +139,7 @@ export class Browser {
 
   /** Re-run the root query (the library or history changed) without losing the cursor. */
   refresh(masterBpm) {
-    if (!this.source || !this.category || this.stack.length !== 1) return;
+    if (!this.source || !this.category || this.stack.length !== 1 || this.list.fixed) return;
     const cur = this.list.cursor, top = this.list.top;
     this.stack = [categoryList(this.source, this.category, masterBpm)];
     this.list.cursor = Math.min(cur, Math.max(0, this.list.items.length - 1));
