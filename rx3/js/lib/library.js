@@ -1,6 +1,6 @@
 // The "USB sticks": USB1 is the signed-in user's r2music library (r2.shawnsingh.me, the same API beatfx uses),
-// USB2 is a folder on this computer, and UPLOAD holds song files picked or dropped one by one. All produce the same
-// track objects:
+// USB2 is a folder on this computer, UPLOAD holds song files picked or dropped one by one, and DEMO is Shawn's own
+// songs (the shawnnn bucket's "shawn" list, open to everyone). All produce the same track objects:
 //   { id, title, artist, album, genre, bpm, key, duration, file(): Promise<File>, prepare?(): Promise }
 // prepare() fetches the rekordbox analysis when there is one: the beat grid (track.grid) and hot cues (track.cues).
 import { readPdb } from './pdb.js';
@@ -31,7 +31,7 @@ async function readAnlz(track, read) {
 
 class Source {
   constructor(id, label) {
-    this.id = id; // 'USB1' / 'USB2' / 'FILE'
+    this.id = id; // 'USB1' / 'USB2' / 'FILE' / 'DEMO'
     this.label = label;
     this.icon = 'usb';
     this.tracks = [];
@@ -229,6 +229,54 @@ export class FolderSource extends Source {
     this.tracks.sort((a, b) => a.title.localeCompare(b.title));
     this.status = 'ready';
     return added.length;
+  }
+}
+
+/**
+ * SHAWNNN DEMOS: Shawn's own songs, the "shawn" list in the shawnnn bucket, read through the site's worker
+ * (/r2music/* in worker/groq-proxy.js). No sign-in: the worker serves this one list's audio to anyone. It's the
+ * screen rx3 opens on, as a single folder in the list's own order.
+ */
+export class DemoSource extends Source {
+  constructor() {
+    super('DEMO', 'SHAWNNN DEMOS');
+    this.api = 'https://groq-chat.shawnpsi.workers.dev/r2music';
+    this.ordered = true; // its folder keeps the list's order, not A-Z
+  }
+
+  /** The folder the songs are in: the list's name ("shawn"). */
+  get folder() {
+    return this.playlists[0];
+  }
+
+  async open() {
+    if (this.status === 'ready' || this.status === 'loading') return;
+    this.status = 'loading';
+    try {
+      const r = await fetch(this.api + '/library');
+      if (!r.ok) throw new Error('api');
+      const lib = await r.json();
+      if (!lib.list) throw new Error('no list');
+      this.tracks = lib.list.trackIds.filter((sha) => lib.tracks[sha]).map((sha) => {
+        const t = lib.tracks[sha], named = splitName(t.name);
+        return {
+          id: 'demo:' + sha, title: named.title, artist: named.artist || '', album: '', genre: '',
+          bpm: t.bpm || 0, key: t.key || '', duration: t.duration || 0, folder: lib.list.name, source: this.id,
+          file: async () => {
+            const res = await fetch(this.api + '/track/' + sha);
+            if (!res.ok) throw new Error('download');
+            return new File([await res.blob()], t.name + '.' + t.ext);
+          },
+        };
+      });
+      this.playlists = [{ name: lib.list.name, tracks: [...this.tracks] }];
+      this.status = this.tracks.length ? 'ready' : 'empty';
+      if (!this.tracks.length) this.message = 'NO SONGS YET';
+    } catch (e) {
+      console.warn('SHAWNNN DEMOS: could not load the list', e);
+      this.status = 'error';
+      this.message = 'COULD NOT LOAD DEMOS';
+    }
   }
 }
 

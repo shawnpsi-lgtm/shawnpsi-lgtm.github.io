@@ -21,6 +21,10 @@ USB2 (named USB on screen) is a folder on this computer (MENU → ADD MUSIC → 
 files one at a time or several at once: pick them there, or drop them anywhere on the page. Uploaded songs stay in
 the browser tab; nothing is sent anywhere.
 
+rx3 opens on the fourth source, SHAWNNN DEMOS (DEMO): Shawn's own songs, the "shawn" list in the shawnnn bucket,
+which the site's worker serves to anyone with no sign-in (`/r2music/*` in `worker/groq-proxy.js`). It goes straight
+into that folder's songs, in the list's order; BACK goes to SOURCE. If the list can't be loaded, rx3 stays on SOURCE.
+
 ## Using it
 
 The screen works by touch/mouse like the unit. Under it, on a computer, is a keyboard that shows what every key does:

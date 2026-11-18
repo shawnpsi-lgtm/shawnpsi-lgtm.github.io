@@ -331,7 +331,7 @@ export class Screen {
     }).join('') + '<li class="empty"></li>'.repeat(Math.max(0, 6 - app.sources.length)));
     const s = app.sources[app.deviceCursor];
     const rows = [['Songs', s.status === 'ready' ? s.tracks.length : '-'], ['Playlists', s.status === 'ready' ? s.playlists.length : '-'],
-      ['Source', s.id === 'USB1' ? 'r2.shawnsingh.me' : s === app.uploads ? 'Uploaded files' : 'Local folder'],
+      ['Source', s.id === 'USB1' ? 'r2.shawnsingh.me' : s === app.demos ? 'shawnnn (R2)' : s === app.uploads ? 'Uploaded files' : 'Local folder'],
       ['Status', s.status === 'ready' ? 'Ready' : s.status === 'loading' ? 'Loading' : s.message || 'Not opened']];
     this.set($('#device-info'), rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join(''));
   }
