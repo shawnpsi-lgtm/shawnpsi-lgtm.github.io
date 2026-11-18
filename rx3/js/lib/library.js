@@ -9,6 +9,11 @@ import { readCues, readId3, readPqtz, splitName } from './tags.js';
 const R2 = 'https://r2.shawnsingh.me';
 const AUDIO = /\.(mp3|wav|aiff?|m4a|aac|flac|ogg|opus)$/i;
 
+// Songs in the shawnnn bucket shown under a different title from the one they're stored as (matched ignoring case
+// and extra spaces).
+const TITLES = new Map([['strip clubz :: dollar billz', 'strip clubz // dollar billz']]);
+const shown = (title) => TITLES.get(title.toLowerCase().replace(/\s+/g, ' ').trim()) || title;
+
 /**
  * A track's rekordbox analysis: the beat grid and hot cues from its .DAT, and the hot cues again from its .EXT, which
  * adds their colours and comments. read('DAT' | 'EXT') resolves to the file's bytes or throws.
@@ -79,7 +84,7 @@ export class R2Source extends Source {
       this.tracks = Object.entries(lib.tracks).map(([sha, t]) => {
         const named = splitName(t.name);
         const track = {
-          id: 'r2:' + sha, title: named.title, artist: named.artist || '', album: '', genre: '',
+          id: 'r2:' + sha, title: shown(named.title), artist: named.artist || '', album: '', genre: '',
           bpm: t.bpm || 0, key: t.key || '', duration: t.duration || 0, addedAt: t.addedAt || 0, source: this.id,
           file: async () => {
             const res = await fetch(await this.sign('tracks/' + sha + '.' + t.ext));
@@ -260,7 +265,7 @@ export class DemoSource extends Source {
       this.tracks = lib.list.trackIds.filter((sha) => lib.tracks[sha]).map((sha) => {
         const t = lib.tracks[sha], named = splitName(t.name);
         return {
-          id: 'demo:' + sha, title: named.title, artist: named.artist || '', album: '', genre: '',
+          id: 'demo:' + sha, title: shown(named.title), artist: named.artist || '', album: '', genre: '',
           bpm: t.bpm || 0, key: t.key || '', duration: t.duration || 0, folder: lib.list.name, source: this.id,
           file: async () => {
             const res = await fetch(this.api + '/track/' + sha);
