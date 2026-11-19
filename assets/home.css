@@ -834,8 +834,17 @@
     #scene2::before {
       content: ""; position: absolute; z-index: 1; inset: 0 0 auto; height: var(--r);
       border-top: 1px solid rgb(255 255 255 / .2); border-radius: var(--r) var(--r) 0 0;
+      opacity: var(--edge-o, 1);   /* fades with the corners as the card reaches the top */
       pointer-events: none;
     }
+
+    /* Gentle snapping: stop scrolling near the Shawn AI screen and the page settles on
+       it, so it's easy to land there without sliding on into the footer. The top and
+       the very bottom are snap points too, so both ends stay reachable. "proximity"
+       only pulls when you stop close to one; anywhere else, the page stays put. */
+    html:has(#scene2) { scroll-snap-type: y proximity; }
+    #root, #scene2 { scroll-snap-align: start; }
+    body:has(#scene2) footer.footer { scroll-snap-align: end; }
     #scene2 > iframe {
       position: fixed;
       top: 50%;

@@ -16,7 +16,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=65">
+  <link rel="stylesheet" href="/assets/home.css?v=66">
   <link rel="stylesheet" href="/assets/ask.css?v=16">
   <script src="/assets/page-transition.js?v=1"></script>
   <script src="/assets/wayglim-rx3.js?v=2" defer></script>
@@ -578,6 +578,19 @@
     });
     addEventListener('scroll', scene2, { passive: true });
     scene2();  // a reload mid-page restores scrollY without firing scroll
+    // The card's top corners are round while it rises and flatten as it reaches the
+    // top of the window, so once it's arrived the hero no longer peeks through them.
+    let rf = 0;
+    const round = () => {
+      rf = 0;
+      const R = Math.min(48, Math.max(24, innerWidth * .034));   // = --r's clamp() in home.css
+      const t = Math.min(1, Math.max(0, card.getBoundingClientRect().top / (innerHeight * .25)));
+      card.style.setProperty('--r', (R * t).toFixed(1) + 'px');
+      card.style.setProperty('--edge-o', t.toFixed(3));
+    };
+    addEventListener('scroll', () => rf ||= requestAnimationFrame(round), { passive: true });
+    addEventListener('resize', round);
+    round();
     // The card runs on under the footer, exactly as far as the footer is tall
     // (the footer comes later in the page, so wait for it).
     addEventListener('DOMContentLoaded', () => {
