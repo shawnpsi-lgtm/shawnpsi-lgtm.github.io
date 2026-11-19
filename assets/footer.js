@@ -20,7 +20,10 @@
     'project-visuallyrepresented': '#d8d8d8', // black-and-white photography
   };
   const page = location.pathname.replace(/\/+$/, '').split('/').pop().replace(/\.html$/, '') || 'index';
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Reduced motion, or a page on plain touch scrolling (the homepage on phones): the
+  // footer shows fully revealed and nothing tracks the scroll.
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches
+    || document.documentElement.classList.contains('touch-scroll');
 
   const setup = foot => {
     if (foot.dataset.fx) return;
@@ -72,7 +75,7 @@
     };
     fit(); pull();
     document.fonts?.ready.then(() => { fit(); pull(); });
-    addEventListener('scroll', () => raf ||= requestAnimationFrame(pull), { passive: true });
+    if (!calm) addEventListener('scroll', () => raf ||= requestAnimationFrame(pull), { passive: true });
     addEventListener('resize', () => { fit(); pull(); });
   };
 
