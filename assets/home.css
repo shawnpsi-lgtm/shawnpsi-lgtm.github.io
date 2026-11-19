@@ -812,10 +812,28 @@
        the hero, and its bottom edge reads as a seam across the pinned
        wallpaper once the page scrolls. */
 
-    /* Second screen below the hero. Its wallpaper is pinned like the hero's and
-       sits at the same depth, so it paints over the first one (later in the DOM)
-       while the desktop icons at z-index 50 still scroll away above it. */
-    #scene2 { position: relative; height: 100svh; }
+    /* Second screen below the hero: a card that slides up over it, with rounded top
+       corners (same radius and edge hairline as the footer) so the two read as
+       separate sections. Its wallpaper is pinned like the hero's; clip-path clips
+       even a fixed child, so the video shows only inside the card as it rises.
+       The card reaches on under the footer (--under = the footer's height, set by
+       index.html, and cancelled by the negative margin) so the footer's see-through
+       corners show this video, not the hero's, without lengthening the page. */
+    #scene2 {
+      --r: clamp(24px, 3.4vw, 48px);
+      --under: 0px;
+      position: relative;
+      height: calc(100svh + var(--under));
+      padding-bottom: var(--under);
+      margin-bottom: calc(-1 * var(--under));
+      clip-path: inset(0 round var(--r) var(--r) 0 0);
+      background: #0d0d0f;   /* the card, until the video's first frame */
+    }
+    #scene2::before {
+      content: ""; position: absolute; z-index: 1; inset: 0 0 auto; height: var(--r);
+      border-top: 1px solid rgb(255 255 255 / .2); border-radius: var(--r) var(--r) 0 0;
+      pointer-events: none;
+    }
     #scene2 > iframe {
       position: fixed;
       top: 50%;
@@ -829,7 +847,7 @@
       pointer-events: none;
       z-index: 0;
       opacity: 0;
-      transition: opacity .6s ease;
+      transition: opacity .6s ease;   /* only covers the video loading in, not the scroll */
     }
     body.scene2-on #scene2 > iframe { opacity: 1; }
 
