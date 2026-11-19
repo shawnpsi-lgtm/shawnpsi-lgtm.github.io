@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');</script>
+<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');
+try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.classList.add('ngc2-handoff')}catch{}</script>
 <title>NGC2 — Shawn Singh</title>
 <meta name="description" content="U.S. Army Next Generation Command and Control — turning OPORDs into a live synchronization matrix on Lattice and Foundry.">
 <link rel="icon" type="image/svg+xml" href="/shawnlogo.svg">
@@ -338,6 +339,29 @@
   .splash__auth::after{content:"";display:block;width:100%;height:1px;margin-top:10px;background:linear-gradient(90deg,transparent,var(--hud-accent),transparent);animation:pulse 1s ease-in-out infinite}
   .splash.is-exit{clip-path:inset(50% 0);visibility:hidden}
   .splash.is-exit .splash__mark{opacity:0;transition:opacity .2s}
+  /* Arriving from the Work card's zoom (#ngc2-launch in home.css): paint the
+     exact frame that zoom ends on, so the page swap is invisible, then open
+     straight into the case study. Keep these numbers in step with home.css. */
+  .splash__handoff{display:none}
+  .ngc2-handoff .splash::before{
+    opacity:1;animation:none;
+    background-image:
+      linear-gradient(color-mix(in srgb,var(--hud-accent) 11%,transparent) 1px,transparent 1px),
+      linear-gradient(90deg,color-mix(in srgb,var(--hud-accent) 11%,transparent) 1px,transparent 1px)
+  }
+  .ngc2-handoff .splash::after,
+  .ngc2-handoff .splash__frame::before,.ngc2-handoff .splash__frame::after,
+  .ngc2-handoff .splash__reticle::before,.ngc2-handoff .splash__reticle::after,
+  .ngc2-handoff .splash__meta,.ngc2-handoff .splash__link,
+  .ngc2-handoff .splash__terminal,.ngc2-handoff .splash__auth{display:none}
+  .ngc2-handoff .splash__frame{border-color:color-mix(in srgb,var(--hud-accent) 30%,transparent)}
+  .ngc2-handoff .splash__mark{padding:0;gap:0}
+  .ngc2-handoff .splash__reticle{width:auto;aspect-ratio:auto;border:0}
+  .ngc2-handoff .splash__logo{
+    width:clamp(7rem,14vw,10rem);
+    filter:drop-shadow(0 0 28px color-mix(in srgb,var(--hud-accent) 18%,transparent))
+  }
+  .ngc2-handoff .splash__handoff{display:block;position:absolute;right:30px;bottom:26px;line-height:1.4}
   @keyframes scan{from{top:-10%}to{top:110%}}
   @keyframes spin{to{rotate:1turn}}
   @keyframes blink{50%{visibility:hidden}}
@@ -362,6 +386,7 @@
   <div class="splash__frame" aria-hidden="true"></div>
   <span class="splash__meta">NGC2 // COMMAND INTERFACE</span>
   <span class="splash__link">LATTICE MESH<br>ENCRYPTED</span>
+  <span class="splash__handoff" aria-hidden="true">SECURE LINK // NGC2</span>
   <pre class="splash__terminal" id="terminal" aria-hidden="true"></pre>
   <div class="splash__mark">
     <div class="splash__reticle"><img class="splash__logo" src="/images/ngc2-logo.svg" alt="NGC2"></div>
@@ -573,9 +598,7 @@
     fromHome = sessionStorage.getItem('ngc2-entry') === 'home';
     sessionStorage.removeItem('ngc2-entry');
   } catch {}
-  const states = fromHome
-    ? ['SECURE LINK ESTABLISHED', 'SYNCMAT ONLINE', 'COMMAND VIEW READY']
-    : ['AUTHENTICATING OPERATOR', 'LATTICE MESH CONNECTED', 'SYNCMAT ONLINE', 'COMMAND VIEW READY'];
+  const states = ['AUTHENTICATING OPERATOR', 'LATTICE MESH CONNECTED', 'SYNCMAT ONLINE', 'COMMAND VIEW READY'];
   const bootLog = '> NGC2 HANDSHAKE\n> TOKEN ........ VERIFIED\n> LATTICE MESH . CONNECTED\n> SYNCMAT ...... ONLINE';
   let done = false;
   const timers = [];
@@ -592,11 +615,15 @@
   splash.addEventListener('click', dismiss);
   addEventListener('keydown', dismiss, { once: true });
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) dismiss();
-  else {
-    const step = fromHome ? 180 : 280;
+  else if (fromHome) {
+    // The splash already matches the zoom's last frame: hold it a beat, then open.
+    later(dismiss, 150);
+  } else {
+    status.textContent = states[0];
+    const step = 280;
     states.forEach((text, i) => later(() => { status.textContent = text; }, i * step));
-    [...bootLog].forEach((char, i) => later(() => { terminal.textContent += char; }, i * (fromHome ? 5 : 10)));
-    later(dismiss, states.length * step + (fromHome ? 180 : 320));
+    [...bootLog].forEach((char, i) => later(() => { terminal.textContent += char; }, i * 10));
+    later(dismiss, states.length * step + 320);
   }
 })();
 
