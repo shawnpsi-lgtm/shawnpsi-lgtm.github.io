@@ -996,8 +996,24 @@
         /* wallpaper seen through the lip strip: same darkness the scrim ends on */
         linear-gradient(rgb(0 0 0 / .72), rgb(0 0 0 / .72))
           0 0 / 100% var(--lip-max) no-repeat;
-      padding-top: calc(var(--lip-max) + 56px);
+      padding-top: 0;
+      min-height: clamp(240px, 34vh, 340px);   /* tall enough for the reveal to read as one */
       text-shadow: none;
+    }
+    /* Curtain reveal: the footer scrolls in as usual, but its contents hold still on
+       screen (index.html sets --lift = the distance still to go) and are uncovered as
+       the curved edge rises past them, clipped at the band's top edge. */
+    body:has(#scene2) .footer { display: flex; flex-direction: column; }
+    body:has(#scene2) .footer > .container {
+      overflow: clip;
+      flex: 1;
+      display: flex; flex-direction: column; justify-content: center;   /* links sit mid-band, above the glow */
+      margin-top: var(--lip-max);
+    }
+    body:has(#scene2) .footer__inner { width: 100%; }
+    body:has(#scene2) .footer__inner {
+      transform: translateY(calc(-1 * var(--lift, 0px)));
+      opacity: calc(.35 + var(--pull) * .65);
     }
     /* The scrim stops at the footer's top edge; the footer carries its darkest tone on
        through the lip strip itself (last background layer), under the corners only,

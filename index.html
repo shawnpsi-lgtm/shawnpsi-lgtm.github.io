@@ -16,7 +16,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=50">
+  <link rel="stylesheet" href="/assets/home.css?v=51">
   <link rel="stylesheet" href="/assets/ask.css?v=16">
   <script src="/assets/page-transition.js?v=1"></script>
   <script src="/assets/wayglim-rx3.js?v=2" defer></script>
@@ -686,7 +686,8 @@
   </footer>
   <script>
     // Footer effects (styles in home.css): the curve deepens and the glow brightens
-    // as the footer scrolls in (--pull), and link labels are split into letters
+    // as the footer scrolls in (--pull), its contents stay put while the edge
+    // uncovers them (--lift), and link labels are split into letters
     // for the hover roll.
     (() => {
       const foot = document.querySelector('.footer');
@@ -710,6 +711,7 @@
         const r = foot.getBoundingClientRect();
         const p = calm ? 1 : Math.min(1, Math.max(0, (innerHeight - r.top) / r.height));
         foot.style.setProperty('--pull', p.toFixed(3));
+        foot.style.setProperty('--lift', ((1 - p) * r.height).toFixed(1) + 'px');   // curtain: contents hold still
       };
       addEventListener('scroll', () => raf ||= requestAnimationFrame(pull), { passive: true });
       addEventListener('resize', pull);
