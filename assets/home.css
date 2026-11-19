@@ -853,15 +853,17 @@
     }
 
     /* Gentle snapping: stop scrolling near the Shawn AI screen and the page settles on
-       it, so it's easy to land there without sliding on into the footer. The top and
-       the very bottom are snap points too, so both ends stay reachable. "proximity"
-       only pulls when you stop close to one; anywhere else, the page stays put.
+       it, so it's easy to land there without sliding on into the footer. The very
+       bottom is a snap point too. The top deliberately isn't: a short drag on the hero
+       would stop near it and spring back to 0, which felt stuck on phones (the top is
+       the scroll edge, so it stays reachable anyway). "proximity" only pulls when you
+       stop close to a snap point; anywhere else, the page stays put.
        Not until the hero has rendered, though: while #root is still empty, the Shawn AI
        screen sits at the very top of the page, Safari snaps to it, and when the hero
        then pushes it a screen down, Safari re-snaps to it, so every visit opened on
        Shawn AI instead of the home screen. */
     html:has(#scene2):not(:has(#root:empty)) { scroll-snap-type: y proximity; }
-    #root, #scene2 { scroll-snap-align: start; }
+    #scene2 { scroll-snap-align: start; }
     body:has(#scene2) footer.footer { scroll-snap-align: end; }
     #scene2 > iframe {
       position: fixed;
