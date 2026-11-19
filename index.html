@@ -16,7 +16,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=60">
+  <link rel="stylesheet" href="/assets/home.css?v=61">
   <link rel="stylesheet" href="/assets/ask.css?v=16">
   <script src="/assets/page-transition.js?v=1"></script>
   <script src="/assets/wayglim-rx3.js?v=2" defer></script>
@@ -74,6 +74,8 @@
       .live-banner, body:has(.live-banner) .nav { transition: none; }
     }
   </style>
+  <link rel="stylesheet" href="/assets/footer.css?v=1">
+  <script src="/assets/footer.js?v=1" defer></script>
 </head>
 <body>
   <div class="live-banner">
@@ -682,54 +684,8 @@
           </a>
         </div>
       </div>
-      <div class="footer__mark" aria-hidden="true"><span>Shawn Singh</span></div>
     </div>
   </footer>
-  <script>
-    // Footer effects (styles in home.css): the curve deepens and the glow brightens
-    // as the footer scrolls in (--pull), its contents stay put while the edge
-    // uncovers them (--lift), and link labels are split into letters
-    // for the hover roll.
-    (() => {
-      const foot = document.querySelector('.footer');
-      const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      foot.querySelectorAll('.footer__link, .footer__careers').forEach(a => {
-        const t = [...a.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
-        if (!t) return;
-        const label = t.textContent.trim(), sr = document.createElement('span'), roll = document.createElement('span');
-        sr.className = 'sr-text'; sr.textContent = label;
-        roll.className = 'roll'; roll.setAttribute('aria-hidden', 'true');
-        [...label].forEach((c, i) => {
-          const s = document.createElement('span');
-          s.textContent = c; s.dataset.c = c; s.style.setProperty('--i', i);
-          roll.append(s);
-        });
-        t.replaceWith(sr, roll);
-      });
-      // Fit the giant name to the content width exactly, whatever font the system
-      // gives it (the CSS cqi size is only a first guess).
-      const mark = foot.querySelector('.footer__mark'), word = mark.firstElementChild;
-      const fit = () => {
-        word.style.fontSize = '';
-        const fs = parseFloat(getComputedStyle(word).fontSize);
-        word.style.fontSize = (fs * mark.clientWidth / word.getBoundingClientRect().width).toFixed(2) + 'px';
-      };
-      fit();
-      document.fonts?.ready.then(fit);
-      addEventListener('resize', fit);
-      let raf = 0;
-      const pull = () => {
-        raf = 0;
-        const r = foot.getBoundingClientRect();
-        const p = calm ? 1 : Math.min(1, Math.max(0, (innerHeight - r.top) / r.height));
-        foot.style.setProperty('--pull', p.toFixed(3));
-        foot.style.setProperty('--lift', ((1 - p) * r.height).toFixed(1) + 'px');   // curtain: contents hold still
-      };
-      addEventListener('scroll', () => raf ||= requestAnimationFrame(pull), { passive: true });
-      addEventListener('resize', pull);
-      pull();
-    })();
-  </script>
 
   <link rel="stylesheet" href="/assets/glass.css?v=16">
 
