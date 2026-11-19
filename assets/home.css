@@ -1016,3 +1016,36 @@
         transform: translateY(-50%);
       }
     }
+
+    /* ------------------------------------------------------------------
+       Touch scroll: phones and tablets (html.touch-scroll, set in index.html's
+       <head> for hover:none + pointer:coarse). Plain native scrolling, nothing
+       layered on top of it:
+       - no snap points: proximity snapping fought iOS momentum and re-snapped
+         whenever the toolbar resized the viewport
+       - rubber-band bounce is back (the footer's shadow fills the gap past the end)
+       - nothing runs per scroll frame: the card's corners stay round (index.html
+         skips round()) and the footer shows fully revealed (footer.js skips --pull)
+       - the Shawn AI video scrolls with its card, covering it, instead of a fixed
+         video clipped by the card's clip-path, which phones repaint every frame
+       The hero's pinned wallpaper is unchanged; the card still slides up over it.
+       ------------------------------------------------------------------ */
+    html.touch-scroll:has(#scene2),
+    html.touch-scroll:has(#scene2):not(:has(#root:empty)) { scroll-snap-type: none; overscroll-behavior-y: auto; }
+    html.touch-scroll #scene2 {
+      scroll-snap-align: none;
+      container-type: size;          /* cq units below size the video to the card (cqh is the
+                                        content box, so add the --under padding back on) */
+      clip-path: none;
+      overflow: hidden;
+      border-radius: var(--r) var(--r) 0 0;
+      background-attachment: scroll;
+    }
+    html.touch-scroll #scene2::before { opacity: 1; }
+    html.touch-scroll #scene2 > iframe {
+      position: absolute;
+      top: 50% !important;
+      left: 50%;
+      width: max(100cqw, (100cqh + var(--under)) * 16 / 9) !important;
+      height: max(100cqw * 9 / 16, 100cqh + var(--under)) !important;
+    }
