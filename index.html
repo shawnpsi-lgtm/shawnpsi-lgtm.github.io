@@ -16,7 +16,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=49">
+  <link rel="stylesheet" href="/assets/home.css?v=50">
   <link rel="stylesheet" href="/assets/ask.css?v=16">
   <script src="/assets/page-transition.js?v=1"></script>
   <script src="/assets/wayglim-rx3.js?v=2" defer></script>
@@ -682,13 +682,12 @@
           </a>
         </div>
       </div>
-      <div class="footer__mark" aria-hidden="true"><span>Shawn Singh</span></div>
     </div>
   </footer>
   <script>
     // Footer effects (styles in home.css): the curve deepens and the glow brightens
-    // as the footer scrolls in (--pull), the giant name reveals once, and link
-    // labels are split into letters for the hover roll.
+    // as the footer scrolls in (--pull), and link labels are split into letters
+    // for the hover roll.
     (() => {
       const foot = document.querySelector('.footer');
       const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -705,12 +704,6 @@
         });
         t.replaceWith(sr, roll);
       });
-      if (!calm && 'IntersectionObserver' in window) {
-        foot.classList.add('is-armed');
-        new IntersectionObserver((es, io) => {
-          if (es[0].isIntersecting) { foot.classList.add('is-in'); io.disconnect(); }
-        }, { threshold: .35 }).observe(foot);
-      }
       let raf = 0;
       const pull = () => {
         raf = 0;
