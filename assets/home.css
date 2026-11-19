@@ -1003,13 +1003,13 @@
     /* Curtain reveal: the footer scrolls in as usual, but its contents hold still on
        screen (index.html sets --lift = the distance still to go) and are uncovered as
        the curved edge rises past them, clipped at the band's top edge. */
+    /* Overscroll (trackpad / phone bounce) pulls the page past its end, and the gap
+       shows the pinned video, which stays put. Chrome draws nothing of the page in
+       that gap (a footer shadow there gets cut off), so turn the bounce off here. */
+    html:has(#scene2) { overscroll-behavior-y: none; }
     body:has(#scene2) .footer {
       display: flex; flex-direction: column;
-      /* Overscroll (trackpad / phone bounce) pulls the page up past its end and would
-         show the pinned video under the footer. A shadow the colour of the footer
-         reaches a screen further down; shadows don't lengthen the page and never
-         paint inside the footer's own box, so the see-through lip is unaffected. */
-      box-shadow: 0 50lvh 0 50lvh var(--foot);
+      box-shadow: 0 50lvh 0 50lvh var(--foot);   /* fallback where the bounce can't be turned off */
     }
     body:has(#scene2) .footer > .container {
       overflow: clip;
