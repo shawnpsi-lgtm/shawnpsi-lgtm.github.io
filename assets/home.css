@@ -956,7 +956,7 @@
        fading up from the bottom, plus light text in either theme, keeps it legible. */
     body:has(#scene2) .footer {
       --black: #f5f5f7; --mid: rgb(255 255 255 / .82);
-      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(clamp(28px, 4vw, 56px) + env(safe-area-inset-bottom, 0px));
       text-shadow: 0 1px 8px rgb(0 0 0 / .4);
     }
     /* The scrim reaches above the footer box so it fades in without adding height. */
@@ -988,8 +988,8 @@
         linear-gradient(var(--edge), var(--edge))
           var(--lip) calc(var(--lip-max) - 1px) / calc(100% - 2 * var(--lip)) 1px no-repeat,   /* the same 1px row the corner rings end on */
         /* blue glow rising from the bottom edge */
-        radial-gradient(ellipse 60% calc(55% + var(--pull) * 30%) at 50% 112%,
-          rgb(41 151 255 / calc(.16 + var(--pull) * .22)), rgb(0 113 227 / .06) 55%, transparent 75%)
+        radial-gradient(ellipse 55% calc(22% + var(--pull) * 14%) at 50% 106%,
+          rgb(41 151 255 / calc(.08 + var(--pull) * .14)), rgb(0 113 227 / .03) 55%, transparent 75%)
           0 var(--lip-max) / 100% calc(100% - var(--lip-max)) no-repeat,
         linear-gradient(var(--foot), var(--foot))
           0 var(--lip-max) / 100% calc(100% - var(--lip-max)) no-repeat,
@@ -1029,17 +1029,21 @@
        so the corners and the band below them are exactly the same colour. */
     body:has(#scene2) .footer::before { inset: -80px 0 auto; height: 80px; }
 
+    /* The giant name below already says who this is: drop the small label and let the
+       tagline lead. */
+    body:has(#scene2) .footer__logo { display: none; }
+    body:has(#scene2) .footer__tagline { font-size: .95rem; font-weight: 600; }
     /* Giant name, kept quiet: a faint white that fades out downwards, like a watermark. */
     .footer__mark {
       container-type: inline-size;
-      margin: 48px 0 0 -.04em;
-      overflow: clip; padding-bottom: .1em;
+      margin: 28px 0 0;
+      padding-bottom: .14em;   /* room for the g's descender */
       user-select: none; pointer-events: none;
       font-family: var(--serif); font-weight: 600;
       line-height: .9; letter-spacing: -.05em; white-space: nowrap;
     }
     .footer__mark > span {
-      display: block;
+      display: inline-block;   /* shrink-wraps the text so index.html can measure and fit it */
       font-size: 16cqi;   /* spans the full container width */
       background: linear-gradient(rgb(255 255 255 / .16), rgb(255 255 255 / .02) 85%);
       -webkit-background-clip: text; background-clip: text;

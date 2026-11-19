@@ -16,7 +16,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=54">
+  <link rel="stylesheet" href="/assets/home.css?v=55">
   <link rel="stylesheet" href="/assets/ask.css?v=16">
   <script src="/assets/page-transition.js?v=1"></script>
   <script src="/assets/wayglim-rx3.js?v=2" defer></script>
@@ -706,6 +706,17 @@
         });
         t.replaceWith(sr, roll);
       });
+      // Fit the giant name to the content width exactly, whatever font the system
+      // gives it (the CSS cqi size is only a first guess).
+      const mark = foot.querySelector('.footer__mark'), word = mark.firstElementChild;
+      const fit = () => {
+        word.style.fontSize = '';
+        const fs = parseFloat(getComputedStyle(word).fontSize);
+        word.style.fontSize = (fs * mark.clientWidth / word.getBoundingClientRect().width).toFixed(2) + 'px';
+      };
+      fit();
+      document.fonts?.ready.then(fit);
+      addEventListener('resize', fit);
       let raf = 0;
       const pull = () => {
         raf = 0;
