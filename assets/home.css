@@ -830,7 +830,9 @@
          couldn't be clicked. Level with the scrim and later in the DOM puts the card
          above it; the footer (z-index 1, later still) stays above the card. */
       z-index: 1;
-      height: calc(100svh + var(--under));
+      /* lvh: a full screen with the phone's toolbar collapsed (as it is after scrolling
+         down), so the footer stays out of sight while the panel is snapped in. */
+      height: calc(100lvh + var(--under));
       padding-bottom: var(--under);
       margin-bottom: calc(-1 * var(--under));
       clip-path: inset(0 round var(--r) var(--r) 0 0);
@@ -852,18 +854,13 @@
       pointer-events: none;
     }
 
-    /* Gentle snapping: one stop, the Shawn AI screen flush with the window's edges.
-       Stop scrolling near it and the page settles on it. The footer is deliberately
-       not a stop: it was only a footer's height below, so drags on Shawn AI kept
-       snapping it open. Now it scrolls freely and stays where you leave it (the card
-       runs on under the footer, so the browser counts that whole range as "on" the
-       card and doesn't pull back). The top isn't a stop either: a short drag on the
-       hero would spring back to 0, which felt stuck on phones (it's the scroll edge,
-       so it stays reachable). "proximity" only pulls when you stop close to the stop.
-       Not until the hero has rendered, though: while #root is still empty, the Shawn AI
-       screen sits at the very top of the page, Safari snaps to it, and when the hero
-       then pushes it a screen down, Safari re-snaps to it, so every visit opened on
-       Shawn AI instead of the home screen. */
+    /* Desktop: gentle snapping, one stop with the Shawn AI screen flush with the window's
+       edges; the footer scrolls freely past it (the card runs on under the footer, so the
+       browser counts that whole range as "on" the card). Touch devices get a hard stop
+       instead ("Touch scroll" below).
+       Not until the hero has rendered: while #root is still empty, the panel sits at the
+       very top of the page and Safari would snap to it, then re-snap to it once the hero
+       pushes it a screen down, so every visit opened on Shawn AI instead of the home screen. */
     html:has(#scene2):not(:has(#root:empty)) { scroll-snap-type: y proximity; }
     #scene2 { scroll-snap-align: start; }
     #scene2 > iframe {
@@ -1021,8 +1018,8 @@
        Touch scroll: phones and tablets (html.touch-scroll, set in index.html's
        <head> for hover:none + pointer:coarse). Plain native scrolling, nothing
        layered on top of it:
-       - no snap points: proximity snapping fought iOS momentum and re-snapped
-         whenever the toolbar resized the viewport
+       - one hard stop at the Shawn AI panel (below): a swipe from the hero lands on it
+         and can't run on into the footer; the footer takes a second swipe
        - rubber-band bounce is back (the footer's shadow fills the gap past the end)
        - nothing runs per scroll frame: the card's corners stay round (index.html
          skips round()) and the footer shows fully revealed (footer.js skips --pull)
@@ -1030,10 +1027,18 @@
          video clipped by the card's clip-path, which phones repaint every frame
        The hero's pinned wallpaper is unchanged; the card still slides up over it.
        ------------------------------------------------------------------ */
-    html.touch-scroll:has(#scene2),
-    html.touch-scroll:has(#scene2):not(:has(#root:empty)) { scroll-snap-type: none; overscroll-behavior-y: auto; }
+    html.touch-scroll:has(#scene2) { overscroll-behavior-y: auto; }
+    /* The hard stop. Three snap points: the hero, the panel and the end of the page.
+       The panel's is scroll-snap-stop: always, so a fling from the hero can't pass it.
+       Its snap area is trimmed to one screen (negative scroll-margin cancels the --under
+       part under the footer): left whole it reached the end of the page, the browser
+       counted the footer as "on" the panel, and flings went straight through. */
+    html.touch-scroll:has(#scene2):not(:has(#root:empty)) { scroll-snap-type: y mandatory; }
+    html.touch-scroll #root { scroll-snap-align: start; }
+    html.touch-scroll body footer.footer { scroll-snap-align: end; }
     html.touch-scroll #scene2 {
-      scroll-snap-align: none;
+      scroll-snap-stop: always;
+      scroll-margin-bottom: calc(-1 * var(--under));
       container-type: size;          /* cq units below size the video to the card (cqh is the
                                         content box, so add the --under padding back on) */
       clip-path: none;
