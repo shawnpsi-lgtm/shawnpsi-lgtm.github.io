@@ -16,7 +16,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=64">
+  <link rel="stylesheet" href="/assets/home.css?v=65">
   <link rel="stylesheet" href="/assets/ask.css?v=16">
   <script src="/assets/page-transition.js?v=1"></script>
   <script src="/assets/wayglim-rx3.js?v=2" defer></script>
@@ -547,16 +547,24 @@
     </div>
   </section>
   <script>
-    // Load the second wallpaper the moment scrolling starts: arriving and staying
-    // put still costs one video, not two. It rides up inside the Shawn AI card
-    // (home.css); show it once frames are actually playing, or the card shows an
-    // empty iframe and the video pops in afterwards.
+    // The second wallpaper rides up inside the Shawn AI card (home.css), which is
+    // on screen from the first pixel of scrolling. So: show the video's still frame
+    // in the card straight away (a small image from Vimeo), start loading the video
+    // on the first scroll or shortly after the page settles, whichever comes first,
+    // and swap the video in once frames are actually playing.
     const f = document.querySelector('#scene2 iframe'), VIMEO = 'https://player.vimeo.com';
+    const card = document.getElementById('scene2');
     let playing = false;
+    const load = () => { if (f.dataset.src) { f.src = f.dataset.src.replace('VID', vids[1]); delete f.dataset.src; } };
     const scene2 = () => {
-      if (f.dataset.src && scrollY > 0) { f.src = f.dataset.src.replace('VID', vids[1]); delete f.dataset.src; }
+      if (scrollY > 0) load();
       document.body.classList.toggle('scene2-on', playing);
     };
+    fetch('https://vimeo.com/api/oembed.json?width=1920&url=https://vimeo.com/' + vids[1])
+      .then(r => r.json())
+      .then(d => d.thumbnail_url && card.style.setProperty('--still', `url("${d.thumbnail_url}")`))
+      .catch(() => {});   // no still frame: the card stays dark until the video plays
+    addEventListener('load', () => setTimeout(load, 1500));
     addEventListener('message', e => {
       if (e.origin !== VIMEO || e.source !== f.contentWindow) return;
       let d = e.data;

@@ -827,7 +827,9 @@
       padding-bottom: var(--under);
       margin-bottom: calc(-1 * var(--under));
       clip-path: inset(0 round var(--r) var(--r) 0 0);
-      background: #0d0d0f;   /* the card, until the video's first frame */
+      /* Until the video plays: its still frame (index.html sets --still), pinned and
+         cropped like the video so the swap doesn't jump; dark if there's none. */
+      background: #0d0d0f var(--still, none) center / cover no-repeat fixed;
     }
     #scene2::before {
       content: ""; position: absolute; z-index: 1; inset: 0 0 auto; height: var(--r);
