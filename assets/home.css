@@ -1057,6 +1057,12 @@
       -webkit-text-fill-color: transparent; color: transparent;
       -webkit-text-stroke: 1px rgb(255 255 255 / .2);
     }
+    /* Phones: the footer is a single row plus the name, so tighten the gaps around both. */
+    @media (max-width: 640px) {
+      body:has(#scene2) .footer > .container { padding-top: 22px; }
+      .footer__mark { margin-top: 10px; }
+      .footer__mark > span { line-height: .95; }
+    }
     /* Links: a line that grows in from the left, and (desktop) letters that roll up. */
     body:has(#scene2) .footer__link,
     body:has(#scene2) .footer__careers { position: relative; }
