@@ -1033,8 +1033,9 @@
        tagline lead. */
     body:has(#scene2) .footer__logo { display: none; }
     body:has(#scene2) .footer__tagline { font-size: .95rem; font-weight: 600; }
-    /* Giant name, kept quiet: a 1px outline cropped at its baseline on a hairline (the
-       g's tail is cut off, like Fleetline), echoing the line along the curved edge above. */
+    /* Giant name, kept quiet: a 1px outline sunk behind a hairline horizon so the lower
+       third of the letters is cut off (like Fleetline), echoing the line along the
+       curved edge above. */
     .footer__mark {
       container-type: inline-size;
       margin: 28px 0 0;
@@ -1049,7 +1050,13 @@
       font-size: 16cqi;   /* spans the full container width */
       vertical-align: top;
       line-height: 1.1;                     /* full room above, so only the bottom is cut */
-      text-box: trim-end cap alphabetic;    /* box ends at the baseline, so the g's tail is cropped */
+      text-box: trim-end cap alphabetic;    /* box ends at the baseline */
+      /* Sink the word behind the line by ~35% of its cap height (caps are ~.72em),
+         Fleetline-style. The negative margin keeps its top where it was, so the
+         footer doesn't grow; the translate moves the letters down past the cut. */
+      --sink: .25em;
+      margin-top: calc(-1 * var(--sink));
+      translate: 0 var(--sink);
       -webkit-text-fill-color: transparent; color: transparent;
       -webkit-text-stroke: 1px rgb(255 255 255 / .2);
     }
