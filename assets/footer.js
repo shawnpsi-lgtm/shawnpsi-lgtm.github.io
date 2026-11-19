@@ -21,7 +21,6 @@
   };
   const page = location.pathname.replace(/\/+$/, '').split('/').pop().replace(/\.html$/, '') || 'index';
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const isColor = c => c && c !== 'transparent' && !/rgba?\([^)]*,\s*0\)$/.test(c) && !/\/\s*0\)$/.test(c);
 
   const setup = foot => {
     if (foot.dataset.fx) return;
@@ -63,20 +62,6 @@
       });
     }
 
-    // The colour of whatever sits just above the footer, for under the corners.
-    const paper = () => {
-      let el = foot.previousElementSibling;
-      while (el && (!el.offsetHeight || /^(SCRIPT|LINK|STYLE)$/.test(el.tagName))) el = el.previousElementSibling;
-      for (let e = el; e; e = e.parentElement) {
-        const c = getComputedStyle(e).backgroundColor;
-        if (isColor(c)) return foot.style.setProperty('--paper-auto', c);
-      }
-      for (const e of [foot.parentElement, document.body, document.documentElement]) {
-        const c = e && getComputedStyle(e).backgroundColor;
-        if (isColor(c)) return foot.style.setProperty('--paper-auto', c);
-      }
-    };
-
     let raf = 0;
     const pull = () => {
       raf = 0;
@@ -85,13 +70,10 @@
       foot.style.setProperty('--pull', p.toFixed(3));
       foot.style.setProperty('--lift', ((1 - p) * r.height).toFixed(1) + 'px');
     };
-    fit(); paper(); pull();
+    fit(); pull();
     document.fonts?.ready.then(() => { fit(); pull(); });
     addEventListener('scroll', () => raf ||= requestAnimationFrame(pull), { passive: true });
     addEventListener('resize', () => { fit(); pull(); });
-    // The theme toggle changes the page colour (with a .3s fade): re-read it after.
-    new MutationObserver(() => setTimeout(paper, 350))
-      .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
   };
 
   const find = () => document.querySelectorAll('footer.footer').forEach(setup);

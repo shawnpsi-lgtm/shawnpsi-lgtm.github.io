@@ -999,10 +999,7 @@
     }
 
     /* Homepage footer extras (the footer itself is assets/footer.css, shared by every page).
-       The wallpaper above is a pinned video: let it show through under the curved
-       corners at full brightness, and turn overscroll bounce off (Chrome shows the
-       pinned video in the bounce gap). */
-    body:has(#scene2) footer.footer { --paper: transparent; }
+       Turn overscroll bounce off (Chrome shows the pinned video in the bounce gap). */
     html:has(#scene2) { overscroll-behavior-y: none; }
 
     /* Cloudexa card, phone layout: logo and dashboard side by side, centered in the space above the tagline */
