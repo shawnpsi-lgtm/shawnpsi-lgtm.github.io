@@ -1016,9 +1016,11 @@
       flex: 1;
       display: flex; flex-direction: column; justify-content: center;   /* links sit mid-band, above the glow */
       margin-top: var(--lip-max);
+      padding-top: 56px;   /* breathing room under the curve once the wordmark makes the content taller */
     }
     body:has(#scene2) .footer__inner { width: 100%; }
-    body:has(#scene2) .footer__inner {
+    body:has(#scene2) .footer__inner,
+    body:has(#scene2) .footer__mark {
       transform: translateY(calc(-1 * var(--lift, 0px)));
       opacity: calc(.35 + var(--pull) * .65);
     }
@@ -1027,6 +1029,22 @@
        so the corners and the band below them are exactly the same colour. */
     body:has(#scene2) .footer::before { inset: -80px 0 auto; height: 80px; }
 
+    /* Giant name, kept quiet: a faint white that fades out downwards, like a watermark. */
+    .footer__mark {
+      container-type: inline-size;
+      margin: 48px 0 0 -.04em;
+      overflow: clip; padding-bottom: .1em;
+      user-select: none; pointer-events: none;
+      font-family: var(--serif); font-weight: 600;
+      line-height: .9; letter-spacing: -.05em; white-space: nowrap;
+    }
+    .footer__mark > span {
+      display: block;
+      font-size: 16cqi;   /* spans the full container width */
+      background: linear-gradient(rgb(255 255 255 / .16), rgb(255 255 255 / .02) 85%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; color: transparent;
+    }
     /* Links: a line that grows in from the left, and (desktop) letters that roll up. */
     body:has(#scene2) .footer__link,
     body:has(#scene2) .footer__careers { position: relative; }
