@@ -209,6 +209,16 @@
         const m = clean.match(/^(.+?)\s+[-–—]\s+(.+)$/)
         return m ? { artist: m[1], title: m[2] } : { artist: '', title: clean }
       }
+      // Hard-coded fixes for Shawn's own songs, by title: "strip clubz // dollar billz" is stored as "::" (macOS saves a
+      // slash typed in Finder as a colon), and it and "kiiss" show the cover from "signs".
+      const RETITLE = { 'strip clubz :: dollar billz': 'strip clubz // dollar billz' }
+      const SIGNS_COVER = new Set(['strip clubz // dollar billz', 'kiiss'])
+      function fixShawn() {
+        const key = t => t.title.toLowerCase().replace(/\s+/g, ' ').trim()
+        for (const t of Object.values(tracks)) if (RETITLE[key(t)]) t.title = t.name = RETITLE[key(t)]
+        const signs = Object.keys(tracks).find(id => key(tracks[id]) === 'signs')
+        if (signs) for (const t of Object.values(tracks)) if (SIGNS_COVER.has(key(t))) t.art = signs
+      }
       // A stable gradient per track, under the cover (or instead of one).
       const swatch = name => {
         let h = 0
@@ -246,7 +256,7 @@
       const row = (id, p) => {
         const t = tracks[id], cls = [p.sel.has(id) && 'sel', id === now && 'now'].filter(Boolean).join(' ')
         return `<tr data-id="${id}" draggable="true"${cls ? ` class="${cls}"` : ''}>
-          <td class="art"><span style="${swatch(t.name)}">${noArt.has(id) ? '' : `<img src="${API}/art/${id}" loading="lazy" alt="">`}</span>${playable.has(id) ? `<button data-act="play" aria-label="Play ${esc(t.title)}">${ico('M8 5v14l11-7z')}</button>` : ''}</td>
+          <td class="art"><span style="${swatch(t.name)}">${noArt.has(id) ? '' : `<img src="${API}/art/${t.art || id}" loading="lazy" alt="">`}</span>${playable.has(id) ? `<button data-act="play" aria-label="Play ${esc(t.title)}">${ico('M8 5v14l11-7z')}</button>` : ''}</td>
           <td class="name">${esc(t.title)}</td><td>${esc(t.artist)}</td><td class="time">${time(t.duration)}</td>
           <td><span class="r2-kind${LOSSLESS.has(t.ext) ? ' ll' : ''}">${esc(t.kind)}</span></td></tr>`
       }
@@ -458,6 +468,7 @@
       // Opens like the screenshot: the playable list on the left, the whole library on the right, by title.
       fetch(`${API}/library`).then(r => r.ok ? r.json() : Promise.reject()).then(data => {
         for (const [id, t] of Object.entries(data.tracks)) tracks[id] = { ...t, ...parseName(t.name), kind: t.ext.toUpperCase() }
+        fixShawn()
         libIds = Object.keys(tracks).sort((a, b) => tracks[b].addedAt - tracks[a].addedAt)
         if (data.list) lists = [{ name: data.list.name, ids: data.list.trackIds.filter(id => tracks[id]) }]
         playable = new Set(lists[0]?.ids)
