@@ -980,24 +980,29 @@
       --edge: rgb(255 255 255 / .2);                               /* hairline along the curve, like the glass nav */
       background:
         /* concave corners, with the hairline traced just inside the curve */
-        radial-gradient(circle at 100% 0, transparent calc(var(--lip) - 1.5px), var(--edge) calc(var(--lip) - .5px), var(--foot) calc(var(--lip) + .5px))
+        radial-gradient(circle at 100% 0, transparent calc(var(--lip) - 1.25px), var(--edge) calc(var(--lip) - .75px), var(--edge) calc(var(--lip) - .25px), var(--foot) calc(var(--lip) + .25px))
           left 0 top var(--off) / var(--lip) var(--lip) no-repeat,
-        radial-gradient(circle at 0 0, transparent calc(var(--lip) - 1.5px), var(--edge) calc(var(--lip) - .5px), var(--foot) calc(var(--lip) + .5px))
+        radial-gradient(circle at 0 0, transparent calc(var(--lip) - 1.25px), var(--edge) calc(var(--lip) - .75px), var(--edge) calc(var(--lip) - .25px), var(--foot) calc(var(--lip) + .25px))
           right 0 top var(--off) / var(--lip) var(--lip) no-repeat,
         /* hairline along the straight top edge */
         linear-gradient(var(--edge), var(--edge))
-          var(--lip) var(--lip-max) / calc(100% - 2 * var(--lip)) 1px no-repeat,
+          var(--lip) calc(var(--lip-max) - 1px) / calc(100% - 2 * var(--lip)) 1px no-repeat,   /* the same 1px row the corner rings end on */
         /* blue glow rising from the bottom edge */
         radial-gradient(ellipse 60% calc(55% + var(--pull) * 30%) at 50% 112%,
           rgb(41 151 255 / calc(.16 + var(--pull) * .22)), rgb(0 113 227 / .06) 55%, transparent 75%)
           0 var(--lip-max) / 100% calc(100% - var(--lip-max)) no-repeat,
         linear-gradient(var(--foot), var(--foot))
-          0 var(--lip-max) / 100% calc(100% - var(--lip-max)) no-repeat;
+          0 var(--lip-max) / 100% calc(100% - var(--lip-max)) no-repeat,
+        /* wallpaper seen through the lip strip: same darkness the scrim ends on */
+        linear-gradient(rgb(0 0 0 / .72), rgb(0 0 0 / .72))
+          0 0 / 100% var(--lip-max) no-repeat;
       padding-top: calc(var(--lip-max) + 56px);
       text-shadow: none;
     }
-    /* Keep the scrim above the footer only: it now darkens the wallpaper into the curve. */
-    body:has(#scene2) .footer::before { inset: -80px 0 auto; height: calc(80px + var(--lip-max)); }
+    /* The scrim stops at the footer's top edge; the footer carries its darkest tone on
+       through the lip strip itself (last background layer), under the corners only,
+       so the corners and the band below them are exactly the same colour. */
+    body:has(#scene2) .footer::before { inset: -80px 0 auto; height: 80px; }
 
     /* Giant name, filled with the Tahoe wallpaper and fading towards the bottom. */
     .footer__mark {
