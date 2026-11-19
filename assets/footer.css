@@ -29,11 +29,13 @@ footer.footer {
   border: 0; border-radius: 0;
   color: var(--mid);
   background:
-    /* concave corners, with the hairline traced just inside the curve */
+    /* concave corners, with the hairline traced just inside the curve. Each runs 2px
+       past the page edge and into the fill below, so fractional sizes never leave a
+       sliver of the page above showing through. */
     radial-gradient(circle at 100% 0, transparent calc(var(--lip) - 1.25px), var(--edge) calc(var(--lip) - .75px), var(--edge) calc(var(--lip) - .25px), var(--foot) calc(var(--lip) + .25px))
-      left 0 top var(--off) / var(--lip) var(--lip) no-repeat,
+      -2px var(--off) / calc(var(--lip) + 2px) calc(var(--lip) + 2px) no-repeat,
     radial-gradient(circle at 0 0, transparent calc(var(--lip) - 1.25px), var(--edge) calc(var(--lip) - .75px), var(--edge) calc(var(--lip) - .25px), var(--foot) calc(var(--lip) + .25px))
-      right 0 top var(--off) / var(--lip) var(--lip) no-repeat,
+      right -2px top var(--off) / calc(var(--lip) + 2px) calc(var(--lip) + 2px) no-repeat,
     /* hairline along the straight top edge, on the same 1px row the corner rings end on */
     linear-gradient(var(--edge), var(--edge))
       var(--lip) calc(var(--lip-max) - 1px) / calc(100% - 2 * var(--lip)) 1px no-repeat,
