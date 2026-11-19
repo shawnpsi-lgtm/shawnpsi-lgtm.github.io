@@ -952,14 +952,10 @@
     }
 
     /* Homepage footer extras (the footer itself is assets/footer.css, shared by every page).
-       The wallpaper above is a pinned video, so: a scrim darkens it into the curve,
-       the lip strip carries the scrim's last tone under the corners, and overscroll
-       bounce is off (Chrome shows the pinned video in the bounce gap). */
-    body:has(#scene2) footer.footer { --paper: rgb(0 0 0 / .72); }
-    body:has(#scene2) footer.footer::before {
-      content: ""; position: absolute; z-index: -1; inset: -80px 0 auto; height: 80px; pointer-events: none;
-      background: linear-gradient(to bottom, rgb(0 0 0 / 0), rgb(0 0 0 / .5) 40%, rgb(0 0 0 / .72));
-    }
+       The wallpaper above is a pinned video: let it show through under the curved
+       corners at full brightness, and turn overscroll bounce off (Chrome shows the
+       pinned video in the bounce gap). */
+    body:has(#scene2) footer.footer { --paper: transparent; }
     html:has(#scene2) { overscroll-behavior-y: none; }
 
     /* Cloudexa card, phone layout: logo and dashboard side by side, centered in the space above the tagline */
