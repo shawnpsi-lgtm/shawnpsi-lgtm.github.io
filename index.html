@@ -607,33 +607,6 @@
       const foot = document.querySelector('footer.footer'), card = document.getElementById('scene2');
       if (foot) new ResizeObserver(() => card.style.setProperty('--under', foot.offsetHeight + 'px')).observe(foot);
     });
-    // Desktop's stop at the Shawn AI panel (touch has its own, in home.css's snap rules).
-    // A wheel or trackpad gesture that starts above the panel is held there, flush with
-    // the window, so one long scroll or a trackpad flick can't run on into the footer.
-    // Pause, and the next gesture carries on to the footer. A gesture is a run of wheel
-    // events less than GAP ms apart; a trackpad's momentum keeps firing until it settles,
-    // so the whole flick counts as one. Scrolling within the hero is untouched.
-    if (!document.documentElement.classList.contains('touch-scroll')) {
-      const GAP = 300;
-      let last = -Infinity, held = false;
-      const top = () => card.offsetTop;
-      addEventListener('wheel', e => {
-        if (e.ctrlKey) return;                                   // pinch-zoom
-        if (e.timeStamp - last > GAP) held = e.deltaY > 0 && scrollY < top() - 2;   // new gesture
-        last = e.timeStamp;
-        if (!held || e.deltaY <= 0) return;
-        const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1);
-        if (scrollY >= top() - 1) e.preventDefault();             // at the stop: swallow the rest
-        else if (scrollY + dy > top()) { e.preventDefault(); scrollTo({ top: top(), behavior: 'smooth' }); }
-      }, { passive: false });
-      // The browser's own smooth wheel animation can still carry past the panel from
-      // events let through just before it, and runs on a little after the last event;
-      // pull it back until it has had time to settle (not for good: the scrollbar and
-      // keyboard still have to reach the footer).
-      addEventListener('scroll', () => {
-        if (held && performance.now() - last < GAP + 700 && scrollY > top()) scrollTo({ top: top(), behavior: 'instant' });
-      }, { passive: true });
-    }
   </script>
   <script>
     // Shawn AI boots up once, the first time its screen is half in view: the
