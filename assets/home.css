@@ -956,7 +956,7 @@
        fading up from the bottom, plus light text in either theme, keeps it legible. */
     body:has(#scene2) .footer {
       --black: #f5f5f7; --mid: rgb(255 255 255 / .82);
-      padding-bottom: calc(clamp(28px, 4vw, 56px) + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);   /* the name runs off the page's bottom edge */
       text-shadow: 0 1px 8px rgb(0 0 0 / .4);
     }
     /* The scrim reaches above the footer box so it fades in without adding height. */
@@ -997,7 +997,6 @@
         linear-gradient(rgb(0 0 0 / .72), rgb(0 0 0 / .72))
           0 0 / 100% var(--lip-max) no-repeat;
       padding-top: 0;
-      min-height: clamp(240px, 34vh, 340px);   /* tall enough for the reveal to read as one */
       text-shadow: none;
     }
     /* Curtain reveal: the footer scrolls in as usual, but its contents hold still on
@@ -1014,9 +1013,9 @@
     body:has(#scene2) .footer > .container {
       overflow: clip;
       flex: 1;
-      display: flex; flex-direction: column; justify-content: center;   /* links sit mid-band, above the glow */
+      display: flex; flex-direction: column;
       margin-top: var(--lip-max);
-      padding-top: 56px;   /* breathing room under the curve once the wordmark makes the content taller */
+      padding-top: 48px;   /* breathing room under the curve */
     }
     body:has(#scene2) .footer__inner { width: 100%; }
     body:has(#scene2) .footer__inner,
@@ -1033,14 +1032,12 @@
        tagline lead. */
     body:has(#scene2) .footer__logo { display: none; }
     body:has(#scene2) .footer__tagline { font-size: .95rem; font-weight: 600; }
-    /* Giant name, kept quiet: a 1px outline sunk behind a hairline horizon so the lower
-       third of the letters is cut off (like Fleetline), echoing the line along the
-       curved edge above. */
+    /* Giant name, kept quiet: a 1px outline rising from the very bottom of the page,
+       its lower quarter cut off by the footer's bottom edge (like Fleetline). */
     .footer__mark {
       container-type: inline-size;
       margin: 28px 0 0;
-      overflow: clip;                                  /* cut at the baseline, like a horizon */
-      border-bottom: 1px solid rgb(255 255 255 / .2);  /* the horizon line, exactly at the cut */
+      overflow: clip;   /* the page's bottom edge cuts the letters */
       user-select: none; pointer-events: none;
       font-family: var(--serif); font-weight: 600;
       line-height: .9; letter-spacing: -.05em; white-space: nowrap;
@@ -1051,10 +1048,10 @@
       vertical-align: top;
       line-height: 1.1;                     /* full room above, so only the bottom is cut */
       text-box: trim-end cap alphabetic;    /* box ends at the baseline */
-      /* Sink the word behind the line by ~35% of its cap height (caps are ~.72em),
-         Fleetline-style. The negative margin keeps its top where it was, so the
-         footer doesn't grow; the translate moves the letters down past the cut. */
-      --sink: .25em;
+      /* Sink the word past the footer's bottom edge by ~25% of its cap height (caps
+         are ~.72em), Fleetline-style. The negative margin keeps its top where it was;
+         the translate moves the letters down past the cut. */
+      --sink: .18em;
       margin-top: calc(-1 * var(--sink));
       translate: 0 var(--sink);
       -webkit-text-fill-color: transparent; color: transparent;
