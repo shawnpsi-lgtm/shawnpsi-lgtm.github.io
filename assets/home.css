@@ -1020,7 +1020,7 @@
        layered on top of it:
        - one hard stop at the Shawn AI panel (below): a swipe from the hero lands on it
          and can't run on into the footer; the footer takes a second swipe
-       - rubber-band bounce is back (the footer's shadow fills the gap past the end)
+       - rubber-band bounce is back (the gap past the end is footer-dark, see below)
        - nothing runs per scroll frame: the card's corners stay round (index.html
          skips round()) and the footer shows fully revealed (footer.js skips --pull)
        - the Shawn AI video scrolls with its card, covering it, instead of a fixed
@@ -1028,6 +1028,12 @@
        The hero's pinned wallpaper is unchanged; the card still slides up over it.
        ------------------------------------------------------------------ */
     html.touch-scroll:has(#scene2) { overscroll-behavior-y: auto; }
+    /* Bounce past the footer shows more footer. iOS doesn't paint the footer's shadow
+       outside the page, so the gap shows the canvas plus any fixed layer: the hero's
+       pinned wallpaper. Paint the canvas footer-dark, and once the Shawn AI card covers
+       the screen (html.hero-off, set by index.html) hide the wallpaper it hides anyway. */
+    html.touch-scroll:has(#scene2) { background: #0d0d0f; }
+    html.touch-scroll.hero-off body .min-h-screen > :is(img, iframe, div:first-of-type) { visibility: hidden; }
     /* The hard stop. Three snap points: the hero, the panel and the end of the page.
        The panel's is scroll-snap-stop: always, so a fling from the hero can't pass it.
        Its snap area is trimmed to one screen (negative scroll-margin cancels the --under

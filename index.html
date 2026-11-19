@@ -16,7 +16,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=73">
+  <link rel="stylesheet" href="/assets/home.css?v=74">
   <link rel="stylesheet" href="/assets/ask.css?v=16">
   <script src="/assets/page-transition.js?v=1"></script>
   <script src="/assets/wayglim-rx3.js?v=2" defer></script>
@@ -593,6 +593,14 @@
     addEventListener('scroll', () => rf ||= requestAnimationFrame(round), { passive: true });
     addEventListener('resize', round);
     round();
+    // Touch: once the card reaches the top of the screen it covers the hero, so its
+    // pinned wallpaper is hidden (home.css, html.hero-off). Then a bounce past the
+    // footer shows footer-dark, not the hero video. The observer's root is a line
+    // along the top edge, so it fires only when the card crosses it.
+    if (document.documentElement.classList.contains('touch-scroll') && 'IntersectionObserver' in window) {
+      new IntersectionObserver(([e]) => document.documentElement.classList.toggle('hero-off', e.isIntersecting),
+        { rootMargin: '0px 0px -100% 0px' }).observe(card);
+    }
     // The card runs on under the footer, exactly as far as the footer is tall
     // (the footer comes later in the page, so wait for it).
     addEventListener('DOMContentLoaded', () => {
