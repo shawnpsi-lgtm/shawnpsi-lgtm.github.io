@@ -1033,11 +1033,13 @@
        tagline lead. */
     body:has(#scene2) .footer__logo { display: none; }
     body:has(#scene2) .footer__tagline { font-size: .95rem; font-weight: 600; }
-    /* Giant name, kept quiet: a faint white that fades out downwards, like a watermark. */
+    /* Giant name, kept quiet: a 1px outline cropped at its baseline on a hairline (the
+       g's tail is cut off, like Fleetline), echoing the line along the curved edge above. */
     .footer__mark {
       container-type: inline-size;
       margin: 28px 0 0;
-      padding-bottom: .14em;   /* room for the g's descender */
+      overflow: clip;                                  /* cut at the baseline, like a horizon */
+      border-bottom: 1px solid rgb(255 255 255 / .2);  /* the horizon line, exactly at the cut */
       user-select: none; pointer-events: none;
       font-family: var(--serif); font-weight: 600;
       line-height: .9; letter-spacing: -.05em; white-space: nowrap;
@@ -1045,9 +1047,11 @@
     .footer__mark > span {
       display: inline-block;   /* shrink-wraps the text so index.html can measure and fit it */
       font-size: 16cqi;   /* spans the full container width */
-      background: linear-gradient(rgb(255 255 255 / .16), rgb(255 255 255 / .02) 85%);
-      -webkit-background-clip: text; background-clip: text;
+      vertical-align: top;
+      line-height: 1.1;                     /* full room above, so only the bottom is cut */
+      text-box: trim-end cap alphabetic;    /* box ends at the baseline, so the g's tail is cropped */
       -webkit-text-fill-color: transparent; color: transparent;
+      -webkit-text-stroke: 1px rgb(255 255 255 / .2);
     }
     /* Links: a line that grows in from the left, and (desktop) letters that roll up. */
     body:has(#scene2) .footer__link,
