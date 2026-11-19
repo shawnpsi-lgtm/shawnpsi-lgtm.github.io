@@ -852,22 +852,20 @@
       pointer-events: none;
     }
 
-    /* Gentle snapping: one stop, the very bottom, where the Shawn AI screen and the
-       footer show together. They used to be two stops only a footer's height apart,
-       so almost any drag on Shawn AI flipped to the footer, and on short phones that
-       pushed the title up under the nav. padding-top matches the --under padding at
-       the bottom, so the title, box and links centre in the space above the footer.
-       The top deliberately isn't a stop: a short drag on the hero would spring back
-       to 0, which felt stuck on phones (it's the scroll edge, so it stays reachable).
-       "proximity" only pulls when you stop close to the stop; elsewhere the page
-       stays put.
+    /* Gentle snapping: one stop, the Shawn AI screen flush with the window's edges.
+       Stop scrolling near it and the page settles on it. The footer is deliberately
+       not a stop: it was only a footer's height below, so drags on Shawn AI kept
+       snapping it open. Now it scrolls freely and stays where you leave it (the card
+       runs on under the footer, so the browser counts that whole range as "on" the
+       card and doesn't pull back). The top isn't a stop either: a short drag on the
+       hero would spring back to 0, which felt stuck on phones (it's the scroll edge,
+       so it stays reachable). "proximity" only pulls when you stop close to the stop.
        Not until the hero has rendered, though: while #root is still empty, the Shawn AI
        screen sits at the very top of the page, Safari snaps to it, and when the hero
        then pushes it a screen down, Safari re-snaps to it, so every visit opened on
        Shawn AI instead of the home screen. */
     html:has(#scene2):not(:has(#root:empty)) { scroll-snap-type: y proximity; }
-    #scene2 { padding-top: var(--under); }
-    body:has(#scene2) footer.footer { scroll-snap-align: end; }
+    #scene2 { scroll-snap-align: start; }
     #scene2 > iframe {
       position: fixed;
       top: 50%;
