@@ -16,7 +16,7 @@
   <link rel="stylesheet" crossorigin href="/assets/main-6M-rhZKl.css">
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
-  <link rel="stylesheet" href="/assets/home.css?v=47">
+  <link rel="stylesheet" href="/assets/home.css?v=48">
   <link rel="stylesheet" href="/assets/ask.css?v=16">
   <script src="/assets/page-transition.js?v=1"></script>
   <script src="/assets/wayglim-rx3.js?v=2" defer></script>
@@ -682,8 +682,47 @@
           </a>
         </div>
       </div>
+      <div class="footer__mark" aria-hidden="true"><span>Shawn Singh</span></div>
     </div>
   </footer>
+  <script>
+    // Footer effects (styles in home.css): the curve deepens and the glow brightens
+    // as the footer scrolls in (--pull), the giant name reveals once, and link
+    // labels are split into letters for the hover roll.
+    (() => {
+      const foot = document.querySelector('.footer');
+      const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      foot.querySelectorAll('.footer__link, .footer__careers').forEach(a => {
+        const t = [...a.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
+        if (!t) return;
+        const label = t.textContent.trim(), sr = document.createElement('span'), roll = document.createElement('span');
+        sr.className = 'sr-text'; sr.textContent = label;
+        roll.className = 'roll'; roll.setAttribute('aria-hidden', 'true');
+        [...label].forEach((c, i) => {
+          const s = document.createElement('span');
+          s.textContent = c; s.dataset.c = c; s.style.setProperty('--i', i);
+          roll.append(s);
+        });
+        t.replaceWith(sr, roll);
+      });
+      if (!calm && 'IntersectionObserver' in window) {
+        foot.classList.add('is-armed');
+        new IntersectionObserver((es, io) => {
+          if (es[0].isIntersecting) { foot.classList.add('is-in'); io.disconnect(); }
+        }, { threshold: .35 }).observe(foot);
+      }
+      let raf = 0;
+      const pull = () => {
+        raf = 0;
+        const r = foot.getBoundingClientRect();
+        const p = calm ? 1 : Math.min(1, Math.max(0, (innerHeight - r.top) / r.height));
+        foot.style.setProperty('--pull', p.toFixed(3));
+      };
+      addEventListener('scroll', () => raf ||= requestAnimationFrame(pull), { passive: true });
+      addEventListener('resize', pull);
+      pull();
+    })();
+  </script>
 
   <link rel="stylesheet" href="/assets/glass.css?v=16">
 

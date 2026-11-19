@@ -966,20 +966,89 @@
     }
     body:has(#scene2) .footer__link:hover,
     body:has(#scene2) .footer__careers:hover { color: #fff; text-decoration: underline; }
-    /* Rounded "lip": the wallpaper above appears to curve down into a solid footer.
-       Drawn as background layers (two concave corner pieces plus the band below them)
-       so the corners stay see-through to the wallpaper and ::before stays free for the scrim. */
+    /* ---- Footer: rounded lip, glow, giant wordmark ----
+       The wallpaper above appears to curve down into a solid footer. Everything is
+       drawn as background layers so the corners stay see-through to the wallpaper
+       and ::before stays free for the scrim. --pull (0 → 1, set by index.html as
+       the footer scrolls in) deepens the curve and brightens the glow. */
     body:has(#scene2) .footer {
-      --lip: clamp(24px, 3.4vw, 48px);
-      --foot: #111113;
+      --pull: 0;
+      --lip-max: clamp(24px, 3.4vw, 48px);
+      --lip: calc(var(--lip-max) * (.35 + var(--pull) * .65));   /* corner radius */
+      --off: calc(var(--lip-max) - var(--lip));                   /* corners sit on the band's fixed top edge */
+      --foot: #0d0d0f;
+      --edge: rgb(255 255 255 / .2);                               /* hairline along the curve, like the glass nav */
       background:
-        radial-gradient(circle at 100% 0, transparent calc(var(--lip) - .5px), var(--foot) var(--lip))
-          left top / var(--lip) var(--lip) no-repeat,
-        radial-gradient(circle at 0 0, transparent calc(var(--lip) - .5px), var(--foot) var(--lip))
-          right top / var(--lip) var(--lip) no-repeat,
+        /* concave corners, with the hairline traced just inside the curve */
+        radial-gradient(circle at 100% 0, transparent calc(var(--lip) - 1.5px), var(--edge) calc(var(--lip) - .5px), var(--foot) calc(var(--lip) + .5px))
+          left 0 top var(--off) / var(--lip) var(--lip) no-repeat,
+        radial-gradient(circle at 0 0, transparent calc(var(--lip) - 1.5px), var(--edge) calc(var(--lip) - .5px), var(--foot) calc(var(--lip) + .5px))
+          right 0 top var(--off) / var(--lip) var(--lip) no-repeat,
+        /* hairline along the straight top edge */
+        linear-gradient(var(--edge), var(--edge))
+          var(--lip) var(--lip-max) / calc(100% - 2 * var(--lip)) 1px no-repeat,
+        /* blue glow rising from the bottom edge */
+        radial-gradient(ellipse 60% calc(55% + var(--pull) * 30%) at 50% 112%,
+          rgb(41 151 255 / calc(.16 + var(--pull) * .22)), rgb(0 113 227 / .06) 55%, transparent 75%)
+          0 var(--lip-max) / 100% calc(100% - var(--lip-max)) no-repeat,
         linear-gradient(var(--foot), var(--foot))
-          0 var(--lip) / 100% calc(100% - var(--lip)) no-repeat;
-      padding-top: calc(var(--lip) + 56px);
+          0 var(--lip-max) / 100% calc(100% - var(--lip-max)) no-repeat;
+      padding-top: calc(var(--lip-max) + 56px);
+      text-shadow: none;
+    }
+    /* Keep the scrim above the footer only: it now darkens the wallpaper into the curve. */
+    body:has(#scene2) .footer::before { inset: -80px 0 auto; height: calc(80px + var(--lip-max)); }
+
+    /* Giant name, filled with the Tahoe wallpaper and fading towards the bottom. */
+    .footer__mark {
+      container-type: inline-size;
+      margin: 44px 0 0 -.04em; overflow: clip;   /* the reveal starts below: never let it lengthen the page */
+      padding-bottom: .12em;
+      user-select: none; pointer-events: none;
+      font-family: var(--serif); font-weight: 700;
+      line-height: .9; letter-spacing: -.045em; white-space: nowrap;
+      mask-image: linear-gradient(#000 30%, rgb(0 0 0 / calc(.18 + var(--pull, 0) * .5)));
+    }
+    .footer__mark > span {
+      display: block;
+      font-size: 15.6cqi;   /* "Shawn Singh" spans the full container width */
+      color: #f5f5f7;
+      background: linear-gradient(to top, rgb(41 151 255 / .35), transparent 60%), url(/poster.jpg) 50% 58% / cover;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: transform 1.4s cubic-bezier(.22, 1, .36, 1), filter 1.4s cubic-bezier(.22, 1, .36, 1),
+                  opacity .9s ease, clip-path 1.2s cubic-bezier(.65, 0, .35, 1);
+      clip-path: inset(-20% -2% -40% 0);
+    }
+    /* Reveal: index.html adds .is-armed, then .is-in once the footer scrolls into view. */
+    .footer.is-armed:not(.is-in) .footer__mark > span {
+      transform: translateY(55%); filter: blur(12px); opacity: 0; clip-path: inset(-20% 100% -40% 0);
+    }
+
+    /* Links: a line that grows in from the left, and (desktop) letters that roll up. */
+    body:has(#scene2) .footer__link,
+    body:has(#scene2) .footer__careers { position: relative; }
+    body:has(#scene2) .footer__link::after,
+    body:has(#scene2) .footer__careers::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px;
+      background: currentColor; transform: scaleX(0); transform-origin: right;
+      transition: transform .42s cubic-bezier(.22, 1, .36, 1);
+    }
+    body:has(#scene2) .footer__link:hover::after,
+    body:has(#scene2) .footer__careers:hover::after { transform: scaleX(1); transform-origin: left; }
+    body:has(#scene2) .footer__link:hover,
+    body:has(#scene2) .footer__careers:hover { text-decoration: none; }
+    .footer .sr-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .footer .roll { white-space: pre; }
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+      .footer .roll { display: inline-flex; overflow: hidden; vertical-align: top; }
+      .footer .roll > span { position: relative; display: inline-block;
+        transition: transform .5s cubic-bezier(.22, 1, .36, 1) calc(var(--i) * 18ms); }
+      .footer .roll > span::after { content: attr(data-c); position: absolute; top: 100%; left: 0; }
+      .footer a:is(:hover, :focus-visible) .roll > span { transform: translateY(-100%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .footer.is-armed:not(.is-in) .footer__mark > span { transform: none; filter: none; opacity: 1; clip-path: inset(-20% -2% -40% 0); }
     }
     /* Phones: one line instead of a tall stack: name and Careers on the left,
        the three links as icons on the right. The tagline is dropped and the link
