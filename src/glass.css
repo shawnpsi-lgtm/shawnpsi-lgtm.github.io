@@ -43,6 +43,13 @@
   --lg-rim-shine: 0.62;
   --glass-tint: 0.04;
 }
+/* Once a conversation starts the popover grows tall, and bend scales with the short side,
+   so the nav's settings warp the page behind it hard. Ease off while there's a chat log.
+   (The popover resizes as the first message lands, which makes Glisse refit and read these.) */
+#chat:has(#chat-log:not(:empty)) > .glass-layer {
+  --lg-glass-bend: 0.25;
+  --lg-glass-dispersion: 0.35;
+}
 .glass-layer > .lg-glass { width: 100%; height: 100%; border-radius: inherit; }
 
 /* A view-transition-name makes a backdrop root, so glass inside a named element
