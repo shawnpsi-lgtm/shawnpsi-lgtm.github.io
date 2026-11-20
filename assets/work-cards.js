@@ -332,8 +332,26 @@
       }
     };
 
+    // React's client video cards are plain (aria-hidden) divs; this stretches a link over each one to its coverage.
+    const fillClientLinks = () => {
+      const links = [
+        [':has([src$="igstory.mp4"])', 'https://www.hennessy.com/en-us/hennessy-very-special-cocktails', 'Hennessy Very Special cocktails'],
+        [':has([src$="trailer.mp4"])', 'https://djmag.com/news/ministry-of-sound-break-and-illegal-rave-confirmed-stunt-homage-uk-rave-culture', 'LAB 54 x Ministry of Sound on DJ Mag'],
+      ];
+      for (const [sel, href, label] of links) {
+        const wrap = document.querySelector('.grid .card-wrap' + sel);
+        if (!wrap || wrap.querySelector('.card-link')) continue;
+        wrap.removeAttribute('aria-hidden');
+        Object.assign(wrap.style, { position: 'relative', cursor: 'pointer' });
+        const a = Object.assign(document.createElement('a'), { className: 'card-link', href, target: '_blank', rel: 'noopener' });
+        a.setAttribute('aria-label', label + ' (opens in a new tab)');
+        Object.assign(a.style, { position: 'absolute', inset: '0', zIndex: '20' });
+        wrap.append(a);
+      }
+    };
+
   const fillAll = () => {
-    fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillSayclipLogo(); fillSayclipBadge(); fillRx3(); fillR2(); fillBrandHeroes(); fillGroups();
+    fillEmpty(); fillNgc2(); fillDjai(); fillCardCopy(); fillClientLinks(); fillSayclipLogo(); fillSayclipBadge(); fillRx3(); fillR2(); fillBrandHeroes(); fillGroups();
   };
   addEventListener('DOMContentLoaded', () => {
     fillAll();
