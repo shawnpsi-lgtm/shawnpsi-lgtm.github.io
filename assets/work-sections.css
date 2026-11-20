@@ -1,0 +1,133 @@
+/* Work page: the Selected Work grid split into three glass panes (work-sections.js
+   regroups React's cards into them). Each pane's rounded bottom edge sits over the
+   next pane, which tucks underneath it — the same "lip" as the footer. The last
+   pane runs square into the footer, whose own lip makes the final curve.
+
+   Everything is scoped to .grid.ws-on, so ?layout=classic (no .ws-on) is the old grid. */
+
+#work:has(.grid.ws-on) {
+  --ws-L: clamp(24px, 3.4vw, 40px);              /* lip radius, matches the footer's range */
+  --ws-dot: rgb(255 255 255 / .16);
+  --ws-glass: rgb(28 28 30 / .55);
+  --ws-rim: rgb(255 255 255 / .22);
+  --ws-hair: rgb(255 255 255 / .08);
+  --ws-shadow: rgb(0 0 0 / .45);
+  --ws-mix: 18%;
+  background:
+    radial-gradient(circle at 1px 1px, var(--ws-dot) 1px, transparent 1.4px) 0 0 / 22px 22px,
+    #0b0b0d;
+  padding-bottom: 0;
+}
+:root[data-theme="light"] #work:has(.grid.ws-on) {
+  --ws-dot: rgb(0 0 0 / .14);
+  --ws-glass: rgb(255 255 255 / .6);
+  --ws-rim: rgb(255 255 255 / .9);
+  --ws-hair: rgb(0 0 0 / .08);
+  --ws-shadow: rgb(0 0 0 / .12);
+  --ws-mix: 12%;
+  background:
+    radial-gradient(circle at 1px 1px, var(--ws-dot) 1px, transparent 1.4px) 0 0 / 22px 22px,
+    #f2f2f5;
+}
+/* Full-bleed panes are 100vw wide; clip the scrollbar's width instead of scrolling sideways. */
+html:has(.grid.ws-on) { overflow-x: clip; }
+
+#work:has(.grid.ws-on) .section-label { position: relative; z-index: 6; }
+
+.grid.ws-on { display: block; position: relative; }
+
+/* One pane. Full-bleed out of the 1120px grid, content padded back to the grid's edges. */
+.ws-pane {
+  --c: #2997ff;
+  position: relative;
+  margin: 0 calc(50% - 50vw) calc(-1 * var(--ws-L));
+  padding: calc(var(--ws-L) + 18px) calc(50vw - 50%) 32px;
+  background: color-mix(in oklab, var(--c) var(--ws-mix), var(--ws-glass));
+  -webkit-backdrop-filter: blur(3px) saturate(1.6);
+  backdrop-filter: blur(3px) saturate(1.6);
+  border-radius: 0 0 var(--ws-L) var(--ws-L);
+  box-shadow:
+    inset 0 -1px 0 var(--ws-rim),
+    inset 0 0 0 .5px var(--ws-hair),
+    0 18px 40px var(--ws-shadow);
+}
+.ws-pane::before {             /* faint top/bottom sheen, like the nav glass */
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, rgb(255 255 255 / .05), transparent 30%, transparent 75%, rgb(255 255 255 / .04));
+}
+/* The last pane runs square into the footer, whose lip curves over it. */
+.ws-pane:last-of-type {
+  margin-bottom: 0;
+  border-radius: 0;
+  padding-bottom: calc(56px + clamp(24px, 3.4vw, 48px));
+  box-shadow: inset 0 0 0 .5px var(--ws-hair);
+}
+
+/* The header pane: from the top of the page down past "Selected Work", curving over Products. */
+.ws-head {
+  position: absolute; z-index: 5; pointer-events: none;
+  left: calc(50% - 50vw); width: 100vw;
+  top: calc(-1 * var(--ws-top, 189px));
+  height: calc(var(--ws-top, 189px) + var(--ws-L) + 4px);
+  background: var(--ws-glass);
+  -webkit-backdrop-filter: blur(3px) saturate(1.6);
+  backdrop-filter: blur(3px) saturate(1.6);
+  border-radius: 0 0 var(--ws-L) var(--ws-L);
+  box-shadow: inset 0 -1px 0 var(--ws-rim), 0 18px 40px var(--ws-shadow);
+}
+
+/* Section heading: name, count, a rule — all in the section's colour. */
+.ws-head-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; position: relative; }
+.ws-head-row h2 {
+  margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -.01em;
+  color: color-mix(in oklab, var(--c) 35%, var(--ws-title, #fff));
+}
+.ws-head-row span { font-size: 11px; font-weight: 600; color: var(--c); }
+.ws-head-row hr {
+  flex: 1; align-self: center; margin: 0; border: 0;
+  border-top: 1px solid color-mix(in oklab, var(--c) 40%, transparent);
+}
+:root[data-theme="light"] .ws-head-row h2 { --ws-title: #000; color: color-mix(in oklab, var(--c) 70%, #000); }
+
+/* Cards: three across; a short last row splits its width in half. */
+.ws-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; position: relative; }
+.ws-grid > .card-wrap { grid-column: span 2; }
+.ws-grid > .card-wrap.ws-half { grid-column: span 3; }
+.ws-grid > .card-wrap.ws-pair { grid-column: span 3; }
+.grid.ws-on .card-wrap .card,
+.grid.ws-on .card-wrap:nth-child(n) .card {
+  height: clamp(240px, 24vw, 300px);
+  border-radius: 16px;
+}
+.grid.ws-on .card-wrap.ws-pair .card,
+.grid.ws-on .card-wrap.ws-pair:nth-child(n) .card { height: 29rem; }
+
+/* Cloudexa's screenshot is sized to the card's width; in the wider pair it would cover the wordmark. */
+.grid.ws-on .ws-pair .cx-mark { width: 46%; top: 8%; }
+.grid.ws-on .ws-pair .cx-shot { width: 66%; bottom: 7%; }
+/* Shawn TV's clip fills its card rather than letterboxing in the wide slot. */
+.grid.ws-on .card-wrap--tv .card__mock-video { object-fit: cover; }
+
+@media (max-width: 700px) {
+  #work:has(.grid.ws-on) { --ws-L: 24px; }
+  /* Half-width cards: the captions are sized for full-width ones, so scale them down. */
+  .ws-grid > .card-wrap:not(.ws-solo):not(.ws-pair) .card-copy { left: .7rem; right: .7rem; bottom: .7rem; }
+  .ws-grid > .card-wrap:not(.ws-solo):not(.ws-pair) .card-copy b { font-size: .85rem; letter-spacing: -.02em; }
+  .ws-grid > .card-wrap:not(.ws-solo):not(.ws-pair) .card-copy span { font-size: .5rem; margin-bottom: .25rem; }
+  .ws-grid > .card-wrap:not(.ws-solo):not(.ws-pair) .card-tag { transform: scale(.8); transform-origin: top left; }
+  .grid.ws-on .ws-pair .cx-mark { width: 34%; top: 14%; }
+  .grid.ws-on .ws-pair .cx-shot { width: 52%; bottom: auto; }
+  /* Emmy's title is centred; in a half-width card that meets the caption, so lift it to the top. */
+  .ws-grid > [href="project-emmy.html"]:not(.ws-solo) .card__img > [style*="container-type"] { justify-content: flex-start !important; padding-top: 12% !important; }
+  .ws-pane { padding-top: calc(var(--ws-L) + 14px); padding-bottom: 28px; }
+  .ws-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ws-grid > .card-wrap,
+  .ws-grid > .card-wrap.ws-half { grid-column: span 1; }
+  .ws-grid > .card-wrap.ws-solo,
+  .ws-grid > .card-wrap.ws-pair { grid-column: 1 / -1; }
+  .grid.ws-on .card-wrap .card,
+  .grid.ws-on .card-wrap:nth-child(n) .card { height: auto; aspect-ratio: 552 / 464; border-radius: 12px; }
+  .grid.ws-on .card-wrap.ws-solo .card,
+  .grid.ws-on .card-wrap.ws-pair .card,
+  .grid.ws-on .card-wrap.ws-pair:nth-child(n) .card { aspect-ratio: 552 / 464; height: auto; }
+}
