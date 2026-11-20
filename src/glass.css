@@ -20,6 +20,10 @@
   border-radius: inherit;
   pointer-events: none;
   transition: opacity .4s;
+}
+/* The site's glass. The work page's category bar (a Glisse TabBar, with glass of its own) takes it too. */
+.glass-layer,
+.work-tabs .lg-tab-bar-glass {
   --lg-glass-bend: 0.3;
   --lg-glass-dispersion: 0.82;
   --lg-blur: 2px;
@@ -28,7 +32,7 @@
   --glass-tint: 0.11;
   --lg-glass: rgb(255 255 255 / var(--glass-tint));
 }
-[data-theme=dark] .glass-layer { --lg-glass: rgb(40 40 40 / var(--glass-tint)); }
+[data-theme=dark] :is(.glass-layer, .work-tabs .lg-tab-bar-glass) { --lg-glass: rgb(40 40 40 / var(--glass-tint)); }
 /* The nav is only 48px tall and bend scales with the short side, so it takes more of everything.
    The Ask popover hangs off the nav on every page but home, so it matches it. */
 .nav > .glass-layer,

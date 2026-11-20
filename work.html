@@ -16,6 +16,35 @@
 
   <link rel="stylesheet" href="/assets/view-transition.css?v=1">
   <link rel="stylesheet" href="/assets/home.css?v=44">
+  <style>
+    [data-theme=dark] { --bg-off: #141416; }
+    /* Group headings over each grid (work-cards.js) */
+    .work-group { margin: 0 0 20px; font-size: 1.25rem; font-weight: 600; color: var(--black); }
+    .grid + .work-group { margin-top: 72px; }
+    .work-group { scroll-margin-top: 140px; }   /* lands below the nav and the category bar */
+    /* Category bar (work-cards.js links, a Glisse TabBar once glass.js runs): sticks under the nav */
+    .work-tabs { position: sticky; top: 76px; z-index: 10; display: flex; justify-content: center; gap: 24px; margin: 0 0 32px; }
+    .work-tabs > a { color: var(--black); font-size: .9rem; }   /* before glass.js, or without it */
+    .work-tabs .lg-tab-bar { --lg-tab-width: 168px; white-space: nowrap; }
+    /* No "Selected Work" pill here: the category bar heads the page instead */
+    #work .section-label { display: none; }
+    @media (width <= 600px) {   /* three tabs across a phone: "Enterprise / Defense" fits on one line down to 320px */
+      .work-tabs .lg-tab-bar { --lg-tab-width: calc((100vw - 40px) / 3); }
+      .work-tabs :is(.lg-tab, .lg-tab-copy) { font-size: clamp(9px, 2.9vw, 12px); }
+    }
+    /* A 5-card group ends on a row of 3 narrow cards, so the bottom-left corner is the 3rd card's, not the 2nd-to-last's */
+    @media (width > 900px) {
+      .grid > .card-wrap:nth-child(3):nth-last-child(3) .card { border-bottom-left-radius: 2rem; }
+      .grid > .card-wrap:nth-child(4):nth-last-child(2) .card { border-bottom-left-radius: .5rem; }
+      /* Cloudexa, wide card: wordmark top-left on the caption's left edge; the dashboard sits bottom-right in the box
+         between the top inset and the caption (contain), so it's never cut off by the card, under the caption or the wordmark */
+      .card-wrap[href="project-cloudexa.html"] .cx-mark { top: 1.5rem; left: 1.3rem; width: 32%; }
+      .card-wrap[href="project-cloudexa.html"] .cx-shot {
+        top: 1.3rem; bottom: auto; right: .4rem; width: 60%; height: calc(100% - 6.8rem);   /* .4rem: the PNG's own right padding makes up the rest */
+        object-fit: contain; object-position: right bottom;
+      }
+    }
+  </style>
   <link rel="stylesheet" href="/assets/ask.css?v=16">
   <script src="/assets/page-transition.js?v=1"></script>
   <link rel="stylesheet" href="/assets/footer.css?v=1">
@@ -25,11 +54,11 @@
   <div id="root"></div>
 
   <script src="/assets/dotcloud.js"></script>
-  <script src="/assets/work-cards.js?v=13"></script>
+  <script src="/assets/work-cards.js?v=17"></script>
 
-  <link rel="stylesheet" href="/assets/glass.css?v=16">
+  <link rel="stylesheet" href="/assets/glass.css?v=17">
 
-  <script src="/assets/glass.js?v=16" defer></script>
+  <script src="/assets/glass.js?v=17" defer></script>
 
   <script src="/assets/chat.js?v=15"></script>
 </body>

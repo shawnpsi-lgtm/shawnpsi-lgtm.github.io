@@ -13,7 +13,7 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
     --bg:#dcddd7;--ink:#1a1a1a;--muted:#5f6058;--line:#0002;
     --hud-bg:#dcddd7;--hud-accent:#735600;--hud-grid:rgb(115 86 0/.11);--hud-glow:rgb(115 86 0/.2);
     --bg-off:#fff;--panel-shadow:0 1px 2px #00000008,0 4px 14px #0000000a,inset 0 1px 0 #ffffff59;
-    --nav-height:48px;--max-w:1200px
+    --nav-height:48px;--max-w:1200px;--pad:clamp(24px,4vw,64px)
   }
   [data-theme=dark]{
     --bg:#090a08;--ink:#f0f1eb;--muted:#a2a49b;--line:#fff2;
@@ -47,13 +47,20 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
   .nav__toggle{display:none;cursor:pointer;background:none;border:none;flex-direction:column;gap:5px;padding:4px}
   .nav__toggle span{background:var(--ink);width:22px;height:1.5px;display:block;transition:all .3s}
 
-  .hero{position:relative;height:100vh;overflow:hidden}
+  /* Held in place, like the homepage's pinned wallpaper, so the video card rises over it */
+  .hero{position:sticky;top:0;height:100vh;overflow:hidden}
   .hero canvas{display:block;width:100%;height:100%}
   .hero .copy{position:absolute;top:0;left:0;padding:calc(var(--nav-height) + 40px) 40px 0;pointer-events:none}
   .hero h1{margin:0;font-size:clamp(40px,9vw,116px);line-height:.95;letter-spacing:-.03em}
   .hero .eyebrow{font-size:12px;letter-spacing:.16em;margin:0 0 14px}
 
-  main{padding:clamp(60px,6vw,96px) clamp(24px,4vw,64px);max-width:1600px}
+  /* main is full-bleed so the cards can be. Everything else sits in opaque .flow strips
+     (they cover the held hero), inset the way main used to be: left-aligned, 1600px max. */
+  .flow,.problem,.sync{padding-left:var(--pad);padding-right:max(var(--pad),100% - 1600px + var(--pad))}
+  /* The shadow runs the strip's colour on under the next card (48px = the largest --r), so
+     that card's corners and anti-aliased top edge show this strip, not the held video behind */
+  .flow{position:relative;z-index:1;padding-block:clamp(72px,8vw,120px);background:var(--bg);box-shadow:0 48px 0 var(--bg)}
+  .flow>:last-child{margin-bottom:0}
   h2{font-size:13px;letter-spacing:.14em;font-weight:600;margin:64px 0 20px}
   h2:first-child{margin-top:0}
 
@@ -81,14 +88,24 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
   .bar--mod{border-color:#c9a227;color:#c9a227}
   .gantt__list{display:none}
 
-  .chant{height:200vh;margin:0 0 clamp(24px,4vw,48px)}
-  .chant__pin{
-    position:sticky;top:var(--nav-height);height:calc(100vh - var(--nav-height));
-    display:grid;align-items:center;overflow:hidden;isolation:isolate;
-    --ink:#f0f1eb;--bg:#090a08;padding:0 clamp(16px,4vw,48px)
+  /* Scroll cards, as on the homepage (#scene2 in home.css): the video and each pinned
+     section is a card that rises over what came before. Its top corners are round while
+     it climbs and flatten as it reaches the top of the window (the last script sets --r
+     and --edge-o). The video card holds once scrolled to its end (sticky, top = 100vh
+     minus its 200vh), so the next card slides over it instead of pushing it away. */
+  .card{--r:clamp(24px,3.4vw,48px);position:relative;z-index:1;clip-path:inset(0 round var(--r) var(--r) 0 0)}
+  .card::before{
+    content:"";position:absolute;z-index:2;inset:0 0 auto;height:var(--r);pointer-events:none;
+    border-top:1px solid var(--edge,rgb(255 255 255/.2));border-radius:var(--r) var(--r) 0 0;
+    opacity:var(--edge-o,1)
   }
-  .chant__pin video{position:absolute;inset:5%;width:90%;height:90%;object-fit:cover;z-index:-1;filter:brightness(.55)}
-  @media (max-width:640px){.chant__pin video{inset:0;width:100%;height:100%}}
+  .chant{position:sticky;top:-100vh;height:200vh;background:#090a08}
+  .chant__pin{
+    position:sticky;top:0;height:100vh;
+    display:grid;align-items:center;overflow:hidden;isolation:isolate;
+    --ink:#f0f1eb;--bg:#090a08;padding:0 var(--pad)
+  }
+  .chant__pin video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;filter:brightness(.55)}
   .chant p{
     margin:0;max-width:22ch;
     font-size:clamp(32px,5.2vw,76px);font-weight:500;line-height:1.1;
@@ -100,18 +117,16 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
   }
   .ink-words span.is-on{color:var(--ink)}
   @media (prefers-reduced-motion:reduce){
-    .chant{height:auto}
-    .chant__pin{position:relative;height:auto;padding:48px clamp(16px,4vw,48px)}
+    .chant{position:relative;height:auto}
+    .chant__pin{position:relative;height:auto;padding:48px var(--pad)}
     .ink-words span{color:var(--ink);transition:none}
   }
-  /* Full-bleed band: the box-shadow paints the band past main's padding, clip-path trims it vertically */
   .problem{
     --band:#121310;--ink:#f0f1eb;--bg:var(--band);--muted:#a2a49b;
-    position:relative;box-sizing:border-box;min-height:100svh;
+    min-height:100svh;
     display:flex;flex-direction:column;justify-content:center;
-    margin:0 0 clamp(88px,10vw,148px);padding:clamp(96px,8vw,140px) 0;
-    color:var(--ink);background:var(--band);
-    box-shadow:0 0 0 100vmax var(--band);clip-path:inset(0 -100vmax)
+    padding-block:clamp(96px,8vw,140px);
+    color:var(--ink);background:var(--band)
   }
   .problem__copy{margin-bottom:clamp(40px,5vw,72px)}
   .problem h2{margin:0;font-size:clamp(36px,6vw,88px);line-height:1.02;font-weight:400;letter-spacing:-.035em}
@@ -155,7 +170,7 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
   .problem__node strong{font-size:clamp(22px,2.2vw,32px);font-weight:500;letter-spacing:-.03em;line-height:1.15}
   .problem__node>span{color:#aeb0aa;font-size:15px;line-height:1.5;margin-top:10px}
   /* Scroll-pinned chapters (enabled by JS on wide, tall, motion-OK screens) */
-  .problem.is-scrub{height:240vh;min-height:0;padding:0;display:block}
+  .problem.is-scrub{height:240vh;min-height:0;padding-block:0;display:block}
   .problem.is-scrub .problem__stage{
     position:sticky;top:var(--nav-height);height:calc(100vh - var(--nav-height));
     display:flex;flex-direction:column;justify-content:center
@@ -169,7 +184,9 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
     animation:none;transition:translate .2s linear;
     translate:calc(var(--dx) * (1 - var(--s,0))) calc(var(--dy) * (1 - var(--s,0)))
   }
-  .sync.is-scrub{height:200vh}
+  /* Its own surface, a shade off the page, so the card's corners read against the content above */
+  .sync{--edge:var(--line);padding-block:clamp(72px,8vw,120px);background:color-mix(in srgb,var(--ink) 5%,var(--bg))}
+  .sync.is-scrub{height:200vh;padding-block:0}
   .sync.is-scrub .sync__stage{
     position:sticky;top:var(--nav-height);height:calc(100vh - var(--nav-height));
     display:flex;flex-direction:column;justify-content:center
@@ -193,7 +210,7 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
   .pipe__say h3{margin:0;font-size:19px;font-weight:400;letter-spacing:-.01em;line-height:1.2}
   .pipe__say p{margin:0;font-size:14px;line-height:1.6;color:#c7c9cc}
 
-  .next-project{display:block;border-top:1px solid var(--line);padding:72px 0;color:var(--ink);text-decoration:none;transition:background .3s}
+  .next-project{display:block;position:relative;z-index:1;background:var(--bg);border-top:1px solid var(--line);padding:72px 0;color:var(--ink);text-decoration:none;transition:background .3s}
   .next-project:hover{background:color-mix(in srgb,var(--ink) 4%,var(--bg))}
   .next-project__label{letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 20px;font-size:.72rem;font-weight:600}
   .next-project__inner{display:flex;justify-content:space-between;align-items:center;gap:24px}
@@ -220,7 +237,7 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
     .footer__inner{grid-template-columns:1fr;gap:32px}
     .footer__links{align-items:flex-start}
     .players,.pipe__cols{grid-template-columns:1fr}
-    .problem{min-height:0;padding:96px 0}
+    .problem{min-height:0;padding-block:96px}
     .problem__flow{grid-template-columns:1fr}
     .problem__viz{--art:96px;height:120px;margin-bottom:24px}
     .problem__node{min-height:0}
@@ -251,8 +268,8 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
     .gantt__item--mod::after{content:"Changed"}
   }
   @media (max-width:640px){
-    main,.hero .copy,.footer .container,.next-project .container{padding-left:24px;padding-right:24px}
-    .problem{scroll-margin-top:var(--nav-height);padding:64px 0}
+    .hero .copy,.footer .container,.next-project .container{padding-left:24px;padding-right:24px}
+    .problem{scroll-margin-top:var(--nav-height);padding-block:64px}
     .problem__copy{margin-bottom:16px}
     .problem h2{font-size:32px;line-height:1.1}
     .problem__node{padding:22px 22px 24px}
@@ -428,7 +445,7 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
 </section>
 
 <main>
-  <section class="chant" aria-label="Critical situations on the battlefield require solutions that operationalize swift decision-making">
+  <section class="chant card" aria-label="Critical situations on the battlefield require solutions that operationalize swift decision-making">
     <div class="chant__pin">
       <video src="videos/ngc2_chant.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
       <p class="ink-words">
@@ -437,7 +454,7 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
     </div>
   </section>
 
-  <section class="problem" aria-labelledby="problem-title">
+  <section class="problem card" aria-labelledby="problem-title">
     <div class="problem__stage">
     <div class="problem__copy">
       <h2 id="problem-title" class="ink-words"><span>From</span> <span>plans</span> <span>to</span> <span>operations.</span></h2>
@@ -524,12 +541,14 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
     </div>
   </section>
 
-  <p class="pipe__kicker">EXTRACTION PIPELINE</p>
-  <h2 class="pipe__title">Turning documents into trusted data.</h2>
-  <p class="pipe__lead">Three safeguards keep extraction accurate across formats and revisions.</p>
-  <div class="pipe__cols" id="cols"></div>
+  <div class="flow">
+    <p class="pipe__kicker">EXTRACTION PIPELINE</p>
+    <h2 class="pipe__title">Turning documents into trusted data.</h2>
+    <p class="pipe__lead">Three safeguards keep extraction accurate across formats and revisions.</p>
+    <div class="pipe__cols" id="cols"></div>
+  </div>
 
-  <section class="sync" aria-labelledby="sync-title">
+  <section class="sync card" aria-labelledby="sync-title">
     <div class="sync__stage">
       <p class="pipe__kicker">SYNCMAT</p>
       <h2 class="pipe__title" id="sync-title">Operations, readable.</h2>
@@ -538,14 +557,16 @@ try{if(sessionStorage.getItem('ngc2-entry')==='home')document.documentElement.cl
     </div>
   </section>
 
-  <h2>PARTNERS</h2>
-  <div class="players">
-    <article><img src="/images/box8/anduril.png" alt="Anduril"><span>Common data baseline lead. Lattice as the integration layer. 4th ID full-stack implementation.</span></article>
-    <article><img src="/images/box8/palantir.png" alt="Palantir"><span>Foundry as the cloud data layer. Edge-to-cloud mesh with Lattice. Ontology for the plan objects.</span></article>
-    <article><img src="/images/box8/raft.svg" alt="Raft"><span>Data and services registries, transformation, federation. How other apps discover SYNCMAT.</span></article>
-    <article><img src="/images/box8/lockheed.png" alt="Lockheed Martin"><span>25th ID full-stack lead. Partner on this engagement with C3 AI and the Army.</span></article>
-    <article><img src="/images/box8/c3.png" alt="C3 AI"><span>Platform, on-edge LLM, extraction pipeline, and the SYNCMAT application itself.</span></article>
-    <article><img class="army-logo" src="/images/box8/us-army.svg" alt="U.S. Army"><span>4th ID and 25th ID as the first formations. Scale path across all eleven divisions.</span></article>
+  <div class="flow">
+    <h2>PARTNERS</h2>
+    <div class="players">
+      <article><img src="/images/box8/anduril.png" alt="Anduril"><span>Common data baseline lead. Lattice as the integration layer. 4th ID full-stack implementation.</span></article>
+      <article><img src="/images/box8/palantir.png" alt="Palantir"><span>Foundry as the cloud data layer. Edge-to-cloud mesh with Lattice. Ontology for the plan objects.</span></article>
+      <article><img src="/images/box8/raft.svg" alt="Raft"><span>Data and services registries, transformation, federation. How other apps discover SYNCMAT.</span></article>
+      <article><img src="/images/box8/lockheed.png" alt="Lockheed Martin"><span>25th ID full-stack lead. Partner on this engagement with C3 AI and the Army.</span></article>
+      <article><img src="/images/box8/c3.png" alt="C3 AI"><span>Platform, on-edge LLM, extraction pipeline, and the SYNCMAT application itself.</span></article>
+      <article><img class="army-logo" src="/images/box8/us-army.svg" alt="U.S. Army"><span>4th ID and 25th ID as the first formations. Scale path across all eleven divisions.</span></article>
+    </div>
   </div>
 </main>
 
@@ -965,7 +986,7 @@ CARDS.forEach(function (c) {
   catch (e) { host.textContent = e.message; }
 });
 </script>
-  <link rel="stylesheet" href="/assets/glass.css?v=16">
+  <link rel="stylesheet" href="/assets/glass.css?v=17">
 <script>
 (function () {
   const clamp = v => Math.min(1, Math.max(0, v));
@@ -974,7 +995,7 @@ CARDS.forEach(function (c) {
 
   // Fade-ins for the sections that are not pinned
   if (!reduce.matches && 'IntersectionObserver' in window) {
-    const els = [...document.querySelectorAll('main > .pipe__kicker, main > .pipe__title, main > .pipe__lead, .pipe__col, main > h2, .players article')];
+    const els = [...document.querySelectorAll('.flow > .pipe__kicker, .flow > .pipe__title, .flow > .pipe__lead, .pipe__col, .flow > h2, .players article')];
     const groups = new Map();
     els.forEach(el => {
       const n = groups.get(el.parentNode) || 0;
@@ -1041,8 +1062,29 @@ CARDS.forEach(function (c) {
   addEventListener('resize', queue);
   setMode();
 })();
+
+// Card corners, as the homepage's round(): round while a card rises, flat once it
+// reaches the top of the window, so what's behind no longer peeks through them.
+// Not on touch: there the corners stay round and nothing runs per scroll frame.
+(function () {
+  if (matchMedia('(hover: none) and (pointer: coarse)').matches) return;
+  const cards = [...document.querySelectorAll('.card')];
+  let rf = 0;
+  const round = () => {
+    rf = 0;
+    const R = Math.min(48, Math.max(24, innerWidth * .034));   // = .card's --r clamp()
+    cards.forEach(c => {
+      const t = Math.min(1, Math.max(0, c.getBoundingClientRect().top / (innerHeight * .25)));
+      c.style.setProperty('--r', (R * t).toFixed(1) + 'px');
+      c.style.setProperty('--edge-o', t.toFixed(3));
+    });
+  };
+  addEventListener('scroll', () => rf ||= requestAnimationFrame(round), { passive: true });
+  addEventListener('resize', round);
+  round();
+})();
 </script>
-  <script src="/assets/glass.js?v=16" defer></script>
+  <script src="/assets/glass.js?v=17" defer></script>
   <script src="/assets/chat.js?v=15"></script>
 </body>
 </html>

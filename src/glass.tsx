@@ -1,9 +1,9 @@
 // Glisse on the static pages: built to assets/glass.js by `npm run build:glass`.
 // Plain HTML stays the source of truth: glass goes behind existing elements,
 // and native switches/sliders stay in the DOM (hidden) as the value page scripts read and write.
-import { useEffect, useReducer } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Glass, Slider, Switch } from 'glisse'
+import { Glass, Slider, Switch, TabBar } from 'glisse'
 import 'glisse/styles.css'
 import './glass.css'
 
@@ -61,6 +61,44 @@ function input(el: HTMLInputElement) {
   createRoot(host).render(<Bridge el={el} />)
 }
 
+// The work page's category links (.work-tabs, from work-cards.js) as a Glisse tab bar. Each tab links to its
+// section's heading; the selection follows whichever section's heading has passed the top third of the window.
+type Tab = { value: string; label: string; href: string }
+function WorkTabs({ items }: { items: Tab[] }) {
+  const [value, setValue] = useState(items[0].value)
+  // The page scrolls smoothly, so on the way to a chosen section the selection holds on it rather than
+  // stepping through the ones passed (until it's reached, or the scroll is cut short).
+  const going = useRef<string | null>(null)
+  useEffect(() => {
+    const spy = () => {
+      let v = items[0].value
+      for (const { value } of items)
+        if ((document.getElementById(value)?.getBoundingClientRect().top ?? Infinity) < innerHeight / 3) v = value
+      if (going.current && going.current !== v) return
+      going.current = null
+      setValue(v)
+    }
+    spy()
+    addEventListener('scroll', spy, { passive: true })
+    return () => removeEventListener('scroll', spy)
+  }, [items])
+  // Every way of choosing a tab (tap, drag, Enter) ends in a click on its link, which does the scrolling.
+  const go = (v: string) => {
+    going.current = v
+    setTimeout(() => { if (going.current === v) going.current = null }, 1500)
+    setValue(v)
+  }
+  return <TabBar aria-label="Work categories" items={items} value={value} onValueChange={go} />
+}
+
+function tabs(el: HTMLElement) {
+  if (el.dataset.glass != null) return
+  el.dataset.glass = ''
+  const items = [...el.querySelectorAll('a')].map(a => ({ value: a.hash.slice(1), label: a.textContent ?? '', href: a.hash }))
+  el.replaceChildren()
+  createRoot(el).render(<WorkTabs items={items} />)
+}
+
 // The S mark: static pages draw it as an SVG and the homepage bundle as a span with a gradient.
 // Glass needs an HTML box, so wrap the SVG; the span already is one.
 function mark(el: Element) {
@@ -92,6 +130,7 @@ function scan() {
   document.querySelectorAll('.nav__logo > svg:first-child, .nav__logo > span:first-child:not(.nav__mark)').forEach(mark)
   document.querySelectorAll<HTMLElement>(SURFACES).forEach(surface)
   document.querySelectorAll<HTMLInputElement>(INPUTS).forEach(input)
+  document.querySelectorAll<HTMLElement>('.work-tabs').forEach(tabs)
 }
 new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(scan) } })
   .observe(document.documentElement, { childList: true, subtree: true })

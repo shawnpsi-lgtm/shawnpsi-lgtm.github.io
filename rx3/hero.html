@@ -34,6 +34,9 @@
   <div class="rx-bg" aria-hidden="true"></div>
 
   <script>
+    // ?bg= swaps the Neon Ripple for another studio look in src/wayglim-looks.json, e.g. the Work page's Emmy card
+    // passes bg=spotlight and Visually Represented bg=hyperdrive.
+    document.querySelector('.rx-bg').dataset.look = new URLSearchParams(location.search).get('bg') || ''
     // The glass reads the wallpaper's WebGL canvas each frame, so that canvas has to keep its last frame after it's shown.
     {
       const get = HTMLCanvasElement.prototype.getContext
@@ -43,7 +46,7 @@
       }
     }
   </script>
-  <script src="/assets/wayglim-rx3.js?v=2" defer></script>
+  <script src="/assets/wayglim-rx3.js?v=4" defer></script>
   <h1 class="r2-glass">rx3</h1>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <filter id="r2-refract" x="0" y="0" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">

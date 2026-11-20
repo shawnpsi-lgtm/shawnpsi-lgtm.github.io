@@ -259,16 +259,18 @@ export type WayglimBackgroundProps = {
   style?: CSSProperties;
   /** Studio params to change on this mount only, e.g. { spread: 25 }. */
   params?: Record<string, unknown>;
+  /** Another look's whole WAYGLIM_SETTINGS from a studio export (the engine is the same in every export). */
+  look?: typeof WAYGLIM_SETTINGS;
 };
 
-export default function WayglimBackground({ className, style, layout = "fill", paused = false, label, params }: WayglimBackgroundProps) {
+export default function WayglimBackground({ className, style, layout = "fill", paused = false, label, params, look = WAYGLIM_SETTINGS }: WayglimBackgroundProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<{ destroy(): void; setPaused(paused: boolean): void } | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return undefined;
-    const settings = params ? { ...WAYGLIM_SETTINGS, params: { ...WAYGLIM_SETTINGS.params, ...params } } : WAYGLIM_SETTINGS;
+    const settings = params ? { ...look, params: { ...look.params, ...params } } : look;
     const player = mountWayglim(container, settings);
     playerRef.current = player;
     return () => {
