@@ -25,7 +25,13 @@
     /* Category bar (work-cards.js links, a Glisse TabBar once glass.js runs): sticks under the nav */
     .work-tabs { position: sticky; top: 76px; z-index: 10; display: flex; justify-content: center; gap: 24px; margin: 0 0 32px; }
     .work-tabs > a { color: var(--black); font-size: .9rem; }   /* before glass.js, or without it */
-    .work-tabs .lg-tab-bar { --lg-tab-width: 168px; white-space: nowrap; }
+    .work-tabs .lg-tab-bar { --lg-tab-width: 168px; --lg-tab-height: 38px; white-space: nowrap; }
+    /* As in Apple Music's tab bar, whatever sits under the bubble is tinted: the selected tab at rest, and the labels
+       the lens passes over while it's dragged. Apple Music tints red; here it's the site's blue (lighter on dark). */
+    .work-tabs .lg-tab-bar { --lg-tab-selected: var(--accent); }
+    [data-theme=dark] .work-tabs .lg-tab-bar { --lg-tab-selected: var(--accent-light); }
+    /* One weight for every label (the tinted copies too), so nothing shifts as the bubble moves */
+    .work-tabs :is(.lg-tab, .lg-tab-copy) { font-size: 15px; font-weight: 500; letter-spacing: -.01em; }
     /* No "Selected Work" pill here: the category bar heads the page instead */
     #work .section-label { display: none; }
     @media (width <= 600px) {   /* three tabs across a phone: "Enterprise / Defense" fits on one line down to 320px */
