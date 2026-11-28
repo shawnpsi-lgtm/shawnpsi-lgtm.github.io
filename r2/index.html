@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>r2music</title>
+  <meta name="description" content="A track shared from r2music. Listen in your browser.">
+  <meta property="og:title" content="A track on r2music">
+  <meta property="og:description" content="Listen in your browser.">
+  <meta property="og:image" content="https://shawnsingh.me/images/r2music-hero.jpg">
+  <meta name="theme-color" content="#120a1f">
+  <!-- A track's share page. In the r2music demo (project-r2.html, press-r2music.html, r2/demo.html), right-click a
+       track and choose Generate share link: it copies /r2/?t= and the start of the track's id (a SHA-256, as in the
+       bucket). The library and audio come through the site's worker, /r2music/* in worker/groq-proxy.js, which only
+       serves audio for the "shawn" list. -->
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; }
+    body {
+      box-sizing: border-box; min-height: 100svh; display: grid; place-items: center; align-content: center; gap: 32px;
+      padding: max(48px, env(safe-area-inset-top)) 16px max(40px, env(safe-area-inset-bottom));
+      background: radial-gradient(120% 90% at 30% 20%, #3a1d5c, #120a1f 60%, #030305) fixed #030305;
+      color: #f5f5f7; font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased;
+    }
+    /* The cover again, blurred to fill the page, as music apps do. */
+    .bg { position: fixed; inset: -15%; z-index: -1; background: center / cover no-repeat; filter: blur(80px) saturate(1.5) brightness(.5); opacity: 0; transition: opacity .6s; }
+    .bg.on { opacity: 1; }
+    .card { width: min(340px, 100%); }
+    .cover { aspect-ratio: 1; overflow: hidden; border-radius: 14px; background: rgb(255 255 255 / .06); box-shadow: 0 0 0 1px rgb(255 255 255 / .08), 0 24px 70px rgb(0 0 0 / .55); }
+    .cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    h1 { margin: 24px 0 2px; font-size: 1.5rem; line-height: 1.25; font-weight: 700; letter-spacing: -.02em; overflow-wrap: anywhere; }
+    .artist { margin: 0; font-size: 1rem; color: rgb(235 235 245 / .62); overflow-wrap: anywhere; }
+    .artist:empty, .note:empty { display: none; }
+    .player { display: flex; align-items: center; gap: 14px; margin-top: 22px; }
+    .player[hidden] { display: none; }
+    .pp { flex: none; display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: #f5f5f7; color: #19191b; cursor: pointer; }
+    .pp:hover { background: #fff; }
+    .pp:focus-visible { outline: 3px solid #0071e3; outline-offset: 2px; }
+    .pp svg { width: 20px; height: 20px; fill: currentColor; }
+    .pp .pause, .playing .pp .play { display: none; }
+    .playing .pp .pause { display: block; }
+    .seek { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; font-size: .75rem; color: rgb(235 235 245 / .62); font-variant-numeric: tabular-nums; }
+    .seek b { font-weight: inherit; }
+    .bar { --p: 0%; position: relative; flex: 1; height: 4px; border-radius: 2px; background: linear-gradient(#f5f5f7, #f5f5f7) 0 / var(--p) 100% no-repeat, rgb(255 255 255 / .2); cursor: pointer; touch-action: none; outline: none; }
+    .bar::before { content: ''; position: absolute; inset: -10px 0; }
+    .bar:focus-visible { box-shadow: 0 0 0 3px rgb(0 113 227 / .7); }
+    .note { margin: 14px 0 0; font-size: .82rem; line-height: 1.5; color: rgb(235 235 245 / .62); }
+    .brand { display: inline-flex; align-items: center; gap: 8px; font-size: .85rem; font-weight: 600; color: rgb(235 235 245 / .75); text-decoration: none; }
+    .brand:hover { color: #fff; }
+    .brand svg { width: 22px; height: 22px; }
+  </style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"></div>
+  <main class="card" aria-busy="true">
+    <div class="cover"><img alt="" hidden></div>
+    <h1>Loading…</h1>
+    <p class="artist"></p>
+    <div class="player" hidden>
+      <button class="pp" aria-label="Play"><svg class="play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><svg class="pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
+      <span class="seek"><b>0:00</b><span class="bar" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></span><b>0:00</b></span>
+    </div>
+    <p class="note"></p>
+  </main>
+  <a class="brand" href="/project-r2.html"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="r2-lg" cx="40%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9a8f5"/><stop offset="55%" stop-color="#b36fd9"/><stop offset="100%" stop-color="#9a4fc4"/></radialGradient></defs><circle cx="50" cy="50" r="50" fill="url(#r2-lg)"/><text x="50" y="67" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="52" font-weight="600" fill="#fff">r</text></svg>Shared from r2music</a>
+  <script>
+    (() => {
+      const API = 'https://groq-chat.shawnpsi.workers.dev/r2music'
+      const $ = s => document.querySelector(s)
+      const card = $('.card'), h1 = $('h1'), artistEl = $('.artist'), note = $('.note'), cover = $('.cover'), img = $('.cover img'), bg = $('.bg')
+      const player = $('.player'), pp = $('.pp'), bar = $('.bar'), [cur, dur] = document.querySelectorAll('.seek b')
+      const audio = new Audio()
+      audio.preload = 'none'
+
+      const time = s => isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00'
+      // As in the demo: "ANOTR - Strobe" is artist ANOTR, title Strobe; a stable gradient stands in for a missing
+      // cover; and Shawn's songs get the same fixes ("::" back to "//", and the cover from "signs").
+      const parseName = name => {
+        const clean = name.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim()
+        const m = clean.match(/^(.+?)\s+[-–—]\s+(.+)$/)
+        return m ? { artist: m[1], title: m[2] } : { artist: '', title: clean }
+      }
+      const swatch = name => {
+        let h = 0
+        for (const c of name) h = (h * 31 + c.charCodeAt(0)) % 360
+        return `linear-gradient(135deg, hsl(${h} 65% 52%), hsl(${(h + 50) % 360} 70% 30%))`
+      }
+      const key = title => title.toLowerCase().replace(/\s+/g, ' ').trim()
+      const RETITLE = { 'strip clubz :: dollar billz': 'strip clubz // dollar billz' }
+      const SIGNS_COVER = new Set(['strip clubz // dollar billz', 'kiiss'])
+
+      const done = () => card.removeAttribute('aria-busy')
+      function fail(title, why) {
+        h1.textContent = title
+        note.textContent = why
+        cover.style.background = swatch(title)
+        bg.style.backgroundImage = swatch(title)
+        bg.classList.add('on')
+        done()
+      }
+
+      // ?t= is at least 8 characters of the id; the link from the demo carries 12.
+      const t = (new URLSearchParams(location.search).get('t') || '').trim().toLowerCase()
+      if (!/^[0-9a-f]{8,64}$/.test(t)) return fail('No track here', 'This link is missing its track. Ask for a new one.')
+
+      fetch(`${API}/library`).then(r => r.ok ? r.json() : Promise.reject()).then(data => {
+        const all = data.tracks, match = Object.keys(all).filter(id => id.startsWith(t))
+        if (match.length !== 1) return fail('Track not found', 'It may have been taken out of the library.')
+        const id = match[0], raw = all[id]
+        let { artist, title } = parseName(raw.name), name = raw.name
+        if (RETITLE[key(title)]) name = title = RETITLE[key(title)]
+        const signs = SIGNS_COVER.has(key(title)) && Object.keys(all).find(k => key(parseName(all[k].name).title) === 'signs')
+        const art = `${API}/art/${signs || id}`
+
+        document.title = `${artist ? `${title} · ${artist}` : title} · r2music`
+        h1.textContent = title
+        artistEl.textContent = artist
+        cover.style.background = swatch(name)
+        bg.style.backgroundImage = swatch(name)
+        bg.classList.add('on')
+        img.onload = () => { img.hidden = false; bg.style.backgroundImage = `url("${art}")` }
+        img.src = art
+        if ('mediaSession' in navigator) navigator.mediaSession.metadata = new MediaMetadata({ title, artist, album: 'r2music', artwork: [{ src: art, type: 'image/jpeg' }] })
+        done()
+
+        if (!data.list?.trackIds.includes(id)) return note.textContent = 'This track doesn’t play here: only Shawn’s own music does.'
+        player.hidden = false
+        dur.textContent = time(raw.duration)
+        bar.setAttribute('aria-valuemax', Math.round(raw.duration || 0))
+        audio.src = `${API}/track/${id}`
+      }).catch(() => fail('Couldn’t load the track', 'Check your connection and try again.'))
+
+      const toggle = () => audio.paused ? audio.play().catch(() => {}) : audio.pause()
+      pp.addEventListener('click', toggle)
+      audio.onplay = audio.onpause = () => {
+        document.body.classList.toggle('playing', !audio.paused)
+        pp.setAttribute('aria-label', audio.paused ? 'Play' : 'Pause')
+      }
+      audio.ontimeupdate = audio.ondurationchange = () => {
+        cur.textContent = time(audio.currentTime)
+        if (isFinite(audio.duration)) dur.textContent = time(audio.duration)
+        bar.style.setProperty('--p', `${audio.currentTime / audio.duration * 100 || 0}%`)
+        bar.setAttribute('aria-valuenow', Math.round(audio.currentTime))
+        bar.setAttribute('aria-valuetext', `${time(audio.currentTime)} of ${dur.textContent}`)
+      }
+      audio.onerror = () => { if (audio.src) note.textContent = 'Couldn’t play this track.' }
+
+      const seekTo = s => { if (audio.duration) audio.currentTime = Math.min(audio.duration, Math.max(0, s)) }
+      const seek = e => seekTo((e.clientX - bar.getBoundingClientRect().left) / bar.offsetWidth * audio.duration)
+      bar.addEventListener('pointerdown', e => { bar.setPointerCapture(e.pointerId); seek(e) })
+      bar.addEventListener('pointermove', e => { if (bar.hasPointerCapture(e.pointerId)) seek(e) })
+      bar.addEventListener('keydown', e => {
+        const to = { ArrowRight: audio.currentTime + 5, ArrowLeft: audio.currentTime - 5, Home: 0, End: audio.duration }[e.key]
+        if (to === undefined) return
+        e.preventDefault()
+        seekTo(to)
+      })
+      // Space plays and pauses, as in the demo, unless a control has focus.
+      addEventListener('keydown', e => {
+        if (e.key !== ' ' || player.hidden || e.target.closest?.('button, a, .bar')) return
+        e.preventDefault()
+        toggle()
+      })
+    })()
+  </script>
+</body>
+</html>

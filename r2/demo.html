@@ -136,6 +136,28 @@
     /* Outside the window: a drag image can't come from inside a clipped, backdrop-filtered box. */
     .r2-ghost { position: fixed; top: -100px; left: 0; padding: 6px 12px; border-radius: 8px; background: #0071e3; color: #fff; font: 600 13px/1.6 -apple-system, BlinkMacSystemFont, sans-serif; white-space: nowrap; }
 
+    /* Right-click a track: a menu like the Mac's, then its share link. Inside the window, so it scales and clips with it. */
+    .r2-pop {
+      position: absolute; z-index: 7; min-width: 190px; padding: 5px; border-radius: 9px; border: 1px solid rgb(255 255 255 / .14);
+      background: rgb(36 36 40 / .82); -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px);
+      box-shadow: 0 0 0 .5px #000c, 0 14px 40px #000a; font-size: .82rem; line-height: 1.4; outline: none;
+    }
+    .r2-pop[hidden] { display: none; }
+    .r2-pop [role=menuitem] { display: block; width: 100%; padding: 4px 10px; border: 0; border-radius: 5px; background: none; color: var(--black); font: inherit; text-align: left; outline: none; cursor: default; }
+    .r2-pop [role=menuitem]:focus { background: var(--accent); color: #fff; }
+    .r2-pop [role=menuitem]:disabled { color: var(--light); }
+    .r2-pop hr { margin: 5px 10px; border: 0; border-top: 1px solid rgb(255 255 255 / .12); }
+    .r2-pop p { max-width: 210px; margin: 2px 10px 4px; font-size: .72rem; line-height: 1.45; color: var(--mid); }
+    .r2-share { width: 300px; padding: 14px; }
+    .r2-share b { display: block; font-size: .85rem; }
+    .r2-share span { display: block; font-size: .76rem; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .r2-share div { display: flex; gap: 6px; margin-top: 10px; }
+    .r2-share input { flex: 1; min-width: 0; padding: 4px 10px; border: 1px solid var(--border); border-radius: 980px; background: #1c1c1e; color: var(--black); font: inherit; font-size: .76rem; outline: none; user-select: text; -webkit-user-select: text; }
+    .r2-share input:focus { border-color: var(--accent); }
+    .r2-share .r2-btn { padding: 4px 12px; font-size: .76rem; }
+    .r2-share a { display: inline-block; margin-top: 10px; font-size: .76rem; color: #2997ff; text-decoration: none; }
+    .r2-share a:hover { text-decoration: underline; }
+
     .stage .r2-app { width: 100%; height: 100%; min-height: 0; }
   </style>
 </head>
@@ -182,6 +204,7 @@
     // The r2music demo, on the real library: it's read from the r2music bucket through the site's worker
     // (/r2music/* in worker/groq-proxy.js). The "shawn" list is Shawn's own music and plays; the rest of the
     // library is names and covers only. Edits to lists stay in this tab.
+    // Right-click a track for its share link (r2/index.html).
     (() => {
       const API = 'https://groq-chat.shawnpsi.workers.dev/r2music'
       const pane = list => ({ list, q: '', sel: new Set(), anchor: null, sort: null })
@@ -463,6 +486,120 @@
         drag = null
         app.querySelectorAll('.drop').forEach(x => x.classList.remove('drop'))
       })
+
+      // Right-click a track (or press the menu key on a pane) for Play and Generate share link. A share link is the
+      // track's own page, r2/index.html, with the first 12 characters of its id; generating one copies it. Only the
+      // tracks that play get one, since the worker serves audio for nothing else.
+      const pop = document.createElement('div'), SHARE = new URL('/r2/', location.href).href
+      let popAt = null
+      pop.className = 'r2-pop'
+      pop.tabIndex = -1
+      pop.hidden = true
+      app.append(pop)
+
+      // x and y are viewport coordinates. The window can be scaled (r2/demo.html) or tilted on its way in
+      // (project-r2.html), so they're mapped into it; the menu opens to the left of, or above, the pointer if it must.
+      function place(x, y) {
+        popAt = { x, y }
+        pop.hidden = false
+        const r = app.getBoundingClientRect(), k = r.width / app.offsetWidth || 1
+        const w = pop.offsetWidth, h = pop.offsetHeight, W = app.offsetWidth, H = app.offsetHeight
+        let left = (x - r.left) / k, top = (y - r.top) / k
+        if (left + w > W - 8) left = left - w
+        if (top + h > H - 8) top = top - h
+        pop.style.left = `${Math.max(8, Math.min(left, W - w - 8))}px`
+        pop.style.top = `${Math.max(8, Math.min(top, H - h - 8))}px`
+      }
+
+      function closePop() {
+        if (pop.hidden) return
+        const had = pop.contains(document.activeElement)
+        pop.hidden = true
+        pop.innerHTML = ''
+        if (had) panesEl.children[focused]?.focus({ preventScroll: true })
+      }
+
+      function openMenu(id, x, y) {
+        const can = playable.has(id), on = id === now && !audio.paused
+        pop.dataset.id = id
+        pop.className = 'r2-pop'
+        pop.setAttribute('role', 'menu')
+        pop.setAttribute('aria-label', tracks[id].title)
+        pop.innerHTML = (can ? `<button role="menuitem" data-pop="play">${on ? 'Pause' : 'Play'}</button><hr>` : '')
+          + `<button role="menuitem" data-pop="share"${can ? '' : ' disabled aria-describedby="r2-pop-why"'}>Generate share link</button>`
+          + (can ? '' : '<p id="r2-pop-why">Only Shawn’s own music plays in this demo, so only it can be shared.</p>')
+        place(x, y)
+        pop.focus({ preventScroll: true })
+      }
+
+      function shareLink(id) {
+        const url = `${SHARE}?t=${id.slice(0, 12)}`
+        pop.focus({ preventScroll: true })   // off the menu item before it's replaced
+        pop.className = 'r2-pop r2-share'
+        pop.setAttribute('role', 'dialog')
+        pop.setAttribute('aria-label', 'Share link')
+        pop.innerHTML = `<b>Share link</b><span>${esc(tracks[id].title)}</span>
+          <div><input readonly value="${url}" aria-label="Share link" spellcheck="false"><button class="r2-btn" data-pop="copy">Copy</button></div>
+          <a href="${url}" target="_blank" rel="noopener">Open the track page</a>`
+        place(popAt.x, popAt.y)
+        copy()
+      }
+
+      // The link is left selected too, for when the clipboard is off (an iframe without clipboard-write).
+      function copy() {
+        const input = pop.querySelector('input'), btn = pop.querySelector('[data-pop=copy]')
+        input.focus({ preventScroll: true })
+        input.select()
+        const done = ok => { btn.textContent = ok ? 'Copied' : 'Press ⌘C' }
+        const fallback = () => { try { return document.execCommand('copy') } catch { return false } }
+        if (navigator.clipboard?.writeText) navigator.clipboard.writeText(input.value).then(() => done(true), () => done(fallback()))
+        else done(fallback())
+      }
+
+      app.addEventListener('contextmenu', e => {
+        if (pop.contains(e.target)) { if (!e.target.matches('input')) e.preventDefault(); return }
+        let tr = e.target.closest?.('tr[data-id]'), x = e.clientX, y = e.clientY
+        // From the keyboard, on a pane: the track last clicked, under its row.
+        if (!tr && e.target.matches?.('.r2-pane')) {
+          const p = panes[at(e.target)], id = p.sel.has(p.anchor) ? p.anchor : [...p.sel][0]
+          tr = id && e.target.querySelector(`tr[data-id="${id}"]`)
+          if (tr) { const r = tr.getBoundingClientRect(); x = r.left + 40; y = r.bottom }
+        }
+        if (!tr) return
+        e.preventDefault()
+        const i = at(tr), p = panes[i], id = tr.dataset.id
+        if (!p.sel.has(id)) { p.sel = new Set([id]); p.anchor = id }
+        focused = i
+        paint()
+        openMenu(id, x, y)
+      })
+
+      pop.addEventListener('click', e => {
+        e.stopPropagation()
+        const act = e.target.closest('[data-pop]')?.dataset.pop, id = pop.dataset.id
+        if (act === 'play') { closePop(); play(id) }
+        else if (act === 'share') shareLink(id)
+        else if (act === 'copy') copy()
+      })
+      // One highlight, as in a Mac menu: hovering an item focuses it, and the arrow keys move from there.
+      pop.addEventListener('pointermove', e => {
+        const b = e.target.closest('[role=menuitem]:not(:disabled)')
+        if (b && b !== document.activeElement) b.focus({ preventScroll: true })
+      })
+      pop.addEventListener('pointerleave', () => { if (pop.matches('[role=menu]')) pop.focus({ preventScroll: true }) })
+      pop.addEventListener('keydown', e => {
+        e.stopPropagation()
+        const menu = pop.matches('[role=menu]')
+        if (e.key === 'Escape' || (menu && e.key === 'Tab')) { e.preventDefault(); return closePop() }
+        if (!menu || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return
+        e.preventDefault()
+        const items = [...pop.querySelectorAll('[role=menuitem]:not(:disabled)')], n = items.length, i = items.indexOf(document.activeElement)
+        items[{ Home: 0, End: n - 1, ArrowDown: (i + 1) % n, ArrowUp: i < 0 ? n - 1 : (i - 1 + n) % n }[e.key]]?.focus()
+      })
+      document.addEventListener('pointerdown', e => { if (!pop.contains(e.target)) closePop() }, true)
+      app.addEventListener('scroll', e => { if (e.target.matches?.('.r2-scroll')) closePop() }, true)
+      addEventListener('resize', closePop)
+      addEventListener('blur', closePop)
 
       paint()
       // Opens like the screenshot: the playable list on the left, the whole library on the right, by title.
